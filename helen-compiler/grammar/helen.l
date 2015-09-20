@@ -26,3 +26,18 @@ string                   return STRING;
 in                       return IN;
 out                      return OUT;
 debugvar                 return DEBUGVAR;
+\n                       return NEWLINE;
+[ \t]                    ;
+[a-zA-Z][a-zA-Z0-9]*     yylval.vstr = strdup(yytext); return ID;
+[\+\-\*\/\<\>\=]         yylval.vstr = strdup(yytext); return OPERATOR;
+\(                       return LPAREN;
+\)                       return RPAREN;
+\;                       return SEMI;
+\,                       return COMMA;
+\.                       return POINT;
+[0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;
+[0-9]+                   yylval.vint = atoi(yytext); return INTLIT;
+'[^(')]'                 yylval.vchar = yytext[0]; return CHARLIT;
+\"[^(\")]+\"             yylval.vstr = strdup(yytext); return STRLIT;
+<<EOF>>                  static int once = 0; return once++ ? 0 : NEWLINE;
+%%
