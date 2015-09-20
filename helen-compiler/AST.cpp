@@ -10,6 +10,10 @@ Value* VariableAST::codegen() {
     return 0;
 }
 
-//Value *ValueAST::codegen() {
-//    return nullptr;
-//}
+Value * ConstantIntAST::codegen() {
+    return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value);
+}
+
+Value * ConstantRealAST::codegen() {
+    return ConstantFP::get(getGlobalContext(), APFloat(value));
+}

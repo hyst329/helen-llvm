@@ -20,9 +20,19 @@ class AST {
     static map<std::string, Value*> variables;
 };
 
-template<typename T> class ValueAST : public AST {
-    T value;
+class ConstantIntAST : public AST {
+    int64_t value;
     virtual Value* codegen();
+};
+
+class ConstantRealAST : public AST {
+    double value;
+    virtual Value* codegen();
+};
+
+class FunctionCallAST : public AST {
+    string functionName;
+    std::vector<std::unique_ptr<AST>> arguments;
 };
 
 class VariableAST : public AST {
