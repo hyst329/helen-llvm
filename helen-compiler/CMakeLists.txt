@@ -11,8 +11,8 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-BISON_TARGET(HelenParser grammar/helen.y grammar/helen.parser.cpp)
-FLEX_TARGET(HelenScanner grammar/helen.l grammar/helen.lexer.cpp)
+BISON_TARGET(HelenParser grammar/helen.y ${PROJECT_SOURCE_DIR}/grammar/helen.parser.cpp)
+FLEX_TARGET(HelenScanner grammar/helen.l ${PROJECT_SOURCE_DIR}/grammar/helen.lexer.cpp)
 ADD_FLEX_BISON_DEPENDENCY(HelenScanner HelenParser)
 
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -20,7 +20,7 @@ add_definitions(${LLVM_DEFINITIONS})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp AST.cpp AST.h)
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
 add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 

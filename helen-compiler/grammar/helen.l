@@ -1,8 +1,12 @@
 %option case-insensitive
 %option yylineno
 %{
+#include "helen.parser.hpp"
 extern "C" int yywrap() {
     return 1;
+}
+void yyerror(const char* msg) {
+    printf("%s in line %d", msg, yylineno);
 }
 %}
 %%

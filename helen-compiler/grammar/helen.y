@@ -1,4 +1,8 @@
 %{
+#include "helen.parser.hpp"
+
+extern int yylex();
+void yyerror(const char*);
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
@@ -14,8 +18,23 @@
 %token LPAREN RPAREN
 %token SEMI COMMA POINT
 %start program
+
+%union
+{
+    char* vstr;
+    double vreal;
+    int vint;
+    char vchar;
+}
 %%
 program : instseq {
+
+}
+instseq: instseq instruction {
+}
+| instruction {
+}
+instruction : INT {
 
 }
 %%
