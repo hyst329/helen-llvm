@@ -16,7 +16,10 @@ void yyerror(const char*);
 %token ID OPERATOR
 %token NEWLINE
 %token LPAREN RPAREN
+%token LARROW RARROW
 %token SEMI COMMA POINT
+
+%right OPERATOR
 %start program
 
 %union
@@ -38,7 +41,7 @@ instruction : statement NEWLINE {
 
 }
 | NEWLINE {
-    $$ = nullptr;
+    //$$ = nullptr;
 }
 | IF expression NEWLINE instseq ENDIF {
 
@@ -58,7 +61,90 @@ instruction : statement NEWLINE {
 | RETURN expression {
 
 }
-| RESIZE IDENT LPAREN expression RPAREN {
+| RESIZE ID LPAREN expression RPAREN {
+
+}
+statement : declaration {
+
+}
+| IN expression {
+
+}
+| OUT expression {
+
+}
+| DEBUGVAR {
+
+}
+| expression {
+
+}
+declaration : type ID OPERATOR expression {
+
+}
+| type ID {
+
+}
+funprot : ID LPAREN arglist RPAREN {
+
+}
+| ID LPAREN arglist RPAREN RARROW type {
+
+}
+arglist : arglist COMMA type ID {
+
+}
+| type ID {
+
+}
+| /* empty */ {
+
+}
+type : INT {
+
+}
+| REAL {
+
+}
+| CHAR {
+
+}
+| STRING {
+
+}
+| type POINT expression {
+
+}
+expression: expression OPERATOR expression {
+}
+| OPERATOR expression {
+
+}
+| term {
+
+}
+term : literal {
+
+}
+| LPAREN expression RPAREN {
+
+}
+| ID POINT expression {
+
+}
+| SIZE ID {
+
+}
+literal : INTLIT {
+
+}
+| REALLIT {
+
+}
+| CHARLIT {
+
+}
+| STRLIT {
 
 }
 %%
