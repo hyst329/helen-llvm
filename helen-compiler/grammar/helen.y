@@ -1,5 +1,7 @@
 %{
+#include "../AST.h"
 #include "helen.parser.hpp"
+
 
 extern int yylex();
 void yyerror(const char*);
@@ -24,10 +26,11 @@ void yyerror(const char*);
 
 %union
 {
-    char* vstr;
+    char *vstr;
     double vreal;
     int vint;
     char vchar;
+    AST *ast;
 }
 %%
 program: instseq {

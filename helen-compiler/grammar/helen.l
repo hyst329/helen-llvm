@@ -1,6 +1,7 @@
 %option case-insensitive
 %option yylineno
 %{
+#include "../AST.h"
 #include "helen.parser.hpp"
 extern "C" int yywrap() {
     return 1;
