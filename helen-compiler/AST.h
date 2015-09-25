@@ -6,6 +6,7 @@
 #define PROJECT_AST_H
 
 #include <llvm/IR/Value.h>
+#include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 #include <map>
 #include <memory>
@@ -18,6 +19,7 @@ class AST {
     static unique_ptr<Module> *module;
     static IRBuilder<> builder;
     static map<std::string, Value*> variables;
+    static map<std::string, Function*> functions;
 };
 
 class ConstantIntAST : public AST {
@@ -33,6 +35,18 @@ class ConstantRealAST : public AST {
 class FunctionCallAST : public AST {
     string functionName;
     std::vector<std::unique_ptr<AST>> arguments;
+};
+
+class FunctionPrototypeAST {
+    std::string Name;
+    std::vector <std::string> Args;
+    Function *codegen();
+};
+
+class FunctionAST {
+    std::unique_ptr <FunctionPrototypeAST> proto;
+    std::unique_ptr <AST> body;
+    Function *codegen();
 };
 
 class VariableAST : public AST {

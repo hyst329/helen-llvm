@@ -34,7 +34,31 @@ instseq: instseq instruction {
 }
 | instruction {
 }
-instruction : INT {
+instruction : statement NEWLINE {
+
+}
+| NEWLINE {
+    $$ = nullptr;
+}
+| IF expression NEWLINE instseq ENDIF {
+
+}
+| IF expression NEWLINE instseq ELSE NEWLINE instseq ENDIF {
+
+}
+| LOOP statement COMMA expression COMMA statement NEWLINE instseq ENDLOOP {
+
+}
+| FUN funprot NEWLINE instseq ENDFUN {
+
+}
+| DECLARE funprot {
+
+}
+| RETURN expression {
+
+}
+| RESIZE IDENT LPAREN expression RPAREN {
 
 }
 %%
