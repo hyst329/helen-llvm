@@ -30,14 +30,14 @@ void yyerror(const char*);
     char vchar;
 }
 %%
-program : instseq {
+program: instseq {
 
 }
 instseq: instseq instruction {
 }
 | instruction {
 }
-instruction : statement NEWLINE {
+instruction: statement NEWLINE {
 
 }
 | NEWLINE {
@@ -64,7 +64,7 @@ instruction : statement NEWLINE {
 | RESIZE ID LPAREN expression RPAREN {
 
 }
-statement : declaration {
+statement: declaration {
 
 }
 | IN expression {
@@ -79,19 +79,19 @@ statement : declaration {
 | expression {
 
 }
-declaration : type ID OPERATOR expression {
+declaration: type ID OPERATOR expression {
 
 }
 | type ID {
 
 }
-funprot : ID LPAREN arglist RPAREN {
+funprot: ID LPAREN arglist RPAREN {
 
 }
 | ID LPAREN arglist RPAREN RARROW type {
 
 }
-arglist : arglist COMMA type ID {
+arglist: arglist COMMA type ID {
 
 }
 | type ID {
@@ -100,7 +100,7 @@ arglist : arglist COMMA type ID {
 | /* empty */ {
 
 }
-type : INT {
+type: INT {
 
 }
 | REAL {
@@ -123,7 +123,7 @@ expression: expression OPERATOR expression {
 | term {
 
 }
-term : literal {
+term: literal {
 
 }
 | LPAREN expression RPAREN {
@@ -135,7 +135,7 @@ term : literal {
 | SIZE ID {
 
 }
-literal : INTLIT {
+literal: INTLIT {
 
 }
 | REALLIT {

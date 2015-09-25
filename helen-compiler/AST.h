@@ -15,43 +15,57 @@ using namespace llvm;
 using namespace std;
 
 class AST {
-    virtual Value* codegen() = 0;
+    virtual Value *codegen() = 0;
+
     static unique_ptr<Module> *module;
     static IRBuilder<> builder;
-    static map<std::string, Value*> variables;
-    static map<std::string, Function*> functions;
+    static map<std::string, Value *> variables;
+    static map<std::string, Function *> functions;
 };
 
 class ConstantIntAST : public AST {
     int64_t value;
-    virtual Value* codegen();
+
+    virtual Value *codegen();
 };
 
 class ConstantRealAST : public AST {
     double value;
-    virtual Value* codegen();
+
+    virtual Value *codegen();
 };
 
 class FunctionCallAST : public AST {
     string functionName;
     std::vector<std::unique_ptr<AST>> arguments;
+
+    virtual Value *codegen();
+};
+
+class SequenceAST : public AST {
+    std::vector<std::unique_ptr<AST>> instructions;
+
+    virtual Value *codegen();
 };
 
 class FunctionPrototypeAST {
     std::string Name;
-    std::vector <std::string> Args;
+    std::vector<std::string> Args;
+
     Function *codegen();
 };
 
 class FunctionAST {
-    std::unique_ptr <FunctionPrototypeAST> proto;
-    std::unique_ptr <AST> body;
+    std::unique_ptr<FunctionPrototypeAST> proto;
+    std::unique_ptr<AST> body;
+
     Function *codegen();
 };
 
 class VariableAST : public AST {
     string variableName;
-    virtual Value* codegen();
+
+    virtual Value *codegen();
 };
 
 #endif //PROJECT_AST_H
