@@ -13,15 +13,17 @@
 
 using namespace llvm;
 using namespace std;
-
+namespace Helen
+{
 class AST
 {
     virtual Value* codegen() = 0;
 
+protected:
     static unique_ptr<Module>* module;
     static IRBuilder<> builder;
-    static map<std::string, Value*> variables;
-    static map<std::string, Function*> functions;
+    static map<string, Value*> variables;
+    static map<string, Function*> functions;
 };
 
 class ConstantIntAST : public AST
@@ -38,42 +40,41 @@ class ConstantRealAST : public AST
     virtual Value* codegen();
 };
 
+class VariableAST : public AST
+{
+    string name;
+    virtual Value* codegen();
+};
+
 class FunctionCallAST : public AST
 {
     string functionName;
-    std::vector<std::unique_ptr<AST> > arguments;
+    vector<unique_ptr<AST> > arguments;
 
     virtual Value* codegen();
 };
 
 class SequenceAST : public AST
 {
-    std::vector<std::unique_ptr<AST> > instructions;
+    vector<unique_ptr<AST> > instructions;
 
     virtual Value* codegen();
 };
 
-class FunctionPrototypeAST
+class FunctionPrototypeAST : public AST
 {
-    std::string Name;
-    std::vector<std::string> Args;
+    string name;
+    vector<string> args;
 
     Function* codegen();
 };
 
-class FunctionAST
+class FunctionAST : public AST
 {
-    std::unique_ptr<FunctionPrototypeAST> proto;
-    std::unique_ptr<AST> body;
+    unique_ptr<FunctionPrototypeAST> proto;
+    unique_ptr<AST> body;
 
     Function* codegen();
 };
-
-class VariableAST : public AST
-{
-    string variableName;
-
-    virtual Value* codegen();
-};
-
+}
 #endif // PROJECT_AST_H

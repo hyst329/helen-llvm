@@ -3,6 +3,9 @@
 %{
 #include "../AST.h"
 #include "helen.parser.hpp"
+
+using namespace Helen;
+
 extern "C" int yywrap() {
     return 1;
 }

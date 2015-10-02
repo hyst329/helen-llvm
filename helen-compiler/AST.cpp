@@ -4,12 +4,11 @@
 
 #include "AST.h"
 
-IRBuilder<> AST::builder(getGlobalContext());
-
-Value* VariableAST::codegen()
+namespace Helen
 {
-    return 0;
-}
+IRBuilder<> AST::builder(getGlobalContext());
+map<string, Value*> AST::variables;
+map<string, Function*> AST::functions;
 
 Value* ConstantIntAST::codegen()
 {
@@ -19,4 +18,15 @@ Value* ConstantIntAST::codegen()
 Value* ConstantRealAST::codegen()
 {
     return ConstantFP::get(getGlobalContext(), APFloat(value));
+}
+
+Value* VariableAST::codegen()
+{
+    try {
+        return variables.at(name);
+    } catch(out_of_range) {
+        // TODO: regular error
+        return ErrorV("");
+    }
+}
 }
