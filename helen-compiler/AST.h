@@ -5,6 +5,7 @@
 #ifndef PROJECT_AST_H
 #define PROJECT_AST_H
 
+#include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
@@ -20,9 +21,8 @@ class AST
 {
 public:
     virtual Value* codegen() = 0;
-
+    static unique_ptr<Module> module;
 protected:
-    static shared_ptr<Module>* module;
     static IRBuilder<> builder;
     static map<string, Value*> variables;
     static stack<string> callstack;

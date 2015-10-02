@@ -7,6 +7,7 @@
 
 namespace Helen
 {
+unique_ptr<Module> AST::module = 0;
 IRBuilder<> AST::builder(getGlobalContext());
 map<string, Value*> AST::variables;
 map<string, Function*> AST::functions;

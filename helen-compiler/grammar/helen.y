@@ -7,7 +7,7 @@
 using namespace Helen;
 
 extern int yylex();
-void yyerror(const char*);
+void yyerror(Helen::AST* ast, const char*);
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
@@ -28,6 +28,7 @@ void yyerror(const char*);
 %type<ast> instruction
 %right OPERATOR
 %start program
+%parse-param {Helen::AST *&result}
 
 %union
 {
@@ -41,6 +42,7 @@ void yyerror(const char*);
 %%
 program: instseq {
     $$ = new SequenceAST(*$1);
+    result = $$;
 }
 instseq: instseq instruction {
     $1->push_back(shared_ptr<Helen::AST>($2));
