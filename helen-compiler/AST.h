@@ -18,10 +18,11 @@ namespace Helen
 {
 class AST
 {
+public:
     virtual Value* codegen() = 0;
 
 protected:
-    static unique_ptr<Module>* module;
+    static shared_ptr<Module>* module;
     static IRBuilder<> builder;
     static map<string, Value*> variables;
     static stack<string> callstack;
@@ -32,6 +33,7 @@ class ConstantIntAST : public AST
 {
     int64_t value;
 
+public:
     virtual Value* codegen();
 };
 
@@ -39,27 +41,36 @@ class ConstantRealAST : public AST
 {
     double value;
 
+public:
     virtual Value* codegen();
 };
 
 class VariableAST : public AST
 {
     string name;
+
+public:
     virtual Value* codegen();
 };
 
 class FunctionCallAST : public AST
 {
     string functionName;
-    vector<unique_ptr<AST> > arguments;
+    vector<shared_ptr<AST> > arguments;
 
+public:
     virtual Value* codegen();
 };
 
 class SequenceAST : public AST
 {
-    vector<unique_ptr<AST> > instructions;
+    vector<shared_ptr<AST> > instructions;
 
+public:
+    SequenceAST(vector<shared_ptr<AST> >& instructions)
+    {
+        this->instructions = instructions;
+    }
     virtual Value* codegen();
 };
 
@@ -68,14 +79,16 @@ class FunctionPrototypeAST : public AST
     string name;
     vector<string> args;
 
+public:
     Function* codegen();
 };
 
 class FunctionAST : public AST
 {
-    unique_ptr<FunctionPrototypeAST> proto;
-    unique_ptr<AST> body;
+    shared_ptr<FunctionPrototypeAST> proto;
+    shared_ptr<AST> body;
 
+public:
     Function* codegen();
 };
 }

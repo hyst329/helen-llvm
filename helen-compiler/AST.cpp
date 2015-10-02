@@ -29,4 +29,10 @@ Value* VariableAST::codegen()
         return Error::errorValue(ErrorType::UndeclaredVariable);
     }
 }
+
+Value* SequenceAST::codegen()
+{
+    for(shared_ptr<Helen::AST>& a : instructions)
+        a->codegen();
+}
 }

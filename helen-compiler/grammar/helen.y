@@ -1,6 +1,8 @@
 %{
 #include "../AST.h"
 #include "helen.parser.hpp"
+#include <vector>
+#include <memory>
 
 using namespace Helen;
 
@@ -21,7 +23,9 @@ void yyerror(const char*);
 %token LPAREN RPAREN
 %token LARROW RARROW
 %token SEMI COMMA POINT
-
+%type<ast> program
+%type<seq> instseq
+%type<ast> instruction
 %right OPERATOR
 %start program
 
@@ -32,14 +36,19 @@ void yyerror(const char*);
     int vint;
     char vchar;
     Helen::AST *ast;
+    std::vector<shared_ptr<Helen::AST> > *seq;
 }
 %%
 program: instseq {
-
+    $$ = new SequenceAST(*$1);
 }
 instseq: instseq instruction {
+    $1->push_back(shared_ptr<Helen::AST>($2));
+    $$ = $1;
 }
 | instruction {
+    $$ = new std::vector<shared_ptr<Helen::AST> >();
+    $$->push_back(shared_ptr<Helen::AST>($1));
 }
 instruction: statement NEWLINE {
 
