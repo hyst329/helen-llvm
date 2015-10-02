@@ -2,6 +2,7 @@
 #include "../AST.h"
 #include "helen.parser.hpp"
 
+using namespace Helen;
 
 extern int yylex();
 void yyerror(const char*);
@@ -30,7 +31,7 @@ void yyerror(const char*);
     double vreal;
     int vint;
     char vchar;
-    AST *ast;
+    Helen::AST *ast;
 }
 %%
 program: instseq {

@@ -3,6 +3,7 @@
 //
 
 #include "AST.h"
+#include "Error.h"
 
 namespace Helen
 {
@@ -25,8 +26,7 @@ Value* VariableAST::codegen()
     try {
         return variables.at(name);
     } catch(out_of_range) {
-        // TODO: regular error
-        return ErrorV("");
+        return Error::errorValue(ErrorType::UndeclaredVariable);
     }
 }
 }

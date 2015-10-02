@@ -22,7 +22,7 @@ add_definitions(${LLVM_DEFINITIONS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -lpthread")
 
-set(SOURCE_FILES main.cpp AST.cpp AST.h)
+set(SOURCE_FILES main.cpp AST.cpp AST.h Error.cpp Error.h)
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
 add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
