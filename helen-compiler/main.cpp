@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
 
 int yyparse (void);
 extern FILE *yyin;
