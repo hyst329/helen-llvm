@@ -6,14 +6,17 @@
 
 IRBuilder<> AST::builder(getGlobalContext());
 
-Value *VariableAST::codegen() {
+Value* VariableAST::codegen()
+{
     return 0;
 }
 
-Value *ConstantIntAST::codegen() {
+Value* ConstantIntAST::codegen()
+{
     return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value);
 }
 
-Value *ConstantRealAST::codegen() {
+Value* ConstantRealAST::codegen()
+{
     return ConstantFP::get(getGlobalContext(), APFloat(value));
 }
