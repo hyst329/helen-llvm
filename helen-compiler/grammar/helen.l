@@ -2,6 +2,7 @@
 %option yylineno
 %{
 #include "../AST.h"
+#include "../Error.h"
 #include "helen.parser.hpp"
 
 using namespace Helen;
@@ -10,7 +11,9 @@ extern "C" int yywrap() {
     return 1;
 }
 void yyerror(const char* msg) {
+    /* To be fixed*/
     printf("%s in line %d", msg, yylineno);
+    Error::error(ErrorType::SyntaxError);
 }
 %}
 %%

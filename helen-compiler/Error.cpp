@@ -2,9 +2,13 @@
 
 namespace Helen
 {
+
+std::map<ErrorType, string> Error::errorMessages = { { ErrorType::SyntaxError, "Syntax error: %1%" },
+                                                     { ErrorType::UndeclaredVariable, "Undeclared variable: %1%" } };
+
 AST* Error::error(ErrorType et)
 {
-    //fprintf(stderr, msg);
+    fprintf(stderr, "Error [%04d]: %s", et, errorMessages[et].c_str());
     return 0;
 }
 Value* Error::errorValue(ErrorType et)

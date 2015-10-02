@@ -2,6 +2,7 @@
 #define ERROR_H
 
 #include <string>
+#include <map>
 #include <llvm/IR/Value.h>
 
 using namespace std;
@@ -11,16 +12,14 @@ namespace Helen
 {
 class AST;
 
-enum class ErrorType {
-    SyntaxError,
-    UndeclaredVariable
-};
+enum class ErrorType { UnknownError, SyntaxError, UndeclaredVariable };
 
 class Error
 {
 public:
     static AST* error(ErrorType et);
     static Value* errorValue(ErrorType et);
+    static map<ErrorType, string> errorMessages;
 };
 }
 
