@@ -22,6 +22,7 @@ class AST
 public:
     virtual Value* codegen() = 0;
     static unique_ptr<Module> module;
+
 protected:
     static IRBuilder<> builder;
     static map<string, Value*> variables;
@@ -53,6 +54,22 @@ public:
     virtual Value* codegen();
 };
 
+class ConditionAST : public AST
+{
+    shared_ptr<AST> condition;
+    shared_ptr<AST> thenBranch;
+    shared_ptr<AST> elseBranch;
+
+public:
+    ConditionAST(shared_ptr<AST> condition, shared_ptr<AST> thenBranch, shared_ptr<AST> elseBranch)
+        : condition(condition)
+        , thenBranch(thenBranch)
+        , elseBranch(elseBranch)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class FunctionCallAST : public AST
 {
     string functionName;
@@ -67,9 +84,14 @@ class SequenceAST : public AST
     vector<shared_ptr<AST> > instructions;
 
 public:
-    SequenceAST(vector<shared_ptr<AST> >& instructions)
+    vector<shared_ptr<AST> >& getInstructions()
     {
-        this->instructions = instructions;
+        return instructions;
+    }
+
+    SequenceAST(vector<shared_ptr<AST> > instructions = std::vector<shared_ptr<Helen::AST> >())
+        : instructions(instructions)
+    {
     }
     virtual Value* codegen();
 };
@@ -90,6 +112,12 @@ class FunctionAST : public AST
 
 public:
     Function* codegen();
+};
+
+class NullAST : public AST
+{
+public:
+    virtual Value* codegen();
 };
 }
 #endif // PROJECT_AST_H

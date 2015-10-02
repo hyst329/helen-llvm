@@ -24,8 +24,10 @@ void yyerror(Helen::AST* ast, const char*);
 %token LARROW RARROW
 %token SEMI COMMA POINT
 %type<ast> program
-%type<seq> instseq
+%type<ast> instseq
 %type<ast> instruction
+%type<ast> statement
+%type<ast> expression
 %right OPERATOR
 %start program
 %parse-param {Helen::AST *&result}
@@ -37,32 +39,35 @@ void yyerror(Helen::AST* ast, const char*);
     int vint;
     char vchar;
     Helen::AST *ast;
-    std::vector<shared_ptr<Helen::AST> > *seq;
 }
 %%
 program: instseq {
-    $$ = new SequenceAST(*$1);
+    $$ = $1;
     result = $$;
 }
 instseq: instseq instruction {
-    $1->push_back(shared_ptr<Helen::AST>($2));
+    (dynamic_cast<SequenceAST*>($1))->getInstructions().push_back(shared_ptr<Helen::AST>($2));
     $$ = $1;
 }
 | instruction {
-    $$ = new std::vector<shared_ptr<Helen::AST> >();
-    $$->push_back(shared_ptr<Helen::AST>($1));
+    $$ = new SequenceAST();
+    (dynamic_cast<SequenceAST*>($$))->getInstructions().push_back(shared_ptr<Helen::AST>($1));
 }
 instruction: statement NEWLINE {
-
+    $$ = $1;
 }
 | NEWLINE {
-    //$$ = nullptr;
+    $$ = new Helen::NullAST;
 }
 | IF expression NEWLINE instseq ENDIF {
-
+    $$ = new ConditionAST(shared_ptr<Helen::AST>($2),
+                          shared_ptr<Helen::AST>($4),
+                          shared_ptr<Helen::AST>(new Helen::NullAST));
 }
 | IF expression NEWLINE instseq ELSE NEWLINE instseq ENDIF {
-
+    $$ = new ConditionAST(shared_ptr<Helen::AST>($2),
+                          shared_ptr<Helen::AST>($4),
+                          shared_ptr<Helen::AST>($7));
 }
 | LOOP statement COMMA expression COMMA statement NEWLINE instseq ENDLOOP {
 

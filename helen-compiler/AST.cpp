@@ -31,9 +31,22 @@ Value* VariableAST::codegen()
     }
 }
 
+Value* ConditionAST::codegen()
+{
+    if(condition->codegen()) // TODO: add "is nonzero" or similar
+        return thenBranch->codegen();
+    else
+        return elseBranch->codegen();
+}
+
 Value* SequenceAST::codegen()
 {
     for(shared_ptr<Helen::AST>& a : instructions)
         a->codegen();
+}
+
+Value* NullAST::codegen()
+{
+    return 0;
 }
 }
