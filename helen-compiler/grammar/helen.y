@@ -132,6 +132,9 @@ term: literal {
 | LPAREN expression RPAREN {
 
 }
+| ID {
+    
+}
 | ID POINT expression {
 
 }

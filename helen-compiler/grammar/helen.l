@@ -41,7 +41,7 @@ debugvar                 return DEBUGVAR;
 \;                       return SEMI;
 \,                       return COMMA;
 \.                       return POINT;
-[\+\-\*\/\<\>\=]         yylval.vstr = strdup(yytext); return OPERATOR;
+[\+\-\*\/\<\>\=@]        yylval.vstr = strdup(yytext); return OPERATOR;
 [0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;
 [0-9]+                   yylval.vint = atoi(yytext); return INTLIT;
 '[^(')]'                 yylval.vchar = yytext[0]; return CHARLIT;
