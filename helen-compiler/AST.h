@@ -9,6 +9,7 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 #include <map>
+#include <stack>
 #include <memory>
 
 using namespace llvm;
@@ -23,6 +24,7 @@ protected:
     static unique_ptr<Module>* module;
     static IRBuilder<> builder;
     static map<string, Value*> variables;
+    static stack<string> callstack;
     static map<string, Function*> functions;
 };
 
