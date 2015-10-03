@@ -39,6 +39,21 @@ Value* ConditionAST::codegen()
         return elseBranch->codegen();
 }
 
+Value* FunctionCallAST::codegen()
+{
+    Function* f = module->getFunction(functionName);
+    if(!f)
+        return Error::errorValue(ErrorType::UndeclaredFunction);
+    std::vector<Value*> vargs;
+    for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
+        //TODO: add type checking
+        vargs.push_back(arguments[i]->codegen());
+        if(!vargs.back())
+            return nullptr;
+    }
+    return builder.CreateCall(f, vargs, "calltmp");
+}
+
 Value* SequenceAST::codegen()
 {
     for(shared_ptr<Helen::AST>& a : instructions)

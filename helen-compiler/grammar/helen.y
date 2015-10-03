@@ -2,12 +2,16 @@
 #include "../AST.h"
 #include "helen.parser.hpp"
 #include <vector>
+#include <string>
 #include <memory>
 
 using namespace Helen;
 
 extern int yylex();
 void yyerror(Helen::AST* ast, const char*);
+
+const std::string operatorMarker = "__operator_";
+const std::string unaryOperatorMarker = "__unary_operator_";
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
@@ -28,6 +32,7 @@ void yyerror(Helen::AST* ast, const char*);
 %type<ast> instruction
 %type<ast> statement
 %type<ast> expression
+%type<vstr> OPERATOR
 %right OPERATOR
 %start program
 %parse-param {Helen::AST *&result}
@@ -136,9 +141,12 @@ type: INT {
 
 }
 expression: expression OPERATOR expression {
+    $$ = new FunctionCallAST(operatorMarker + $2,
+                             {shared_ptr<AST>($1), shared_ptr<AST>($3)});
 }
 | OPERATOR expression {
-
+    $$ = new FunctionCallAST(unaryOperatorMarker + $1,
+                            {shared_ptr<AST>($2)});
 }
 | term {
 

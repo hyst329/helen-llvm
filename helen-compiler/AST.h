@@ -11,6 +11,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <map>
 #include <stack>
+#include <vector>
 #include <memory>
 
 using namespace llvm;
@@ -76,6 +77,11 @@ class FunctionCallAST : public AST
     vector<shared_ptr<AST> > arguments;
 
 public:
+    FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments)
+        : functionName(functionName)
+        , arguments(arguments)
+    {
+    }
     virtual Value* codegen();
 };
 
