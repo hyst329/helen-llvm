@@ -36,6 +36,10 @@ class ConstantIntAST : public AST
     int64_t value;
 
 public:
+    ConstantIntAST(int64_t value)
+        : value(value)
+    {
+    }
     virtual Value* codegen();
 };
 
@@ -44,6 +48,34 @@ class ConstantRealAST : public AST
     double value;
 
 public:
+    ConstantRealAST(double value)
+        : value(value)
+    {
+    }
+    virtual Value* codegen();
+};
+
+class ConstantCharAST : public AST
+{
+    char value;
+
+public:
+    ConstantCharAST(char value)
+        : value(value)
+    {
+    }
+    virtual Value* codegen();
+};
+
+class ConstantStringAST : public AST
+{
+    string value;
+
+public:
+    ConstantStringAST(string value)
+        : value(value)
+    {
+    }
     virtual Value* codegen();
 };
 
@@ -52,6 +84,10 @@ class VariableAST : public AST
     string name;
 
 public:
+    VariableAST(string name)
+        : name(name)
+    {
+    }
     virtual Value* codegen();
 };
 
@@ -77,7 +113,7 @@ class FunctionCallAST : public AST
     vector<shared_ptr<AST> > arguments;
 
 public:
-    FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments)
+    FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
         : functionName(functionName)
         , arguments(arguments)
     {
@@ -95,7 +131,7 @@ public:
         return instructions;
     }
 
-    SequenceAST(vector<shared_ptr<AST> > instructions = std::vector<shared_ptr<Helen::AST> >())
+    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
         : instructions(instructions)
     {
     }

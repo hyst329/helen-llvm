@@ -22,6 +22,16 @@ Value* ConstantRealAST::codegen()
     return ConstantFP::get(getGlobalContext(), APFloat(value));
 }
 
+Value* ConstantCharAST::codegen()
+{
+    return ConstantInt::get(Type::getInt8Ty(getGlobalContext()), value);
+}
+
+Value* ConstantStringAST::codegen()
+{
+    return 0; // TODO: String
+}
+
 Value* VariableAST::codegen()
 {
     try {

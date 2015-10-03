@@ -32,7 +32,14 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 %type<ast> instruction
 %type<ast> statement
 %type<ast> expression
+%type<ast> term
+%type<ast> literal
 %type<vstr> OPERATOR
+%type<vstr> ID
+%type<vint> INTLIT
+%type<vreal> REALLIT
+%type<vchar> CHARLIT
+%type<vstr> STRLIT
 %right OPERATOR
 %start program
 %parse-param {Helen::AST *&result}
@@ -41,7 +48,7 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 {
     char *vstr;
     double vreal;
-    int vint;
+    uint64_t vint;
     char vchar;
     Helen::AST *ast;
 }
@@ -93,13 +100,13 @@ statement: declaration {
 
 }
 | IN expression {
-
+    $$ = new FunctionCallAST("__in", {shared_ptr<AST>($2)});
 }
 | OUT expression {
-
+    $$ = new FunctionCallAST("__out", {shared_ptr<AST>($2)});
 }
 | DEBUGVAR {
-
+    $$ = new FunctionCallAST("__debugvar");
 }
 | expression {
 
@@ -149,33 +156,34 @@ expression: expression OPERATOR expression {
                             {shared_ptr<AST>($2)});
 }
 | term {
-
+    $$ = $1;
 }
 term: literal {
-
+    $$ = $1;
 }
 | LPAREN expression RPAREN {
-
+    $$ = $2;
 }
 | ID {
-    
+    $$ = new VariableAST($1);
 }
 | ID POINT expression {
-
+    $$ = new FunctionCallAST("__index",
+                             {shared_ptr<AST>(new VariableAST($1)), shared_ptr<AST>($3)});
 }
 | SIZE ID {
-
+    $$ = new FunctionCallAST("__size", {shared_ptr<AST>(new VariableAST($2))});
 }
 literal: INTLIT {
-
+     $$ = new ConstantIntAST($1);
 }
 | REALLIT {
-
+    $$ = new ConstantRealAST($1);
 }
 | CHARLIT {
-
+    $$ = new ConstantCharAST($1);
 }
 | STRLIT {
-
+    $$ = new ConstantStringAST($1);
 }
 %%
