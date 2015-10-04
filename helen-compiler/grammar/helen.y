@@ -41,6 +41,7 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 %type<ast> declaration
 %type<type> type
 %type<arglist> arglist
+%type<exprlist> exprlist
 %type<vstr> OPERATOR
 %type<vstr> ID
 %type<vint> INTLIT
@@ -67,6 +68,7 @@ const std::string unaryOperatorMarker = "__unary_operator_";
     Helen::AST *ast;
     llvm::Type* type;
     NamedArgs* arglist;
+    std::vector<shared_ptr<Helen::AST> >* exprlist;
 }
 %%
 program: instseq {
@@ -168,6 +170,17 @@ type: INT {
 | type POINT expression {
     $$ = llvm::VectorType::get($1, 0);
 }
+exprlist: exprlist COMMA expression {
+    $1->push_back(shared_ptr<AST>($3));
+    $$ = $1;
+}
+| expression {
+    $$ = new vector<shared_ptr<AST> >;
+    $$->push_back(shared_ptr<AST>($1));
+}
+| /* empty*/ {
+    $$ = new vector<shared_ptr<AST> >;
+}
 expression: expression OPERATOR expression {
     $$ = new FunctionCallAST(operatorMarker + $2,
                              {shared_ptr<AST>($1), shared_ptr<AST>($3)});
@@ -184,6 +197,9 @@ term: literal {
 }
 | LPAREN expression RPAREN {
     $$ = $2;
+}
+| ID LPAREN exprlist RPAREN {
+    $$ = new FunctionCallAST($1, *$3);
 }
 | ID {
     $$ = new VariableAST($1);

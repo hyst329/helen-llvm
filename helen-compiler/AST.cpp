@@ -4,6 +4,7 @@
 
 #include "AST.h"
 #include "Error.h"
+#include "FunctionNameMangler.h"
 
 namespace Helen
 {
@@ -88,16 +89,20 @@ Value* ConditionAST::codegen()
 
 Value* FunctionCallAST::codegen()
 {
-    Function* f = module->getFunction(functionName);
-    if(!f)
-        return Error::errorValue(ErrorType::UndeclaredFunction, {functionName});
     std::vector<Value*> vargs;
+    std::vector<Type*> types;
     for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
         // TODO: add type checking
         vargs.push_back(arguments[i]->codegen());
         if(!vargs.back())
             return nullptr;
     }
+    for(Value* v: vargs) types.push_back(v->getType());
+    functionName = FunctionNameMangler::mangleName(functionName, types);
+    string hrName = FunctionNameMangler::humanReadableName(functionName);
+    Function* f = module->getFunction(functionName);
+    if(!f)
+        return Error::errorValue(ErrorType::UndeclaredFunction, {hrName});
     ArrayRef<Type*> params = f->getFunctionType()->params();
     for(unsigned i = 0; i < vargs.size(); i++)
         if(vargs[i]->getType() != params[i])
@@ -123,6 +128,7 @@ Value* NullAST::codegen()
 Function* FunctionPrototypeAST::codegen()
 {
     FunctionType* ft = FunctionType::get(returnType, args, false);
+    name = FunctionNameMangler::mangleName(name, args);
     Function* f = Function::Create(ft, Function::ExternalLinkage, name, module.get());
     functions[name] = f;
 
