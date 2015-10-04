@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <llvm/IR/Value.h>
 
 using namespace std;
@@ -18,14 +19,17 @@ enum class ErrorType {
     UndeclaredVariable,
     UndeclaredFunction,
     WrongArgumentType,
-    FunctionRedefined
+    FunctionRedefined,
+    UnexpectedOperator
 };
 
 class Error
 {
 public:
-    static AST* error(ErrorType et);
-    static Value* errorValue(ErrorType et);
+    static AST* error(ErrorType et, vector<string> args = vector<string>());
+    static Value* errorValue(ErrorType et, vector<string> args = vector<string>());
+
+private:
     static map<ErrorType, string> errorMessages;
 };
 }

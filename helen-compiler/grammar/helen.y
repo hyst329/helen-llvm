@@ -1,5 +1,6 @@
 %{
 #include "../AST.h"
+#include "../Error.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -36,6 +37,8 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 %type<ast> expression
 %type<ast> term
 %type<ast> literal
+%type<ast> funprot
+%type<ast> declaration
 %type<type> type
 %type<arglist> arglist
 %type<vstr> OPERATOR
@@ -98,19 +101,19 @@ instruction: statement NEWLINE {
 
 }
 | FUN funprot NEWLINE instseq ENDFUN {
-
+    $$ = new FunctionAST(shared_ptr<FunctionPrototypeAST>(dynamic_cast<FunctionPrototypeAST*>($2)), shared_ptr<AST>($4));
 }
 | DECLARE funprot {
-
+    $$ = $2;
 }
 | RETURN expression {
-
+    $$ = new ReturnAST(shared_ptr<AST>($2));
 }
 | RESIZE ID LPAREN expression RPAREN {
-
+    $$ = new FunctionCallAST("__resize", {shared_ptr<AST>($4)});
 }
 statement: declaration {
-
+    $$ = $1;
 }
 | IN expression {
     $$ = new FunctionCallAST("__in", {shared_ptr<AST>($2)});
@@ -122,19 +125,20 @@ statement: declaration {
     $$ = new FunctionCallAST("__debugvar");
 }
 | expression {
-
+    $$ = $1;
 }
 declaration: type ID OPERATOR expression {
-
+    if(strcmp($3, "=")) Error::errorValue(ErrorType::UnexpectedOperator, {$3});
+    $$ = new DeclarationAST($1, $2, shared_ptr<AST>($4));
 }
 | type ID {
-
+    $$ = new DeclarationAST($1, $2);
 }
 funprot: ID LPAREN arglist RPAREN {
-
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()));
 }
 | ID LPAREN arglist RPAREN RARROW type {
-
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6);
 }
 arglist: arglist COMMA type ID {
     $1->types.push_back($3);

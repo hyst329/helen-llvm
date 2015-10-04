@@ -9,7 +9,7 @@ namespace Helen
 {
 unique_ptr<Module> AST::module = 0;
 IRBuilder<> AST::builder(getGlobalContext());
-map<string, AllocaInst*> AST::variables;
+map<string, Value*> AST::variables;
 map<string, Function*> AST::functions;
 
 Value* ConstantIntAST::codegen()
@@ -41,7 +41,7 @@ Value* VariableAST::codegen()
     try {
         return variables.at(name);
     } catch(out_of_range) {
-        return Error::errorValue(ErrorType::UndeclaredVariable);
+        return Error::errorValue(ErrorType::UndeclaredVariable, {name});
     }
 }
 
@@ -90,7 +90,7 @@ Value* FunctionCallAST::codegen()
 {
     Function* f = module->getFunction(functionName);
     if(!f)
-        return Error::errorValue(ErrorType::UndeclaredFunction);
+        return Error::errorValue(ErrorType::UndeclaredFunction, {functionName});
     std::vector<Value*> vargs;
     for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
         // TODO: add type checking
@@ -98,13 +98,21 @@ Value* FunctionCallAST::codegen()
         if(!vargs.back())
             return nullptr;
     }
+    ArrayRef<Type*> params = f->getFunctionType()->params();
+    for(unsigned i = 0; i < vargs.size(); i++)
+        if(vargs[i]->getType() != params[i])
+            return Error::errorValue(ErrorType::WrongArgumentType, {std::to_string(i)});
     return builder.CreateCall(f, vargs, "calltmp");
 }
 
 Value* SequenceAST::codegen()
 {
-    for(shared_ptr<Helen::AST>& a : instructions)
-        a->codegen();
+    for(shared_ptr<Helen::AST>& a : instructions) {
+        Value* v = a->codegen();
+        if(dynamic_cast<ReturnAST*>(a.get()))
+            return v;
+    }
+    return 0;
 }
 
 Value* NullAST::codegen()
@@ -135,18 +143,22 @@ Function* FunctionAST::codegen()
         return 0;
 
     if(!f->empty())
-        return (Function*)Error::errorValue(ErrorType::FunctionRedefined);
+        return (Function*)Error::errorValue(ErrorType::FunctionRedefined, {proto->getName()});
 
-    BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", TheFunction);
+    BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
     for(auto& arg : f->args())
-        variables[Arg.getName()] = &arg;
+        variables[arg.getName()] = &arg;
     if(Value* ret = body->codegen()) {
-        Builder.CreateRet(ret);
+        builder.CreateRet(ret);
         verifyFunction(*f);
         return f;
     }
     f->eraseFromParent();
     return nullptr;
+}
+Value* ReturnAST::codegen()
+{
+    return result->codegen();
 }
 }

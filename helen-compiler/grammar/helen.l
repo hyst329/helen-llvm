@@ -13,7 +13,7 @@ extern "C" int yywrap() {
 void yyerror(Helen::AST* ast, const char* msg) {
     /* To be fixed*/
     printf("%s in line %d", msg, yylineno);
-    Error::error(ErrorType::SyntaxError);
+    Error::error(ErrorType::SyntaxError, {msg});
 }
 %}
 %%

@@ -9,6 +9,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Verifier.h>
 #include <map>
 #include <stack>
 #include <vector>
@@ -26,7 +27,7 @@ public:
 
 protected:
     static IRBuilder<> builder;
-    static map<string, AllocaInst*> variables;
+    static map<string, Value*> variables;
     static stack<string> callstack;
     static map<string, Function*> functions;
 };
@@ -95,11 +96,13 @@ class DeclarationAST : public AST
 {
     Type* type;
     string name;
+    shared_ptr<AST> initialiser;
 
 public:
-    DeclarationAST(Type* type, string name)
+    DeclarationAST(Type* type, string name, shared_ptr<AST> initialiser = 0)
         : type(type)
         , name(name)
+        , initialiser(initialiser)
     {
     }
     virtual Value* codegen();
@@ -171,6 +174,10 @@ public:
     {
         return name;
     }
+    const vector<Type*>& getArgs() const
+    {
+        return args;
+    }
     Function* codegen();
 };
 
@@ -180,7 +187,24 @@ class FunctionAST : public AST
     shared_ptr<AST> body;
 
 public:
+    FunctionAST(shared_ptr<FunctionPrototypeAST> proto, shared_ptr<AST> body)
+        : proto(proto)
+        , body(body)
+    {
+    }
     Function* codegen();
+};
+
+class ReturnAST : public AST
+{
+    shared_ptr<AST> result;
+
+public:
+    ReturnAST(shared_ptr<AST> result)
+        : result(result)
+    {
+    }
+    virtual Value* codegen();
 };
 
 class NullAST : public AST
