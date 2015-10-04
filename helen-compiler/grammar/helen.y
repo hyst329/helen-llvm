@@ -1,14 +1,16 @@
 %{
 #include "../AST.h"
-#include "helen.parser.hpp"
 #include <vector>
 #include <string>
 #include <memory>
+#include "helen.parser.hpp"
 
 using namespace Helen;
 
 extern int yylex();
 void yyerror(Helen::AST* ast, const char*);
+
+
 
 const std::string operatorMarker = "__operator_";
 const std::string unaryOperatorMarker = "__unary_operator_";
@@ -34,6 +36,8 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 %type<ast> expression
 %type<ast> term
 %type<ast> literal
+%type<type> type
+%type<arglist> arglist
 %type<vstr> OPERATOR
 %type<vstr> ID
 %type<vint> INTLIT
@@ -44,6 +48,13 @@ const std::string unaryOperatorMarker = "__unary_operator_";
 %start program
 %parse-param {Helen::AST *&result}
 
+%code requires {
+    struct NamedArgs {
+        std::vector<Type*> types;
+        std::vector<std::string> names;
+    };
+}
+
 %union
 {
     char *vstr;
@@ -51,6 +62,8 @@ const std::string unaryOperatorMarker = "__unary_operator_";
     uint64_t vint;
     char vchar;
     Helen::AST *ast;
+    llvm::Type* type;
+    NamedArgs* arglist;
 }
 %%
 program: instseq {
@@ -124,28 +137,32 @@ funprot: ID LPAREN arglist RPAREN {
 
 }
 arglist: arglist COMMA type ID {
-
+    $1->types.push_back($3);
+    $1->names.push_back($4);
+    $$ = $1;
 }
 | type ID {
-
+    $$ = new NamedArgs;
+    $$->types.push_back($1);
+    $$->names.push_back($2);
 }
 | /* empty */ {
-
+    $$ = new NamedArgs;
 }
 type: INT {
-
+    $$ = llvm::Type::getInt64Ty(getGlobalContext());
 }
 | REAL {
-
+    $$ = llvm::Type::getDoubleTy(getGlobalContext());
 }
 | CHAR {
-
+    $$ = llvm::Type::getInt8Ty(getGlobalContext());
 }
 | STRING {
-
+    $$ = llvm::Type::getInt8PtrTy(getGlobalContext());
 }
 | type POINT expression {
-
+    $$ = llvm::VectorType::get($1, 0);
 }
 expression: expression OPERATOR expression {
     $$ = new FunctionCallAST(operatorMarker + $2,

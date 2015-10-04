@@ -26,7 +26,7 @@ public:
 
 protected:
     static IRBuilder<> builder;
-    static map<string, Value*> variables;
+    static map<string, AllocaInst*> variables;
     static stack<string> callstack;
     static map<string, Function*> functions;
 };
@@ -91,6 +91,20 @@ public:
     virtual Value* codegen();
 };
 
+class DeclarationAST : public AST
+{
+    Type* type;
+    string name;
+
+public:
+    DeclarationAST(Type* type, string name)
+        : type(type)
+        , name(name)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class ConditionAST : public AST
 {
     shared_ptr<AST> condition;
@@ -141,9 +155,22 @@ public:
 class FunctionPrototypeAST : public AST
 {
     string name;
-    vector<string> args;
+    vector<Type*> args;
+    vector<string> argNames;
+    Type* returnType;
 
 public:
+    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType)
+        : name(name)
+        , args(args)
+        , argNames(argNames)
+        , returnType(returnType)
+    {
+    }
+    const string& getName() const
+    {
+        return name;
+    }
     Function* codegen();
 };
 

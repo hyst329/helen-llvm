@@ -12,8 +12,14 @@ namespace Helen
 {
 class AST;
 
-enum class ErrorType { UnknownError, SyntaxError, UndeclaredVariable, UndeclaredFunction,
-WrongArgumentType };
+enum class ErrorType {
+    UnknownError,
+    SyntaxError,
+    UndeclaredVariable,
+    UndeclaredFunction,
+    WrongArgumentType,
+    FunctionRedefined
+};
 
 class Error
 {
