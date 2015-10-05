@@ -12,6 +12,7 @@ unique_ptr<Module> AST::module = 0;
 IRBuilder<> AST::builder(getGlobalContext());
 map<string, Value*> AST::variables;
 map<string, Function*> AST::functions;
+stack<string> AST::callstack;
 
 Value* ConstantIntAST::codegen()
 {
@@ -150,7 +151,7 @@ Function* FunctionAST::codegen()
 
     if(!f->empty())
         return (Function*)Error::errorValue(ErrorType::FunctionRedefined, {proto->getName()});
-
+    callstack.push(proto->getName());
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
     for(auto& arg : f->args())
@@ -158,8 +159,16 @@ Function* FunctionAST::codegen()
     if(Value* ret = body->codegen()) {
         builder.CreateRet(ret);
         verifyFunction(*f);
+        callstack.pop();
+        string previous = callstack.empty() ? "_main_v" : callstack.top();
+        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
+        builder.SetInsertPoint(bb);
         return f;
     }
+    /*callstack.pop();
+    string previous = callstack.empty() ? "_main_v" : callstack.top();
+    bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
+    builder.SetInsertPoint(bb);*/
     f->eraseFromParent();
     return nullptr;
 }

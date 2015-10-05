@@ -2,19 +2,22 @@
 #include <boost/program_options.hpp>
 #include <llvm/ADT/STLExtras.h>
 #include "AST.h"
+#include "BuiltinFunctions.h"
 
 namespace po = boost::program_options;
+using namespace Helen;
 
-int yyparse(Helen::AST*& ast);
+int yyparse(AST*& ast);
 extern FILE* yyin;
 
 int main(int argc, char** argv)
 {
-    Helen::AST::module = llvm::make_unique<Module>("helen-module", getGlobalContext());
+    AST::module = llvm::make_unique<Module>("helen-module", getGlobalContext());
+    BuiltinFunctions::createMainFunction();
     yyin = (argc == 1) ? stdin : fopen(argv[1], "r");
-    Helen::AST* result;
+    AST* result;
     yyparse(result);
     result->codegen();
-    Helen::AST::module->dump();
+    AST::module->dump();
     return 0;
 }

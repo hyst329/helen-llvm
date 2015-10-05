@@ -7,13 +7,15 @@ message(STATUS "Found Flex ${FLEX_VERSION}")
 message(STATUS "Found Bison ${BISON_VERSION}")
 
 find_package(LLVM REQUIRED CONFIG)
-find_package(Boost 1.57 REQUIRED COMPONENTS program_options)
+find_package(Boost 1.55 REQUIRED COMPONENTS program_options)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-BISON_TARGET(HelenParser grammar/helen.y ${PROJECT_SOURCE_DIR}/grammar/helen.parser.cpp)
-FLEX_TARGET(HelenScanner grammar/helen.l ${PROJECT_SOURCE_DIR}/grammar/helen.lexer.cpp)
+BISON_TARGET(HelenParser grammar/helen.y
+             ${PROJECT_SOURCE_DIR}/grammar/helen.parser.cpp)
+FLEX_TARGET(HelenScanner grammar/helen.l
+            ${PROJECT_SOURCE_DIR}/grammar/helen.lexer.cpp)
 ADD_FLEX_BISON_DEPENDENCY(HelenScanner HelenParser)
 
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -25,7 +27,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -lpthread")
 set(SOURCE_FILES main.cpp
                  AST.cpp AST.h
                  Error.cpp Error.h
-                 FunctionNameMangler.cpp FunctionNameMangler.h)
+                 FunctionNameMangler.cpp FunctionNameMangler.h
+                 BuiltinFunctions.cpp BuiltinFunctions.h)
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
 add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 

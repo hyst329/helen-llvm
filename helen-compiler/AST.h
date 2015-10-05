@@ -24,8 +24,6 @@ class AST
 public:
     virtual Value* codegen() = 0;
     static unique_ptr<Module> module;
-
-protected:
     static IRBuilder<> builder;
     static map<string, Value*> variables;
     static stack<string> callstack;
