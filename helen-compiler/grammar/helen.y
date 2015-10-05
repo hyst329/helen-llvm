@@ -92,7 +92,7 @@ instruction: statement NEWLINE {
 | IF expression NEWLINE instseq ENDIF {
     $$ = new ConditionAST(shared_ptr<Helen::AST>($2),
                           shared_ptr<Helen::AST>($4),
-                          shared_ptr<Helen::AST>(new Helen::NullAST));
+                          shared_ptr<Helen::AST>(new Helen::ConstantIntAST(0)));
 }
 | IF expression NEWLINE instseq ELSE NEWLINE instseq ENDIF {
     $$ = new ConditionAST(shared_ptr<Helen::AST>($2),

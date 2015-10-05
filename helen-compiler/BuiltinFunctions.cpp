@@ -9,6 +9,7 @@ using namespace llvm;
 
 void BuiltinFunctions::createMainFunction()
 {
+    createAllBuiltins();
     vector<Type*> v;
     FunctionType* ft = FunctionType::get(Type::getInt32Ty(getGlobalContext()), v, false);
     string name = FunctionNameMangler::mangleName("main", v);
@@ -16,5 +17,29 @@ void BuiltinFunctions::createMainFunction()
     AST::functions[name] = f;
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "start", f);
     AST::builder.SetInsertPoint(bb);
+}
+
+void BuiltinFunctions::createAllBuiltins()
+{
+    createAdds();
+    createSubs();
+    createMuls();
+    createDivs();
+}
+
+void BuiltinFunctions::createAdds()
+{
+}
+
+void BuiltinFunctions::createSubs()
+{
+}
+
+void BuiltinFunctions::createMuls()
+{
+}
+
+void BuiltinFunctions::createDivs()
+{
 }
 }

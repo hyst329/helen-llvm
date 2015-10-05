@@ -8,8 +8,14 @@ class BuiltinFunctions
 {
 public:
     static void createMainFunction();
-};
+    static void createAllBuiltins();
 
+private:
+    static void createAdds();
+    static void createSubs();
+    static void createMuls();
+    static void createDivs();
+};
 }
 
 #endif // BUILTINFUNCTIONS_H
