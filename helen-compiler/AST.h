@@ -7,9 +7,12 @@
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Analysis/Passes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Transforms/Scalar.h>
 #include <map>
 #include <stack>
 #include <vector>
@@ -24,6 +27,7 @@ class AST
 public:
     virtual Value* codegen() = 0;
     static unique_ptr<Module> module;
+    static unique_ptr<legacy::FunctionPassManager> fpm;
     static IRBuilder<> builder;
     static map<string, Value*> variables;
     static stack<string> callstack;

@@ -1,6 +1,8 @@
 #ifndef BUILTINFUNCTIONS_H
 #define BUILTINFUNCTIONS_H
 
+#include <string>
+
 namespace Helen
 {
 
@@ -11,10 +13,9 @@ public:
     static void createAllBuiltins();
 
 private:
-    static void createAdds();
-    static void createSubs();
-    static void createMuls();
-    static void createDivs();
+    static void createArith();
+    const static std::string operatorMarker;
+    const static std::string unaryOperatorMarker;
 };
 }
 

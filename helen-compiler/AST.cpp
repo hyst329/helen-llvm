@@ -9,6 +9,7 @@
 namespace Helen
 {
 unique_ptr<Module> AST::module = 0;
+unique_ptr<legacy::FunctionPassManager> AST::fpm = 0;
 IRBuilder<> AST::builder(getGlobalContext());
 map<string, Value*> AST::variables;
 map<string, Function*> AST::functions;
@@ -159,6 +160,7 @@ Function* FunctionAST::codegen()
     if(Value* ret = body->codegen()) {
         builder.CreateRet(ret);
         verifyFunction(*f);
+        fpm->run(*f);
         callstack.pop();
         string previous = callstack.empty() ? "_main_v" : callstack.top();
         BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
