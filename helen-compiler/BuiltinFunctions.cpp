@@ -25,6 +25,7 @@ void BuiltinFunctions::createMainFunction()
 void BuiltinFunctions::createAllBuiltins()
 {
     createArith();
+    createIO();
 }
 
 void BuiltinFunctions::createArith()
@@ -37,17 +38,18 @@ void BuiltinFunctions::createArith()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for(char c : { '+', '-', '*', '/' }) {
-        for(Type* t : { i, r }) {
+    for (char c : { '+', '-', '*', '/' }) {
+        for (Type* t : { i, r }) {
             ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+            f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            switch(c) {
+            switch (c) {
             case '+':
                 res = t == i ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
                 break;
@@ -64,6 +66,54 @@ void BuiltinFunctions::createArith()
             }
             AST::builder.CreateRet(res);
         }
+    }
+}
+
+void BuiltinFunctions::createIO()
+{
+    std::vector<Type*> printf_types;
+    printf_types.push_back(Type::getInt8PtrTy(getGlobalContext()));
+
+    FunctionType* printf_type = FunctionType::get(Type::getInt32Ty(getGlobalContext()), printf_types, true);
+
+    Function* printf = Function::Create(printf_type, Function::ExternalLinkage, "printf", AST::module.get());
+    printf->setCallingConv(CallingConv::C);
+
+    // __out
+    Type* i = Type::getInt64Ty(getGlobalContext());
+    Type* r = Type::getDoubleTy(getGlobalContext());
+    Type* v = Type::getVoidTy(getGlobalContext());
+    for (Type* t : { i, r }) {
+        string s;
+        if (t == i)
+            s = "%lld";
+        if (t == r)
+            s = "%lf";
+        string name = FunctionNameMangler::mangleName("__out", { t });
+        FunctionType* ft = FunctionType::get(v, { t }, false);
+        Function* f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+        BasicBlock* parent = AST::builder.GetInsertBlock();
+        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+        AST::builder.SetInsertPoint(bb);
+        vector<Value*> args;
+        Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(s));
+        GlobalVariable* var = new GlobalVariable(*AST::module.get(),
+                                                 ArrayType::get(IntegerType::get(getGlobalContext(), 8), 4),
+                                                 true,
+                                                 GlobalValue::PrivateLinkage,
+                                                 fmt,
+                                                 ".str");
+
+        llvm::Constant* zero = llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
+        llvm::Constant* fmt_ref = llvm::ConstantExpr::getGetElementPtr(var, vector<llvm::Constant*>{ zero, zero });
+        auto it = printf->arg_begin();
+        Value* val = it++;
+        //llvm::CallInst* call = AST::builder.CreateCall2(printf, fmt_ref, val);
+        args.push_back(fmt_ref);
+        args.push_back(f->arg_begin());
+        CallInst* call = AST::builder.CreateCall(printf, args);
+        call->setTailCall(false);
+        AST::builder.CreateRet(0);
     }
 }
 }

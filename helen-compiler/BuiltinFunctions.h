@@ -16,6 +16,7 @@ public:
 
 private:
     static void createArith();
+    static void createIO();
 };
 }
 

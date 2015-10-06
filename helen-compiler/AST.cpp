@@ -193,7 +193,8 @@ Function* FunctionAST::codegen()
 
     if(!f->empty())
         return (Function*)Error::errorValue(ErrorType::FunctionRedefined, { proto->getName() });
-    callstack.push(proto->getName());
+    //callstack.push(proto->getName());
+    BasicBlock *parent = builder.GetInsertBlock();
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
     for(auto& arg : f->args()) {
@@ -205,10 +206,11 @@ Function* FunctionAST::codegen()
         builder.CreateRet(ret);
         verifyFunction(*f);
         fpm->run(*f);
-        callstack.pop();
-        string previous = callstack.empty() ? "main" : callstack.top();
-        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
-        builder.SetInsertPoint(bb);
+//        callstack.pop();
+//        string previous = callstack.empty() ? "main" : callstack.top();
+//        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
+//        builder.SetInsertPoint(bb);
+        builder.SetInsertPoint(parent);
         return f;
     }
     /*callstack.pop();
@@ -216,10 +218,13 @@ Function* FunctionAST::codegen()
     bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
     builder.SetInsertPoint(bb);*/
     f->eraseFromParent();
+    builder.SetInsertPoint(parent);
     return nullptr;
 }
 Value* ReturnAST::codegen()
 {
-    return result->codegen();
+    Value* ret = result->codegen();
+    //builder.CreateRet(ret);
+    return ret;
 }
 }
