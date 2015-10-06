@@ -86,11 +86,11 @@ void BuiltinFunctions::createIO()
     for (Type* t : { i, r }) {
         string s;
         if (t == i)
-            s = "%lld";
+            s = "%lld\n";
         if (t == r)
-            s = "%lf";
+            s = "%lf\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
-        FunctionType* ft = FunctionType::get(v, { t }, false);
+        FunctionType* ft = FunctionType::get(i, { t }, false);
         Function* f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
         BasicBlock* parent = AST::builder.GetInsertBlock();
         BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
@@ -98,14 +98,14 @@ void BuiltinFunctions::createIO()
         vector<Value*> args;
         Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(s));
         GlobalVariable* var = new GlobalVariable(*AST::module.get(),
-                                                 ArrayType::get(IntegerType::get(getGlobalContext(), 8), 4),
+                                                 ArrayType::get(IntegerType::get(getGlobalContext(), 8), s.size() + 1),
                                                  true,
                                                  GlobalValue::PrivateLinkage,
                                                  fmt,
                                                  ".str");
 
-        llvm::Constant* zero = llvm::Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
-        llvm::Constant* fmt_ref = llvm::ConstantExpr::getGetElementPtr(var, vector<llvm::Constant*>{ zero, zero });
+        Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
+        Constant* fmt_ref = ConstantExpr::getGetElementPtr(var, vector<llvm::Constant*>{ zero, zero });
         auto it = printf->arg_begin();
         Value* val = it++;
         //llvm::CallInst* call = AST::builder.CreateCall2(printf, fmt_ref, val);
@@ -113,7 +113,7 @@ void BuiltinFunctions::createIO()
         args.push_back(f->arg_begin());
         CallInst* call = AST::builder.CreateCall(printf, args);
         call->setTailCall(false);
-        AST::builder.CreateRet(0);
+        AST::builder.CreateRet(Constant::getNullValue(llvm::IntegerType::getInt64Ty(getGlobalContext())));
     }
 }
 }
