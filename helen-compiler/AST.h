@@ -29,9 +29,10 @@ public:
     static unique_ptr<Module> module;
     static unique_ptr<legacy::FunctionPassManager> fpm;
     static IRBuilder<> builder;
-    static map<string, Value*> variables;
+    static map<string, AllocaInst*> variables;
     static stack<string> callstack;
     static map<string, Function*> functions;
+    static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
 };
 
 class ConstantIntAST : public AST
@@ -90,6 +91,10 @@ public:
     VariableAST(string name)
         : name(name)
     {
+    }
+    const string& getName() const
+    {
+        return name;
     }
     virtual Value* codegen();
 };

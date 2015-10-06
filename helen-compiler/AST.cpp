@@ -5,15 +5,22 @@
 #include "AST.h"
 #include "Error.h"
 #include "FunctionNameMangler.h"
+#include "BuiltinFunctions.h"
 
 namespace Helen
 {
 unique_ptr<Module> AST::module = 0;
 unique_ptr<legacy::FunctionPassManager> AST::fpm = 0;
 IRBuilder<> AST::builder(getGlobalContext());
-map<string, Value*> AST::variables;
+map<string, AllocaInst*> AST::variables;
 map<string, Function*> AST::functions;
 stack<string> AST::callstack;
+
+AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName)
+{
+    IRBuilder<> tmp(&f->getEntryBlock(), f->getEntryBlock().begin());
+    return tmp.CreateAlloca(t, 0, VarName.c_str());
+}
 
 Value* ConstantIntAST::codegen()
 {
@@ -37,14 +44,29 @@ Value* ConstantStringAST::codegen()
 
 Value* DeclarationAST::codegen()
 {
+    Function* f = builder.GetInsertBlock()->getParent();
+
+    Value* initValue;
+    if(initialiser) {
+        initValue = initialiser->codegen();
+        if(!initValue)
+            return nullptr;
+    } else {
+        initValue = 0;
+    }
+    AllocaInst* alloca = createEntryBlockAlloca(f, type, name);
+    if(initValue)
+        builder.CreateStore(initValue, alloca);
+    variables[name] = alloca;
 }
 
 Value* VariableAST::codegen()
 {
     try {
-        return variables.at(name);
+        Value* val = variables.at(name);
+        return builder.CreateLoad(val, name.c_str());
     } catch(out_of_range) {
-        return Error::errorValue(ErrorType::UndeclaredVariable, {name});
+        return Error::errorValue(ErrorType::UndeclaredVariable, { name });
     }
 }
 
@@ -91,6 +113,23 @@ Value* ConditionAST::codegen()
 
 Value* FunctionCallAST::codegen()
 {
+    // Assignment is the special case
+    if(functionName == BuiltinFunctions::operatorMarker + "=") {
+        shared_ptr<AST> left = arguments[0], right = arguments[1];
+        VariableAST* lefte = dynamic_cast<VariableAST*>(left.get());
+        if(!lefte)
+            return Error::errorValue(ErrorType::AssignmentError, {std::to_string((size_t)lefte)});
+        Value* v = right->codegen();
+        if(!v)
+            return nullptr;
+        try {
+            Value* var = variables.at(lefte->getName());
+            builder.CreateStore(v, var);
+            return v;
+        } catch(out_of_range) {
+            return Error::errorValue(ErrorType::UndeclaredVariable, {lefte->getName()});
+        }
+    }
     std::vector<Value*> vargs;
     std::vector<Type*> types;
     for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
@@ -99,16 +138,17 @@ Value* FunctionCallAST::codegen()
         if(!vargs.back())
             return nullptr;
     }
-    for(Value* v: vargs) types.push_back(v->getType());
+    for(Value* v : vargs)
+        types.push_back(v->getType());
     functionName = FunctionNameMangler::mangleName(functionName, types);
     string hrName = FunctionNameMangler::humanReadableName(functionName);
     Function* f = module->getFunction(functionName);
     if(!f)
-        return Error::errorValue(ErrorType::UndeclaredFunction, {hrName});
+        return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
     ArrayRef<Type*> params = f->getFunctionType()->params();
     for(unsigned i = 0; i < vargs.size(); i++)
         if(vargs[i]->getType() != params[i])
-            return Error::errorValue(ErrorType::WrongArgumentType, {std::to_string(i)});
+            return Error::errorValue(ErrorType::WrongArgumentType, { std::to_string(i) });
     return builder.CreateCall(f, vargs, "calltmp");
 }
 
@@ -135,8 +175,9 @@ Function* FunctionPrototypeAST::codegen()
     functions[name] = f;
 
     unsigned i = 0;
-    for(auto& arg : f->args())
+    for(auto& arg : f->args()) {
         arg.setName(argNames[i++]);
+    }
     return f;
 }
 
@@ -151,18 +192,21 @@ Function* FunctionAST::codegen()
         return 0;
 
     if(!f->empty())
-        return (Function*)Error::errorValue(ErrorType::FunctionRedefined, {proto->getName()});
+        return (Function*)Error::errorValue(ErrorType::FunctionRedefined, { proto->getName() });
     callstack.push(proto->getName());
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
-    for(auto& arg : f->args())
-        variables[arg.getName()] = &arg;
+    for(auto& arg : f->args()) {
+        AllocaInst* alloca = createEntryBlockAlloca(f, arg.getType(), arg.getName());
+        builder.CreateStore(&arg, alloca);
+        variables[arg.getName()] = alloca;
+    }
     if(Value* ret = body->codegen()) {
         builder.CreateRet(ret);
         verifyFunction(*f);
         fpm->run(*f);
         callstack.pop();
-        string previous = callstack.empty() ? "_main_v" : callstack.top();
+        string previous = callstack.empty() ? "main" : callstack.top();
         BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
         builder.SetInsertPoint(bb);
         return f;

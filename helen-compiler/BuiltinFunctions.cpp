@@ -15,7 +15,7 @@ void BuiltinFunctions::createMainFunction()
     createAllBuiltins();
     vector<Type*> v;
     FunctionType* ft = FunctionType::get(Type::getInt32Ty(getGlobalContext()), v, false);
-    string name = FunctionNameMangler::mangleName("main", v);
+    string name = "main";
     Function* f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
     AST::functions[name] = f;
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "start", f);
@@ -37,8 +37,8 @@ void BuiltinFunctions::createArith()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (char c : { '+', '-', '*', '/' }) {
-        for (Type* t : { i, r }) {
+    for(char c : { '+', '-', '*', '/' }) {
+        for(Type* t : { i, r }) {
             ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
@@ -47,7 +47,7 @@ void BuiltinFunctions::createArith()
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            switch (c) {
+            switch(c) {
             case '+':
                 res = t == i ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
                 break;

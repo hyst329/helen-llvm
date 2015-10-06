@@ -20,7 +20,8 @@ enum class ErrorType {
     UndeclaredFunction,
     WrongArgumentType,
     FunctionRedefined,
-    UnexpectedOperator
+    UnexpectedOperator,
+    AssignmentError
 };
 
 class Error

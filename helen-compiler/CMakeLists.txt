@@ -32,6 +32,6 @@ set(SOURCE_FILES main.cpp
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
 add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
-llvm_map_components_to_libnames(llvm_libs support core irreader scalaropts)
+llvm_map_components_to_libnames(llvm_libs support core irreader scalaropts bitwriter)
 
 target_link_libraries(helen_compiler ${llvm_libs})
