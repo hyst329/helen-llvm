@@ -26,6 +26,7 @@ void BuiltinFunctions::createAllBuiltins()
 {
     createArith();
     createIO();
+    createIndex();
 }
 
 void BuiltinFunctions::createArith()
@@ -38,8 +39,8 @@ void BuiltinFunctions::createArith()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (char c : { '+', '-', '*', '/' }) {
-        for (Type* t : { i, r }) {
+    for(char c : { '+', '-', '*', '/' }) {
+        for(Type* t : { i, r }) {
             ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
@@ -49,7 +50,7 @@ void BuiltinFunctions::createArith()
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            switch (c) {
+            switch(c) {
             case '+':
                 res = t == i ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
                 break;
@@ -83,11 +84,11 @@ void BuiltinFunctions::createIO()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     Type* v = Type::getVoidTy(getGlobalContext());
-    for (Type* t : { i, r }) {
+    for(Type* t : { i, r }) {
         string s;
-        if (t == i)
+        if(t == i)
             s = "%lld\n";
-        if (t == r)
+        if(t == r)
             s = "%lf\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i, { t }, false);
@@ -97,23 +98,29 @@ void BuiltinFunctions::createIO()
         AST::builder.SetInsertPoint(bb);
         vector<Value*> args;
         Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(s));
+        Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), s.size() + 1);
         GlobalVariable* var = new GlobalVariable(*AST::module.get(),
-                                                 ArrayType::get(IntegerType::get(getGlobalContext(), 8), s.size() + 1),
+                                                 stype,
                                                  true,
                                                  GlobalValue::PrivateLinkage,
                                                  fmt,
                                                  ".str");
 
         Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
-        Constant* fmt_ref = ConstantExpr::getGetElementPtr(var, vector<llvm::Constant*>{ zero, zero });
+        Constant* ind[] = { zero, zero };
+        Constant* fmt_ref = ConstantExpr::getGetElementPtr(stype, var, ind);
         auto it = printf->arg_begin();
         Value* val = it++;
-        //llvm::CallInst* call = AST::builder.CreateCall2(printf, fmt_ref, val);
         args.push_back(fmt_ref);
         args.push_back(f->arg_begin());
         CallInst* call = AST::builder.CreateCall(printf, args);
-        call->setTailCall(false);
+        call->setTailCall(true);
         AST::builder.CreateRet(Constant::getNullValue(llvm::IntegerType::getInt64Ty(getGlobalContext())));
     }
+}
+
+void BuiltinFunctions::createIndex()
+{
+    // The index function is temporary handled in AST.cpp
 }
 }

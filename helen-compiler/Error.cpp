@@ -14,6 +14,8 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::FunctionRedefined, "Function %1% is redefined" },
     { ErrorType::UnexpectedOperator, "Unexpected operator: %1%" },
     { ErrorType::AssignmentError, "Assignment error: %1% is not an lvalue" },
+    { ErrorType::IndexArgumentError, "Index argument must be an array" },
+    { ErrorType::ZeroIndexError, "Array index must not be zero (it's not C++, so indices do start from 1)" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

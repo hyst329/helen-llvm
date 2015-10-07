@@ -21,7 +21,9 @@ enum class ErrorType {
     WrongArgumentType,
     FunctionRedefined,
     UnexpectedOperator,
-    AssignmentError
+    AssignmentError,
+    IndexArgumentError,
+    ZeroIndexError,
 };
 
 class Error

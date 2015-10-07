@@ -6,16 +6,13 @@
 #include "BuiltinFunctions.h"
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/IPO.h>
 
 namespace po = boost::program_options;
 using namespace Helen;
 
 int yyparse(AST*& ast);
 extern FILE* yyin;
-namespace llvm
-{
-Pass* createAlwaysInlinerPass(); // TODO: search for include file
-}
 
 int main(int argc, char** argv)
 {
@@ -27,7 +24,7 @@ int main(int argc, char** argv)
     AST::fpm->add(createReassociatePass());
     AST::fpm->add(createGVNPass());
     AST::fpm->add(createCFGSimplificationPass());
-    //AST::fpm->add(createAlwaysInlinerPass());
+    //AST::fpm->add(createFunctionInliningPass());
     AST::fpm->doInitialization();
     BuiltinFunctions::createMainFunction();
     yyin = (argc == 1) ? stdin : fopen(argv[1], "r");

@@ -167,8 +167,8 @@ type: INT {
 | STRING {
     $$ = llvm::Type::getInt8PtrTy(getGlobalContext());
 }
-| type POINT expression {
-    $$ = llvm::VectorType::get($1, 0);
+| type POINT INTLIT {
+    $$ = llvm::VectorType::get($1, $3);
 }
 exprlist: exprlist COMMA expression {
     $1->push_back(shared_ptr<AST>($3));

@@ -52,7 +52,7 @@ Value* DeclarationAST::codegen()
         if(!initValue)
             return nullptr;
     } else {
-        initValue = 0;
+        initValue = Constant::getNullValue(type);
     }
     AllocaInst* alloca = createEntryBlockAlloca(f, type, name);
     if(initValue)
@@ -118,7 +118,7 @@ Value* FunctionCallAST::codegen()
         shared_ptr<AST> left = arguments[0], right = arguments[1];
         VariableAST* lefte = dynamic_cast<VariableAST*>(left.get());
         if(!lefte)
-            return Error::errorValue(ErrorType::AssignmentError, {std::to_string((size_t)lefte)});
+            return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)lefte) });
         Value* v = right->codegen();
         if(!v)
             return nullptr;
@@ -127,8 +127,19 @@ Value* FunctionCallAST::codegen()
             builder.CreateStore(v, var);
             return v;
         } catch(out_of_range) {
-            return Error::errorValue(ErrorType::UndeclaredVariable, {lefte->getName()});
+            return Error::errorValue(ErrorType::UndeclaredVariable, { lefte->getName() });
         }
+    }
+    // Index (temporary, should be in BuiltFunction::createIndex)
+    if(functionName == "__index") {
+        Value* left = arguments[0]->codegen(), * right = arguments[1]->codegen();
+        if(!left->getType()->isVectorTy())
+            return Error::errorValue(ErrorType::IndexArgumentError);
+        if(!right->getType()->isIntegerTy(64))
+            return Error::errorValue(ErrorType::WrongArgumentType, { "not int" });
+        Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
+        right = builder.CreateSub(right, one);
+        return builder.CreateExtractElement(left, right, "indtmp");
     }
     std::vector<Value*> vargs;
     std::vector<Type*> types;
@@ -193,8 +204,8 @@ Function* FunctionAST::codegen()
 
     if(!f->empty())
         return (Function*)Error::errorValue(ErrorType::FunctionRedefined, { proto->getName() });
-    //callstack.push(proto->getName());
-    BasicBlock *parent = builder.GetInsertBlock();
+    // callstack.push(proto->getName());
+    BasicBlock* parent = builder.GetInsertBlock();
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
     for(auto& arg : f->args()) {
@@ -206,10 +217,10 @@ Function* FunctionAST::codegen()
         builder.CreateRet(ret);
         verifyFunction(*f);
         fpm->run(*f);
-//        callstack.pop();
-//        string previous = callstack.empty() ? "main" : callstack.top();
-//        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
-//        builder.SetInsertPoint(bb);
+        //        callstack.pop();
+        //        string previous = callstack.empty() ? "main" : callstack.top();
+        //        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
+        //        builder.SetInsertPoint(bb);
         builder.SetInsertPoint(parent);
         return f;
     }
@@ -224,7 +235,7 @@ Function* FunctionAST::codegen()
 Value* ReturnAST::codegen()
 {
     Value* ret = result->codegen();
-    //builder.CreateRet(ret);
+    // builder.CreateRet(ret);
     return ret;
 }
 }
