@@ -31,6 +31,7 @@ class Error
 public:
     static AST* error(ErrorType et, vector<string> args = vector<string>());
     static Value* errorValue(ErrorType et, vector<string> args = vector<string>());
+    static bool errorFlag;
 
 private:
     static map<ErrorType, string> errorMessages;

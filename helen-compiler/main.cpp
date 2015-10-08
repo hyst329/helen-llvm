@@ -3,6 +3,7 @@
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include "AST.h"
+#include "Error.h"
 #include "BuiltinFunctions.h"
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
@@ -31,6 +32,11 @@ int main(int argc, char** argv)
     AST* result;
     yyparse(result);
     result->codegen();
+    if (Error::errorFlag) 
+    {
+        fprintf(stderr, "Fatal errors detected: translation terminated\n");
+        return 1;
+    }
     AST::builder.CreateRet(ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0));
     AST::module->dump();
     string filename = (argc >= 3) ? argv[2] : (argv[1] + string(".bc"));

@@ -5,6 +5,7 @@ namespace Helen
 {
 
 using namespace std;
+bool Error::errorFlag = 0;
 
 map<ErrorType, string> Error::errorMessages = {
     { ErrorType::SyntaxError, "Syntax error: %1%" },
@@ -25,6 +26,7 @@ AST* Error::error(ErrorType et, vector<string> args)
     for(string& s : args)
         fmt = fmt % s;
     fprintf(stderr, "Error [%04d]: %s\n", et, fmt.str().c_str());
+    errorFlag = 1;
     return 0;
 }
 Value* Error::errorValue(ErrorType et, vector<string> args)

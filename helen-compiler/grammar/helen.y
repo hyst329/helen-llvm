@@ -216,7 +216,7 @@ expression: expression OPERATOR expression {
                INT_MAX : prec[((FunctionCallAST*)($3))->getFunctionName()];
       double added = prec.find(operatorMarker + $2) == prec.end() ?
                    -DBL_MAX : prec[operatorMarker + $2];
-      printf("Added: %g; Last: %g\n", added, last);
+      //printf("Added: %g; Last: %g\n", added, last);
     if(rightAssoc.count(operatorMarker + $2) ? added <= last : added < last) {
         std::vector<shared_ptr<AST> > v = { shared_ptr<AST>($1), shared_ptr<AST>($3) };
         $$ = new FunctionCallAST(operatorMarker + $2, v);
