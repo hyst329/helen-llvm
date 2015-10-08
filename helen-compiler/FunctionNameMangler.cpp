@@ -11,6 +11,10 @@ string FunctionNameMangler::mangleName(string name, vector<Type*> args)
         mangledName += "_v";
     for(Type* t : args) {
         mangledName += "_";
+        if(t->isVectorTy()) {
+            mangledName += "v";
+            t = t->getScalarType();
+        }
         if(t == Type::getInt64Ty(getGlobalContext()))
             mangledName += "i";
         if(t == Type::getDoubleTy(getGlobalContext()))
