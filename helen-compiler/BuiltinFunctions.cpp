@@ -83,13 +83,19 @@ void BuiltinFunctions::createIO()
     // __out
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
+    Type* c = Type::getInt8Ty(getGlobalContext());
+    Type* s = PointerType::get(c, 0);
     Type* v = Type::getVoidTy(getGlobalContext());
-    for (Type* t : { i, r }) {
-        string s;
+    for (Type* t : { i, r, c, s }) {
+        string fmtstr;
         if (t == i)
-            s = "%lld\n";
+            fmtstr = "%lld\n";
         if (t == r)
-            s = "%lf\n";
+            fmtstr = "%lf\n";
+        if (t == c)
+            fmtstr = "%c\n";
+        if (t == s)
+            fmtstr = "%s\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i, { t }, false);
         Function* f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
@@ -97,8 +103,8 @@ void BuiltinFunctions::createIO()
         BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
         AST::builder.SetInsertPoint(bb);
         vector<Value*> args;
-        Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(s));
-        Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), s.size() + 1);
+        Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(fmtstr));
+        Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), fmtstr.size() + 1);
         GlobalVariable* var =
             new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::PrivateLinkage, fmt, ".str");
         Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));

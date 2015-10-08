@@ -50,7 +50,7 @@ debugvar                 return DEBUGVAR;
 [\+\-\*\/\<\>\=@]        yylval.vstr = strdup(yytext); return OPERATOR;
 [\+\-]?[0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;
 [\+\-]?[0-9]+                   yylval.vint = atoi(yytext); return INTLIT;
-'[^(')]'                 yylval.vchar = yytext[0]; return CHARLIT;
-\"[^(\")]+\"             yylval.vstr = strdup(yytext); return STRLIT;
+'[^(')]'                 yylval.vchar = yytext[1]; return CHARLIT;
+\"[^(\")]+\"             yylval.vstr = strdup(yytext + 1); yylval.vstr[strlen(yylval.vstr) - 1] = 0; return STRLIT;
 <<EOF>>                  static int once = 0; return once++ ? 0 : NEWLINE;
 %%
