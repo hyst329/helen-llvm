@@ -41,6 +41,10 @@ string FunctionNameMangler::humanReadableName(string mangledName)
     boost::split(strs, mangledName, boost::is_any_of("_"));
     name = strs[0] + "(";
     for(int i = 1; i < strs.size(); i++) {
+        if(strs[i][0] == 'v') {
+            name += "array ";
+            strs[i] = strs[i].substr(1);
+        }
         if(strs[i] == "i")
             name += "int";
         if(strs[i] == "r")
