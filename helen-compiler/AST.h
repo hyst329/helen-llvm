@@ -142,6 +142,8 @@ public:
         , arguments(arguments)
     {
     }
+    string getFunctionName() { return functionName; }
+    vector<shared_ptr<AST> >& getArguments() { return arguments; }
     virtual Value* codegen();
 };
 

@@ -39,8 +39,8 @@ void BuiltinFunctions::createArith()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for(char c : { '+', '-', '*', '/' }) {
-        for(Type* t : { i, r }) {
+    for (char c : { '+', '-', '*', '/' }) {
+        for (Type* t : { i, r }) {
             ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
@@ -50,7 +50,7 @@ void BuiltinFunctions::createArith()
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            switch(c) {
+            switch (c) {
             case '+':
                 res = t == i ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
                 break;
@@ -84,11 +84,11 @@ void BuiltinFunctions::createIO()
     Type* i = Type::getInt64Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     Type* v = Type::getVoidTy(getGlobalContext());
-    for(Type* t : { i, r }) {
+    for (Type* t : { i, r }) {
         string s;
-        if(t == i)
+        if (t == i)
             s = "%lld\n";
-        if(t == r)
+        if (t == r)
             s = "%lf\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i, { t }, false);
@@ -99,16 +99,15 @@ void BuiltinFunctions::createIO()
         vector<Value*> args;
         Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(s));
         Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), s.size() + 1);
-        GlobalVariable* var = new GlobalVariable(*AST::module.get(),
-                                                 stype,
-                                                 true,
-                                                 GlobalValue::PrivateLinkage,
-                                                 fmt,
-                                                 ".str");
-
+        GlobalVariable* var =
+            new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::PrivateLinkage, fmt, ".str");
         Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
         Constant* ind[] = { zero, zero };
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7
         Constant* fmt_ref = ConstantExpr::getGetElementPtr(stype, var, ind);
+#else
+        Constant* fmt_ref = ConstantExpr::getGetElementPtr(var, ind);
+#endif
         auto it = printf->arg_begin();
         Value* val = it++;
         args.push_back(fmt_ref);

@@ -1,8 +1,11 @@
 %{
 #include "../AST.h"
 #include "../Error.h"
+#include <float.h>
 #include <vector>
 #include <string>
+#include <map>
+#include <set>
 #include <memory>
 #include "helen.parser.hpp"
 
@@ -15,6 +18,30 @@ void yyerror(Helen::AST* ast, const char*);
 
 const std::string operatorMarker = "__operator_";
 const std::string unaryOperatorMarker = "__unary_operator_";
+
+std::map<std::string, double> prec = {
+    {operatorMarker + "^",  9},
+    {operatorMarker + "*",  8},
+    {operatorMarker + "/",  8},
+    {operatorMarker + "%",  8},
+    {operatorMarker + "!",  8},
+    {operatorMarker + "+",  7},
+    {operatorMarker + "-",  7},
+    {operatorMarker + "<",  6},
+    {operatorMarker + "<=", 6},
+    {operatorMarker + ">",  6},
+    {operatorMarker + ">=", 6},
+    {operatorMarker + "==", 5},
+    {operatorMarker + "!=", 5},
+    {operatorMarker + "&",  4},
+    {operatorMarker + "@",  3},
+    {operatorMarker + "|",  2},
+    {operatorMarker + "=",  1}
+};
+std::set<std::string> rightAssoc = {operatorMarker + "^", operatorMarker + "="};
+
+static bool lastTerm = 0;
+
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
@@ -182,8 +209,27 @@ exprlist: exprlist COMMA expression {
     $$ = new vector<shared_ptr<AST> >;
 }
 expression: expression OPERATOR expression {
-    $$ = new FunctionCallAST(operatorMarker + $2,
-                             {shared_ptr<AST>($1), shared_ptr<AST>($3)});
+    
+    double last = DBL_MAX;
+    if(dynamic_cast<FunctionCallAST*>($3) && !lastTerm)
+        last = prec.find(((FunctionCallAST*)($3))->getFunctionName()) == prec.end() ?
+               INT_MAX : prec[((FunctionCallAST*)($3))->getFunctionName()];
+      double added = prec.find(operatorMarker + $2) == prec.end() ?
+                   -DBL_MAX : prec[operatorMarker + $2];
+      printf("Added: %g; Last: %g\n", added, last);
+    if(rightAssoc.count(operatorMarker + $2) ? added <= last : added < last) {
+        std::vector<shared_ptr<AST> > v = { shared_ptr<AST>($1), shared_ptr<AST>($3) };
+        $$ = new FunctionCallAST(operatorMarker + $2, v);
+    }
+    else {
+        shared_ptr<AST> tmp = ((FunctionCallAST*)($3))->getArguments()[0];
+        ((FunctionCallAST*)($3))->getArguments()[0] = 
+        shared_ptr<AST>(new FunctionCallAST(operatorMarker + $2, {shared_ptr<AST>($1), tmp}));
+        $$ = $3;
+    }
+    lastTerm = 0;
+    //$$ = new FunctionCallAST(operatorMarker + $2,
+    //                         {shared_ptr<AST>($1), shared_ptr<AST>($3)});
 }
 | OPERATOR expression {
     $$ = new FunctionCallAST(unaryOperatorMarker + $1,
@@ -191,6 +237,7 @@ expression: expression OPERATOR expression {
 }
 | term {
     $$ = $1;
+    lastTerm = 1;
 }
 term: literal {
     $$ = $1;
