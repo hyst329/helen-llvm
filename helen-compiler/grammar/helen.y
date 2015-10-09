@@ -45,19 +45,18 @@ static bool lastTerm = 0;
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
-%token FUN ENDFUN DECLARE
+%token FUN ENDFUN DECLARE STYLE
 %token SIZE RESIZE
 %token RETURN
 %token IN OUT DEBUGVAR
 %token USE
-%token INT REAL LOGICAL CHAR STRING
+%token INT REAL LOGICAL CHAR STRING PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
 %token LPAREN RPAREN
 %token LARROW RARROW
 %token SEMI COMMA POINT
-%token STYLE
 %type<ast> program
 %type<ast> instseq
 %type<ast> instruction
@@ -202,8 +201,17 @@ type: INT {
 | STRING {
     $$ = llvm::Type::getInt8PtrTy(getGlobalContext());
 }
+| LOGICAL {
+    $$ = llvm::Type::getInt1Ty(getGlobalContext());
+}
+| INT LPAREN INTLIT RPAREN {
+    $$ = llvm::IntegerType::get(getGlobalContext(), $3);
+}
 | type POINT INTLIT {
     $$ = llvm::VectorType::get($1, $3);
+}
+| PTR type {
+    $$ = llvm::PointerType::get($2, 0);
 }
 exprlist: exprlist COMMA expression {
     $1->push_back(shared_ptr<AST>($3));
