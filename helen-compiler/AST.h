@@ -40,8 +40,7 @@ class ConstantIntAST : public AST
     int64_t value;
 
 public:
-    ConstantIntAST(int64_t value)
-        : value(value)
+    ConstantIntAST(int64_t value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -52,8 +51,7 @@ class ConstantRealAST : public AST
     double value;
 
 public:
-    ConstantRealAST(double value)
-        : value(value)
+    ConstantRealAST(double value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -64,8 +62,7 @@ class ConstantCharAST : public AST
     char value;
 
 public:
-    ConstantCharAST(char value)
-        : value(value)
+    ConstantCharAST(char value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -76,8 +73,7 @@ class ConstantStringAST : public AST
     string value;
 
 public:
-    ConstantStringAST(string value)
-        : value(value)
+    ConstantStringAST(string value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -88,8 +84,7 @@ class VariableAST : public AST
     string name;
 
 public:
-    VariableAST(string name)
-        : name(name)
+    VariableAST(string name) : name(name)
     {
     }
     const string& getName() const
@@ -142,8 +137,14 @@ public:
         , arguments(arguments)
     {
     }
-    string getFunctionName() { return functionName; }
-    vector<shared_ptr<AST> >& getArguments() { return arguments; }
+    string getFunctionName()
+    {
+        return functionName;
+    }
+    vector<shared_ptr<AST> >& getArguments()
+    {
+        return arguments;
+    }
     virtual Value* codegen();
 };
 
@@ -157,8 +158,7 @@ public:
         return instructions;
     }
 
-    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
-        : instructions(instructions)
+    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >()) : instructions(instructions)
     {
     }
     virtual Value* codegen();
@@ -170,13 +170,15 @@ class FunctionPrototypeAST : public AST
     vector<Type*> args;
     vector<string> argNames;
     Type* returnType;
+    string style;
 
 public:
-    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType)
+    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style)
         : name(name)
         , args(args)
         , argNames(argNames)
         , returnType(returnType)
+        , style(style)
     {
     }
     const string& getName() const
@@ -209,8 +211,7 @@ class ReturnAST : public AST
     shared_ptr<AST> result;
 
 public:
-    ReturnAST(shared_ptr<AST> result)
-        : result(result)
+    ReturnAST(shared_ptr<AST> result) : result(result)
     {
     }
     virtual Value* codegen();

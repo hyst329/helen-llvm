@@ -17,6 +17,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::AssignmentError, "Assignment error: %1% is not an lvalue" },
     { ErrorType::IndexArgumentError, "Index argument must be an array" },
     { ErrorType::ZeroIndexError, "Array index must not be zero (it's not C++, so indices do start from 1)" },
+    { ErrorType::UnknownStyle, "Unknown linkage style ('C' and 'Helen' are currently allowed)" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

@@ -57,6 +57,7 @@ static bool lastTerm = 0;
 %token LPAREN RPAREN
 %token LARROW RARROW
 %token SEMI COMMA POINT
+%token STYLE
 %type<ast> program
 %type<ast> instseq
 %type<ast> instruction
@@ -69,6 +70,7 @@ static bool lastTerm = 0;
 %type<type> type
 %type<arglist> arglist
 %type<exprlist> exprlist
+%type<vstr> style
 %type<vstr> OPERATOR
 %type<vstr> ID
 %type<vint> INTLIT
@@ -163,11 +165,17 @@ declaration: type ID OPERATOR expression {
 | type ID {
     $$ = new DeclarationAST($1, $2);
 }
-funprot: ID LPAREN arglist RPAREN {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()));
+funprot: ID LPAREN arglist RPAREN style {
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()), $5);
 }
-| ID LPAREN arglist RPAREN RARROW type {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6);
+| ID LPAREN arglist RPAREN RARROW type style {
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6, $7);
+}
+style: STYLE LPAREN ID RPAREN {
+    $$ = $3;
+}
+| /* empty */ {
+    $$ = "Helen";
 }
 arglist: arglist COMMA type ID {
     $1->types.push_back($3);

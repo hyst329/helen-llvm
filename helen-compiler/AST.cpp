@@ -6,6 +6,7 @@
 #include "Error.h"
 #include "FunctionNameMangler.h"
 #include "BuiltinFunctions.h"
+#include <set>
 
 namespace Helen
 {
@@ -47,25 +48,28 @@ Value* DeclarationAST::codegen()
     Function* f = builder.GetInsertBlock()->getParent();
 
     Value* initValue;
-    if(initialiser) {
+    if (initialiser) {
         initValue = initialiser->codegen();
-        if(!initValue)
+        if (!initValue)
             return nullptr;
     } else {
         initValue = Constant::getNullValue(type);
     }
     AllocaInst* alloca = createEntryBlockAlloca(f, type, name);
-    if(initValue)
+    if (initValue)
         builder.CreateStore(initValue, alloca);
     variables[name] = alloca;
 }
 
 Value* VariableAST::codegen()
 {
-    try {
+    try
+    {
         Value* val = variables.at(name);
         return builder.CreateLoad(val, name.c_str());
-    } catch(out_of_range) {
+    }
+    catch (out_of_range)
+    {
         return Error::errorValue(ErrorType::UndeclaredVariable, { name });
     }
 }
@@ -73,7 +77,7 @@ Value* VariableAST::codegen()
 Value* ConditionAST::codegen()
 {
     Value* cond = condition->codegen();
-    if(!cond)
+    if (!cond)
         return 0;
     cond = builder.CreateICmpNE(cond, ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0), "ifcond");
     Function* f = builder.GetInsertBlock()->getParent();
@@ -86,7 +90,7 @@ Value* ConditionAST::codegen()
     builder.SetInsertPoint(thenBB);
 
     Value* thenValue = thenBranch->codegen();
-    if(!thenValue)
+    if (!thenValue)
         return 0;
 
     builder.CreateBr(mergeBB);
@@ -96,7 +100,7 @@ Value* ConditionAST::codegen()
     builder.SetInsertPoint(elseBB);
 
     Value* elseValue = elseBranch->codegen();
-    if(!elseValue)
+    if (!elseValue)
         return 0;
 
     builder.CreateBr(mergeBB);
@@ -114,28 +118,31 @@ Value* ConditionAST::codegen()
 Value* FunctionCallAST::codegen()
 {
     // Assignment is the special case
-    if(functionName == BuiltinFunctions::operatorMarker + "=") {
+    if (functionName == BuiltinFunctions::operatorMarker + "=") {
         shared_ptr<AST> left = arguments[0], right = arguments[1];
         VariableAST* lefte = dynamic_cast<VariableAST*>(left.get());
-        if(!lefte)
+        if (!lefte)
             return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)lefte) });
         Value* v = right->codegen();
-        if(!v)
+        if (!v)
             return nullptr;
-        try {
+        try
+        {
             Value* var = variables.at(lefte->getName());
             builder.CreateStore(v, var);
             return v;
-        } catch(out_of_range) {
+        }
+        catch (out_of_range)
+        {
             return Error::errorValue(ErrorType::UndeclaredVariable, { lefte->getName() });
         }
     }
     // Index (temporary, should be in BuiltFunction::createIndex)
-    if(functionName == "__index") {
-        Value* left = arguments[0]->codegen(), * right = arguments[1]->codegen();
-        if(!left->getType()->isVectorTy())
+    if (functionName == "__index") {
+        Value* left = arguments[0]->codegen(), *right = arguments[1]->codegen();
+        if (!left->getType()->isVectorTy())
             return Error::errorValue(ErrorType::IndexArgumentError);
-        if(!right->getType()->isIntegerTy(64))
+        if (!right->getType()->isIntegerTy(64))
             return Error::errorValue(ErrorType::WrongArgumentType, { "not int" });
         Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
         right = builder.CreateSub(right, one);
@@ -143,31 +150,38 @@ Value* FunctionCallAST::codegen()
     }
     std::vector<Value*> vargs;
     std::vector<Type*> types;
-    for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
+    for (unsigned i = 0, e = arguments.size(); i != e; ++i) {
         // TODO: add type checking
         vargs.push_back(arguments[i]->codegen());
-        if(!vargs.back())
+        if (!vargs.back())
             return nullptr;
     }
-    for(Value* v : vargs)
+    for (Value* v : vargs)
         types.push_back(v->getType());
-    functionName = FunctionNameMangler::mangleName(functionName, types);
+    // try to find mangled function, then unmangled one
+    Function* f = 0;
+    string oldFName = functionName;
+    for (string style : { "Helen", "C" }) {
+        functionName = FunctionNameMangler::mangleName(oldFName, types, style);
+        f = module->getFunction(functionName);
+        if (f)
+            break;
+    }
     string hrName = FunctionNameMangler::humanReadableName(functionName);
-    Function* f = module->getFunction(functionName);
-    if(!f)
+    if (!f)
         return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
     ArrayRef<Type*> params = f->getFunctionType()->params();
-    for(unsigned i = 0; i < vargs.size(); i++)
-        if(vargs[i]->getType() != params[i])
+    for (unsigned i = 0; i < vargs.size(); i++)
+        if (vargs[i]->getType() != params[i])
             return Error::errorValue(ErrorType::WrongArgumentType, { std::to_string(i) });
     return builder.CreateCall(f, vargs, "calltmp");
 }
 
 Value* SequenceAST::codegen()
 {
-    for(shared_ptr<Helen::AST>& a : instructions) {
+    for (shared_ptr<Helen::AST>& a : instructions) {
         Value* v = a->codegen();
-        if(dynamic_cast<ReturnAST*>(a.get()))
+        if (dynamic_cast<ReturnAST*>(a.get()))
             return v;
     }
     return 0;
@@ -180,13 +194,16 @@ Value* NullAST::codegen()
 
 Function* FunctionPrototypeAST::codegen()
 {
+    set<string> styles = { "C", "Helen" };
+    if (!styles.count(style))
+        return (Function*)Error::errorValue(ErrorType::UnknownStyle);
     FunctionType* ft = FunctionType::get(returnType, args, false);
-    name = FunctionNameMangler::mangleName(name, args);
+    name = FunctionNameMangler::mangleName(name, args, style);
     Function* f = Function::Create(ft, Function::ExternalLinkage, name, module.get());
     functions[name] = f;
 
     unsigned i = 0;
-    for(auto& arg : f->args()) {
+    for (auto& arg : f->args()) {
         arg.setName(argNames[i++]);
     }
     return f;
@@ -196,24 +213,24 @@ Function* FunctionAST::codegen()
 {
     Function* f = module->getFunction(proto->getName());
 
-    if(!f)
+    if (!f)
         f = proto->codegen();
 
-    if(!f)
+    if (!f)
         return 0;
 
-    if(!f->empty())
+    if (!f->empty())
         return (Function*)Error::errorValue(ErrorType::FunctionRedefined, { proto->getName() });
     // callstack.push(proto->getName());
     BasicBlock* parent = builder.GetInsertBlock();
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
-    for(auto& arg : f->args()) {
+    for (auto& arg : f->args()) {
         AllocaInst* alloca = createEntryBlockAlloca(f, arg.getType(), arg.getName());
         builder.CreateStore(&arg, alloca);
         variables[arg.getName()] = alloca;
     }
-    if(Value* ret = body->codegen()) {
+    if (Value* ret = body->codegen()) {
         builder.CreateRet(ret);
         verifyFunction(*f);
         fpm->run(*f);

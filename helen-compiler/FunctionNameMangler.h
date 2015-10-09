@@ -13,7 +13,7 @@ using namespace std;
 class FunctionNameMangler
 {
 public:
-    static string mangleName(string name, vector<Type*> args);
+    static string mangleName(string name, vector<Type*> args, string style = "Helen");
     static string humanReadableName(string mangledName);
 };
 
