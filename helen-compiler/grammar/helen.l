@@ -47,6 +47,7 @@ ptr                      return PTR;
 \(                       return LPAREN;
 \)                       return RPAREN;
 \;                       return SEMI;
+\:                       return COLON;
 \,                       return COMMA;
 \.                       return POINT;
 [\+\-\*\/\<\>\=@]        yylval.vstr = strdup(yytext); return OPERATOR;

@@ -38,9 +38,12 @@ public:
 class ConstantIntAST : public AST
 {
     int64_t value;
+    int bitwidth;
 
 public:
-    ConstantIntAST(int64_t value) : value(value)
+    ConstantIntAST(int64_t value, int bitwidth = 64)
+        : value(value)
+        , bitwidth(bitwidth)
     {
     }
     virtual Value* codegen();

@@ -56,7 +56,7 @@ static bool lastTerm = 0;
 %token NEWLINE
 %token LPAREN RPAREN
 %token LARROW RARROW
-%token SEMI COMMA POINT
+%token SEMI COLON COMMA POINT
 %type<ast> program
 %type<ast> instseq
 %type<ast> instruction
@@ -276,6 +276,9 @@ term: literal {
 }
 literal: INTLIT {
      $$ = new ConstantIntAST($1);
+}
+| INTLIT COLON INTLIT {
+     $$ = new ConstantIntAST($1, $3);
 }
 | REALLIT {
     $$ = new ConstantRealAST($1);

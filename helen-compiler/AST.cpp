@@ -25,7 +25,7 @@ AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string&
 
 Value* ConstantIntAST::codegen()
 {
-    return ConstantInt::get(Type::getInt64Ty(getGlobalContext()), value);
+    return ConstantInt::get(IntegerType::get(getGlobalContext(), bitwidth), value);
 }
 
 Value* ConstantRealAST::codegen()
