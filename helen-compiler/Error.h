@@ -25,6 +25,8 @@ enum class ErrorType {
     IndexArgumentError,
     ZeroIndexError,
     UnknownStyle,
+    TypeRedefined,
+    UndeclaredType,
 };
 
 class Error

@@ -26,6 +26,8 @@ int main(int argc, char** argv)
     AST::fpm->add(createGVNPass());
     AST::fpm->add(createCFGSimplificationPass());
     //AST::fpm->add(createFunctionInliningPass());
+    legacy::PassManager pm;
+    pm.add(createAlwaysInlinerPass());
     AST::fpm->doInitialization();
     BuiltinFunctions::createMainFunction();
     yyin = (argc == 1) ? stdin : fopen(argv[1], "r");
@@ -38,6 +40,7 @@ int main(int argc, char** argv)
         return 1;
     }
     AST::builder.CreateRet(ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0));
+    pm.run(*(AST::module.get()));
     AST::module->dump();
     string filename = (argc >= 3) ? argv[2] : (argv[1] + string(".bc"));
     std::error_code ec;

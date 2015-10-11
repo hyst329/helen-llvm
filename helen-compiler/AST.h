@@ -32,6 +32,7 @@ public:
     static map<string, AllocaInst*> variables;
     static stack<string> callstack;
     static map<string, Function*> functions;
+    static map<string, Type*> types;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
 };
 

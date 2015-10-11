@@ -15,6 +15,7 @@ unique_ptr<legacy::FunctionPassManager> AST::fpm = 0;
 IRBuilder<> AST::builder(getGlobalContext());
 map<string, AllocaInst*> AST::variables;
 map<string, Function*> AST::functions;
+map<string, Type*> AST::types;
 stack<string> AST::callstack;
 
 AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName)

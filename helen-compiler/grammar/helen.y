@@ -50,7 +50,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT DEBUGVAR
 %token USE
-%token INT REAL LOGICAL CHAR STRING PTR
+%token TYPE INT REAL LOGICAL CHAR STRING PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -142,6 +142,12 @@ instruction: statement NEWLINE {
 | RESIZE ID LPAREN expression RPAREN {
     $$ = new FunctionCallAST("__resize", {shared_ptr<AST>($4)});
 }
+| TYPE ID OPERATOR type {
+    if(strcmp($3, "=")) Error::error(ErrorType::UnexpectedOperator, {$3});
+    if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
+    AST::types[$2] = $4;
+    $$ = new NullAST();
+}
 statement: declaration {
     $$ = $1;
 }
@@ -158,7 +164,7 @@ statement: declaration {
     $$ = $1;
 }
 declaration: type ID OPERATOR expression {
-    if(strcmp($3, "=")) Error::errorValue(ErrorType::UnexpectedOperator, {$3});
+    if(strcmp($3, "=")) Error::error(ErrorType::UnexpectedOperator, {$3});
     $$ = new DeclarationAST($1, $2, shared_ptr<AST>($4));
 }
 | type ID {
@@ -203,6 +209,10 @@ type: INT {
 }
 | LOGICAL {
     $$ = llvm::Type::getInt1Ty(getGlobalContext());
+}
+| ID {
+    if(AST::types.find($1) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$1});
+    $$ = AST::types[$1];
 }
 | INT LPAREN INTLIT RPAREN {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);

@@ -18,6 +18,8 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::IndexArgumentError, "Index argument must be an array" },
     { ErrorType::ZeroIndexError, "Array index must not be zero (it's not C++, so indices do start from 1)" },
     { ErrorType::UnknownStyle, "Unknown linkage style ('C' and 'Helen' are currently allowed)" },
+    { ErrorType::TypeRedefined, "Function %1% is redefined" },
+    { ErrorType::UndeclaredType, "Undeclared type: %1%" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)
