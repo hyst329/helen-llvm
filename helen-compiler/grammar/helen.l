@@ -30,6 +30,7 @@ use                      return USE;
 resize                   return RESIZE;
 size                     return SIZE;
 type                     return TYPE;
+endtype                  return ENDTYPE;
 int                      return INT;
 real                     return REAL;
 logical                  return LOGICAL;

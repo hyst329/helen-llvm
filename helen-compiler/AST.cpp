@@ -16,6 +16,7 @@ IRBuilder<> AST::builder(getGlobalContext());
 map<string, AllocaInst*> AST::variables;
 map<string, Function*> AST::functions;
 map<string, Type*> AST::types;
+map<string, vector<string> > AST::fields;
 stack<string> AST::callstack;
 
 AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName)
@@ -140,14 +141,32 @@ Value* FunctionCallAST::codegen()
     }
     // Index (temporary, should be in BuiltFunction::createIndex)
     if (functionName == "__index") {
-        Value* left = arguments[0]->codegen(), *right = arguments[1]->codegen();
-        if (!left->getType()->isVectorTy())
+        Value* left = arguments[0]->codegen();
+        if (left->getType()->isVectorTy()) {
+            Value* right = arguments[1]->codegen();
+            if (!right->getType()->isIntegerTy(64))
+                return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });
+            Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
+            right = builder.CreateSub(right, one);
+            return builder.CreateExtractElement(left, right, "indtmp");
+
+        } else if (left->getType()->isStructTy()) {
+            if (!dynamic_cast<VariableAST*>(arguments[1].get()))
+                return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
+            string name = ((VariableAST*)arguments[1].get())->getName();
+            vector<string> fie = fields[static_cast<StructType*>(left->getType())->getName()];
+            auto field = std::find(fie.begin(), fie.end(), name);
+            if (field == fie.end()) {
+                return Error::errorValue(ErrorType::UndeclaredVariable, { name });
+            }
+            int pos = field - fie.begin();
+            Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+            Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
+            Value* right[] = { zero, ind };
+            return builder.CreateGEP(left, right, "indtmp");
+        } else {
             return Error::errorValue(ErrorType::IndexArgumentError);
-        if (!right->getType()->isIntegerTy(64))
-            return Error::errorValue(ErrorType::WrongArgumentType, { "not int" });
-        Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
-        right = builder.CreateSub(right, one);
-        return builder.CreateExtractElement(left, right, "indtmp");
+        }
     }
     std::vector<Value*> vargs;
     std::vector<Type*> types;
@@ -255,5 +274,24 @@ Value* ReturnAST::codegen()
     Value* ret = result->codegen();
     // builder.CreateRet(ret);
     return ret;
+}
+Value* CustomTypeAST::codegen()
+{
+    return 0;
+}
+void CustomTypeAST::compileTime()
+{
+
+    std::vector<string> fieldNames;
+    std::vector<Type*> fieldTypes;
+    for (shared_ptr<AST> i : instructions) {
+        if (dynamic_cast<DeclarationAST*>(i.get())) {
+            DeclarationAST* di = (DeclarationAST*)i.get();
+            fieldNames.push_back(di->getName());
+            fieldTypes.push_back(di->getType());
+        }
+    }
+    fields[typeName] = fieldNames;
+    types[typeName] = StructType::create(ArrayRef<Type*>(fieldTypes), typeName);
 }
 }

@@ -50,7 +50,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT DEBUGVAR
 %token USE
-%token TYPE INT REAL LOGICAL CHAR STRING PTR
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -66,9 +66,11 @@ static bool lastTerm = 0;
 %type<ast> literal
 %type<ast> funprot
 %type<ast> declaration
+%type<ast> property
 %type<type> type
 %type<arglist> arglist
 %type<exprlist> exprlist
+%type<exprlist> properties
 %type<vstr> style
 %type<vstr> OPERATOR
 %type<vstr> ID
@@ -147,6 +149,22 @@ instruction: statement NEWLINE {
     if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
     AST::types[$2] = $4;
     $$ = new NullAST();
+}
+| TYPE ID NEWLINE properties ENDTYPE {
+    if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
+    $$ = new CustomTypeAST($2, *$4);
+    ((CustomTypeAST*)$$)->compileTime();
+}
+properties: properties property NEWLINE {
+    $1->push_back(shared_ptr<AST>($2));
+    $$ = $1;
+}
+| property NEWLINE {
+    $$ = new vector<shared_ptr<AST> >;
+    $$->push_back(shared_ptr<AST>($1));
+}
+property: type ID {
+    $$ = new DeclarationAST($1, $2);
 }
 statement: declaration {
     $$ = $1;

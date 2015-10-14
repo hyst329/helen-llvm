@@ -33,6 +33,7 @@ public:
     static stack<string> callstack;
     static map<string, Function*> functions;
     static map<string, Type*> types;
+    static map<string, vector<string> > fields;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
 };
 
@@ -110,6 +111,14 @@ public:
         , name(name)
         , initialiser(initialiser)
     {
+    }
+    Type* getType()
+    {
+        return type;
+    }
+    string getName()
+    {
+        return name;
     }
     virtual Value* codegen();
 };
@@ -219,6 +228,21 @@ public:
     {
     }
     virtual Value* codegen();
+};
+
+class CustomTypeAST : public AST
+{
+    string typeName;
+    vector<shared_ptr<AST> > instructions;
+
+public:
+    CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions)
+        : typeName(typeName)
+        , instructions(instructions)
+    {
+    }
+    virtual Value* codegen();
+    void compileTime();
 };
 
 class NullAST : public AST
