@@ -163,7 +163,10 @@ Value* FunctionCallAST::codegen()
             Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
             Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
             Value* right[] = { zero, ind };
-            return builder.CreateGEP(left, right, "indtmp");
+            AllocaInst* aleft = builder.CreateAlloca(left->getType(), 0, "atmp");
+            builder.CreateStore(left, aleft);
+            Value* tmpptr = builder.CreateInBoundsGEP(aleft, right, "indtmpptr");
+            return builder.CreateLoad(tmpptr, "indtmp");
         } else {
             return Error::errorValue(ErrorType::IndexArgumentError);
         }
