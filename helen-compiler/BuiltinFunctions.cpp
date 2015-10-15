@@ -25,6 +25,7 @@ void BuiltinFunctions::createMainFunction()
 void BuiltinFunctions::createAllBuiltins()
 {
     createArith();
+    createLnC();
     createIO();
     createIndex();
 }
@@ -65,6 +66,51 @@ void BuiltinFunctions::createArith()
                     t == i ? AST::builder.CreateSDiv(left, right, "tmp") : AST::builder.CreateFDiv(left, right, "tmp");
                 break;
             }
+            AST::builder.CreateRet(res);
+        }
+    }
+}
+
+void BuiltinFunctions::createLnC()
+{
+    FunctionType* ft;
+    Function* f;
+    BasicBlock* bb;
+    string name;
+    Value* left, *right, *res;
+    Type* i = Type::getInt64Ty(getGlobalContext());
+    Type* log = Type::getInt1Ty(getGlobalContext());
+    Type* r = Type::getDoubleTy(getGlobalContext());
+    //_operator_(int, int), _operator_(real, real)
+    for (string s : { "<", ">", "<=", ">=", "==", "!=" }) {
+        for (Type* t : { i, r }) {
+            ft = FunctionType::get(log, vector<Type*>{ t, t }, false);
+            name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
+            f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+            f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+            bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+            AST::builder.SetInsertPoint(bb);
+            auto it = f->arg_begin();
+            left = it++;
+            right = it;
+            if (s == "<")
+                res = t == i ? AST::builder.CreateICmpSLT(left, right, "tmp") :
+                               AST::builder.CreateFCmpOLT(left, right, "tmp");
+            if (s == "<=")
+                res = t == i ? AST::builder.CreateICmpSLE(left, right, "tmp") :
+                               AST::builder.CreateFCmpOLE(left, right, "tmp");
+            if (s == ">")
+                res = t == i ? AST::builder.CreateICmpSGT(left, right, "tmp") :
+                               AST::builder.CreateFCmpOGT(left, right, "tmp");
+            if (s == ">=")
+                res = t == i ? AST::builder.CreateICmpSGE(left, right, "tmp") :
+                               AST::builder.CreateFCmpOGE(left, right, "tmp");
+            if (s == "==")
+                res = t == i ? AST::builder.CreateICmpEQ(left, right, "tmp") :
+                               AST::builder.CreateFCmpOEQ(left, right, "tmp");
+            if (s == "!=")
+                res = t == i ? AST::builder.CreateICmpNE(left, right, "tmp") :
+                               AST::builder.CreateFCmpONE(left, right, "tmp");
             AST::builder.CreateRet(res);
         }
     }

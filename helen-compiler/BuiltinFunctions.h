@@ -16,6 +16,7 @@ public:
 
 private:
     static void createArith();
+    static void createLnC(); // Logical and Comparison
     static void createIO();
     static void createIndex();
 };

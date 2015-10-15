@@ -79,9 +79,13 @@ Value* VariableAST::codegen()
 Value* ConditionAST::codegen()
 {
     Value* cond = condition->codegen();
+    Type* condtype = cond->getType();
     if (!cond)
         return 0;
-    cond = builder.CreateICmpNE(cond, ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0), "ifcond");
+    if (condtype->isIntegerTy())
+        cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "ifcond");
+    if (condtype->isDoubleTy())
+        cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype), "ifcond");
     Function* f = builder.GetInsertBlock()->getParent();
     BasicBlock* thenBB = BasicBlock::Create(getGlobalContext(), "then", f);
     BasicBlock* elseBB = BasicBlock::Create(getGlobalContext(), "else");
@@ -93,7 +97,7 @@ Value* ConditionAST::codegen()
 
     Value* thenValue = thenBranch->codegen();
     if (!thenValue)
-        return 0;
+        thenValue = ConstantInt::get(IntegerType::get(getGlobalContext(), 64), 0);
 
     builder.CreateBr(mergeBB);
     thenBB = builder.GetInsertBlock();
@@ -103,7 +107,7 @@ Value* ConditionAST::codegen()
 
     Value* elseValue = elseBranch->codegen();
     if (!elseValue)
-        return 0;
+        elseValue = ConstantInt::get(IntegerType::get(getGlobalContext(), 64), 0);
 
     builder.CreateBr(mergeBB);
     elseBB = builder.GetInsertBlock();
@@ -131,9 +135,9 @@ Value* LoopAST::codegen()
         iteration->codegen();
     Value* cond = condition->codegen();
     Type* condtype = cond->getType();
-    if(condtype->isIntegerTy())
+    if (condtype->isIntegerTy())
         cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "condtmp");
-    if(condtype->isDoubleTy())
+    if (condtype->isDoubleTy())
         cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype), "condtmp");
     BasicBlock* loopEndBB = builder.GetInsertBlock();
     BasicBlock* afterBB = BasicBlock::Create(getGlobalContext(), "afterloop", f);
@@ -148,9 +152,6 @@ Value* FunctionCallAST::codegen()
     if (functionName == BuiltinFunctions::operatorMarker + "=") {
         shared_ptr<AST> left = arguments[0], right = arguments[1];
         FunctionCallAST* leftf = dynamic_cast<FunctionCallAST*>(left.get());
-        int64_t vl = dynamic_cast<ConstantIntAST*>(left.get()) ? ((ConstantIntAST*)(left.get()))->getValue() : 0;
-        int64_t vr = dynamic_cast<ConstantIntAST*>(right.get()) ? ((ConstantIntAST*)(right.get()))->getValue() : 0;
-        printf("%s %s %ld %ld\n", typeid(*left).name(), typeid(*right).name(), vl, vr);
         if (leftf) {
             string fname = leftf->getFunctionName();
             // Here must be check for reference
