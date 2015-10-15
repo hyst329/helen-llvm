@@ -295,7 +295,7 @@ term: literal {
 | ID {
     $$ = new VariableAST($1);
 }
-| ID POINT expression {
+| ID POINT term {
     $$ = new FunctionCallAST("__index",
                              {shared_ptr<AST>(new VariableAST($1)), shared_ptr<AST>($3)});
 }

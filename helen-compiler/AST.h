@@ -48,6 +48,7 @@ public:
         , bitwidth(bitwidth)
     {
     }
+    int64_t getValue() { return value; }
     virtual Value* codegen();
 };
 

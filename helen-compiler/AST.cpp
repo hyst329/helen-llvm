@@ -122,9 +122,57 @@ Value* FunctionCallAST::codegen()
     // Assignment is the special case
     if (functionName == BuiltinFunctions::operatorMarker + "=") {
         shared_ptr<AST> left = arguments[0], right = arguments[1];
+        FunctionCallAST* leftf = dynamic_cast<FunctionCallAST*>(left.get());
+        int64_t vl = dynamic_cast<ConstantIntAST*>(left.get()) ? ((ConstantIntAST*)(left.get()))->getValue() : 0;
+        int64_t vr = dynamic_cast<ConstantIntAST*>(right.get()) ? ((ConstantIntAST*)(right.get()))->getValue() : 0;
+        printf("%s %s %ld %ld\n", typeid(*left).name(), typeid(*right).name(), vl, vr);
+        if (leftf) {
+            string fname = leftf->getFunctionName();
+            // Here must be check for reference
+            if (fname == "__index") {
+                Value* arr = leftf->arguments[0]->codegen();
+                if (arr->getType()->isVectorTy()) {
+                    Value* idx = leftf->arguments[1]->codegen();
+                    if (!idx->getType()->isIntegerTy(64))
+                        return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });
+                    Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
+                    idx = builder.CreateSub(idx, one);
+                    Value* v = right->codegen();
+                    v = builder.CreateInsertElement(arr, v, idx);
+                    if (dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
+                        Value* var = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());
+                        builder.CreateStore(v, var);
+                    }
+                    return v;
+                } else if (arr->getType()->isStructTy()) {
+                    if (!dynamic_cast<VariableAST*>(leftf->arguments[1].get()))
+                        return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
+                    string name = ((VariableAST*)(leftf->arguments[1].get()))->getName();
+                    vector<string> fie = fields[static_cast<StructType*>(arr->getType())->getName()];
+                    auto field = std::find(fie.begin(), fie.end(), name);
+                    if (field == fie.end()) {
+                        return Error::errorValue(ErrorType::UndeclaredVariable, { name });
+                    }
+                    int pos = field - fie.begin();
+                    Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+                    Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
+                    Value* idx[] = { zero, ind };
+                    if (!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
+                        return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
+                    }
+                    AllocaInst* aarr = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());;
+                    builder.CreateStore(arr, aarr);
+                    Value* tmpptr = builder.CreateInBoundsGEP(aarr, idx, "indtmpptr");
+                    Value* v = builder.CreateStore(right->codegen(), tmpptr);
+                    return v;
+                } else {
+                    return Error::errorValue(ErrorType::IndexArgumentError);
+                }
+            }
+        }
         VariableAST* lefte = dynamic_cast<VariableAST*>(left.get());
         if (!lefte)
-            return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)lefte) });
+            return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
         Value* v = right->codegen();
         if (!v)
             return nullptr;
