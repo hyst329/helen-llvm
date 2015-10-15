@@ -117,6 +117,31 @@ Value* ConditionAST::codegen()
     return PN;
 }
 
+Value* LoopAST::codegen()
+{
+    if (initial)
+        initial->codegen();
+    Function* f = builder.GetInsertBlock()->getParent();
+    BasicBlock* preheaderBB = builder.GetInsertBlock();
+    BasicBlock* loopBB = BasicBlock::Create(getGlobalContext(), "loop", f);
+    builder.CreateBr(loopBB);
+    builder.SetInsertPoint(loopBB);
+    body->codegen();
+    if (iteration)
+        iteration->codegen();
+    Value* cond = condition->codegen();
+    Type* condtype = cond->getType();
+    if(condtype->isIntegerTy())
+        cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "condtmp");
+    if(condtype->isDoubleTy())
+        cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype), "condtmp");
+    BasicBlock* loopEndBB = builder.GetInsertBlock();
+    BasicBlock* afterBB = BasicBlock::Create(getGlobalContext(), "afterloop", f);
+    builder.CreateCondBr(cond, loopBB, afterBB);
+    builder.SetInsertPoint(afterBB);
+    return Constant::getNullValue(Type::getInt64Ty(getGlobalContext()));
+}
+
 Value* FunctionCallAST::codegen()
 {
     // Assignment is the special case
@@ -160,7 +185,8 @@ Value* FunctionCallAST::codegen()
                     if (!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
                         return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
                     }
-                    AllocaInst* aarr = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());;
+                    AllocaInst* aarr = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());
+                    ;
                     builder.CreateStore(arr, aarr);
                     Value* tmpptr = builder.CreateInBoundsGEP(aarr, idx, "indtmpptr");
                     Value* v = builder.CreateStore(right->codegen(), tmpptr);

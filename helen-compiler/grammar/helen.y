@@ -130,7 +130,16 @@ instruction: statement NEWLINE {
                           shared_ptr<Helen::AST>($7));
 }
 | LOOP statement COMMA expression COMMA statement NEWLINE instseq ENDLOOP {
-
+    $$ = new LoopAST(shared_ptr<Helen::AST>($2),
+                     shared_ptr<Helen::AST>($4),
+                     shared_ptr<Helen::AST>($6),
+                     shared_ptr<Helen::AST>($8));
+}
+| LOOP expression NEWLINE instseq ENDLOOP {
+    $$ = new LoopAST(shared_ptr<Helen::AST>(0),
+                     shared_ptr<Helen::AST>($2),
+                     shared_ptr<Helen::AST>(0),
+                     shared_ptr<Helen::AST>($4));
 }
 | FUN funprot NEWLINE instseq ENDFUN {
     $$ = new FunctionAST(shared_ptr<FunctionPrototypeAST>(dynamic_cast<FunctionPrototypeAST*>($2)), shared_ptr<AST>($4));

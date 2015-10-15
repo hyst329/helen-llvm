@@ -48,7 +48,10 @@ public:
         , bitwidth(bitwidth)
     {
     }
-    int64_t getValue() { return value; }
+    int64_t getValue()
+    {
+        return value;
+    }
     virtual Value* codegen();
 };
 
@@ -140,6 +143,23 @@ public:
     virtual Value* codegen();
 };
 
+class LoopAST : public AST
+{
+    shared_ptr<AST> initial;
+    shared_ptr<AST> condition;
+    shared_ptr<AST> iteration;
+    shared_ptr<AST> body;
+
+public:
+    LoopAST(shared_ptr<AST> initial, shared_ptr<AST> condition, shared_ptr<AST> iteration, shared_ptr<AST> body)
+        : initial(initial)
+        , condition(condition)
+        , iteration(iteration)
+        , body(body)
+    {
+    }
+    virtual Value* codegen();
+};
 class FunctionCallAST : public AST
 {
     string functionName;
