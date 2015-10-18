@@ -14,9 +14,9 @@ string FunctionNameMangler::mangleName(string name, vector<Type*> args, string s
             mangledName += "_v";
         for (Type* t : args) {
             mangledName += "_";
-            if (t->isVectorTy()) {
+            if (t->isArrayTy()) {
                 mangledName += "v";
-                t = t->getScalarType();
+                t = t->getArrayElementType();
             }
             if (t == Type::getInt64Ty(getGlobalContext()))
                 mangledName += "i";

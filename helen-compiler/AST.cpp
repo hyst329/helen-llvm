@@ -157,7 +157,7 @@ Value* FunctionCallAST::codegen()
             // Here must be check for reference
             if (fname == "__index") {
                 Value* arr = leftf->arguments[0]->codegen();
-                if (arr->getType()->isVectorTy()) {
+                if (arr->getType()->isArrayTy()) {
                     Value* idx = leftf->arguments[1]->codegen();
                     if (!idx->getType()->isIntegerTy(64))
                         return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });
@@ -217,7 +217,7 @@ Value* FunctionCallAST::codegen()
     // Index (temporary, should be in BuiltFunction::createIndex)
     if (functionName == "__index") {
         Value* left = arguments[0]->codegen();
-        if (left->getType()->isVectorTy()) {
+        if (left->getType()->isArrayTy()) {
             Value* right = arguments[1]->codegen();
             if (!right->getType()->isIntegerTy(64))
                 return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });

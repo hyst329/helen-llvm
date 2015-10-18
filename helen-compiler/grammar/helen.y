@@ -245,7 +245,7 @@ type: INT {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);
 }
 | type POINT INTLIT {
-    $$ = llvm::VectorType::get($1, $3);
+    $$ = llvm::ArrayType::get($1, $3);
 }
 | PTR type {
     $$ = llvm::PointerType::get($2, 0);
