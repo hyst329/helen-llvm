@@ -44,7 +44,7 @@ void BuiltinFunctions::createArith()
         for (Type* t : { i, r }) {
             ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
-            f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+            f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
@@ -86,7 +86,7 @@ void BuiltinFunctions::createLnC()
         for (Type* t : { i, r }) {
             ft = FunctionType::get(log, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
-            f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+            f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
@@ -144,7 +144,8 @@ void BuiltinFunctions::createIO()
             fmtstr = "%s\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i, { t }, false);
-        Function* f = Function::Create(ft, Function::ExternalLinkage, name, AST::module.get());
+        Function* f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+        f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
         BasicBlock* parent = AST::builder.GetInsertBlock();
         BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
         AST::builder.SetInsertPoint(bb);
@@ -152,7 +153,7 @@ void BuiltinFunctions::createIO()
         Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(fmtstr));
         Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), fmtstr.size() + 1);
         GlobalVariable* var =
-            new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::PrivateLinkage, fmt, ".str");
+            new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::LinkOnceAnyLinkage, fmt, ".str");
         Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
         Constant* ind[] = { zero, zero };
 #if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7
