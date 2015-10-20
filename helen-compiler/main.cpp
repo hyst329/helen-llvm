@@ -17,7 +17,7 @@ extern FILE* yyin;
 
 int main(int argc, char** argv)
 {
-    AST::module = llvm::make_unique<Module>("helen-module", getGlobalContext());
+    AST::module = llvm::make_unique<Module>("__helenmodule__", getGlobalContext());
     AST::fpm = llvm::make_unique<legacy::FunctionPassManager>(AST::module.get());
     AST::fpm->add(createBasicAliasAnalysisPass());
     AST::fpm->add(createPromoteMemoryToRegisterPass());
@@ -29,10 +29,11 @@ int main(int argc, char** argv)
     legacy::PassManager pm;
     pm.add(createAlwaysInlinerPass());
     AST::fpm->doInitialization();
-    BuiltinFunctions::createMainFunction();
     yyin = (argc == 1) ? stdin : fopen(argv[1], "r");
+    AST::isMainModule = false;
     AST* result;
     yyparse(result);
+    BuiltinFunctions::createMainFunction(AST::isMainModule);
     result->codegen();
     if (Error::errorFlag) 
     {

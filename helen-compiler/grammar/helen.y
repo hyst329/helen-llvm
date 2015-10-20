@@ -49,7 +49,7 @@ static bool lastTerm = 0;
 %token SIZE RESIZE
 %token RETURN
 %token IN OUT DEBUGVAR
-%token USE
+%token USE MAINMODULE
 %token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -74,6 +74,7 @@ static bool lastTerm = 0;
 %type<vstr> style
 %type<vstr> OPERATOR
 %type<vstr> ID
+%type<vstr> qid
 %type<vint> INTLIT
 %type<vreal> REALLIT
 %type<vchar> CHARLIT
@@ -163,6 +164,16 @@ instruction: statement NEWLINE {
     if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
     $$ = new CustomTypeAST($2, *$4);
     ((CustomTypeAST*)$$)->compileTime();
+}
+| MAINMODULE {
+    AST::isMainModule = true;
+    $$ = new NullAST();
+}
+qid: qid COLON ID {
+    $$ = strdup((std::string($1) + "-" + $3).c_str());
+}
+| ID {
+    $$ = strdup($1);
 }
 properties: properties property NEWLINE {
     $1->push_back(shared_ptr<AST>($2));

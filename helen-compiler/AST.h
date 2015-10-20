@@ -35,6 +35,7 @@ public:
     static map<string, Type*> types;
     static map<string, vector<string> > fields;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
+    static bool isMainModule;
 };
 
 class ConstantIntAST : public AST
@@ -60,7 +61,8 @@ class ConstantRealAST : public AST
     double value;
 
 public:
-    ConstantRealAST(double value) : value(value)
+    ConstantRealAST(double value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -71,7 +73,8 @@ class ConstantCharAST : public AST
     char value;
 
 public:
-    ConstantCharAST(char value) : value(value)
+    ConstantCharAST(char value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -82,7 +85,8 @@ class ConstantStringAST : public AST
     string value;
 
 public:
-    ConstantStringAST(string value) : value(value)
+    ConstantStringAST(string value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -93,7 +97,8 @@ class VariableAST : public AST
     string name;
 
 public:
-    VariableAST(string name) : name(name)
+    VariableAST(string name)
+        : name(name)
     {
     }
     const string& getName() const
@@ -192,7 +197,8 @@ public:
         return instructions;
     }
 
-    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >()) : instructions(instructions)
+    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
+        : instructions(instructions)
     {
     }
     virtual Value* codegen();
@@ -200,7 +206,7 @@ public:
 
 class FunctionPrototypeAST : public AST
 {
-    string name;
+    string name, origName;
     vector<Type*> args;
     vector<string> argNames;
     Type* returnType;
@@ -209,6 +215,7 @@ class FunctionPrototypeAST : public AST
 public:
     FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style)
         : name(name)
+        , origName(name)
         , args(args)
         , argNames(argNames)
         , returnType(returnType)
@@ -218,6 +225,14 @@ public:
     const string& getName() const
     {
         return name;
+    }
+    const string& getOriginalName() const
+    {
+        return origName;
+    }
+    Type* getReturnType() const
+    {
+        return returnType;
     }
     const vector<Type*>& getArgs() const
     {
@@ -245,7 +260,8 @@ class ReturnAST : public AST
     shared_ptr<AST> result;
 
 public:
-    ReturnAST(shared_ptr<AST> result) : result(result)
+    ReturnAST(shared_ptr<AST> result)
+        : result(result)
     {
     }
     virtual Value* codegen();

@@ -41,6 +41,7 @@ out                      return OUT;
 debugvar                 return DEBUGVAR;
 style                    return STYLE;
 ptr                      return PTR;
+mainmodule               return MAINMODULE;
 \n                       return NEWLINE;
 [ \t]                    ;
 [a-zA-Z][a-zA-Z0-9]*     yylval.vstr = strdup(yytext); return ID;

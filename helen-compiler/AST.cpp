@@ -18,6 +18,7 @@ map<string, Function*> AST::functions;
 map<string, Type*> AST::types;
 map<string, vector<string> > AST::fields;
 stack<string> AST::callstack;
+bool AST::isMainModule = false;
 
 AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName)
 {
@@ -111,11 +112,12 @@ Value* ConditionAST::codegen()
 
     f->getBasicBlockList().push_back(mergeBB);
     builder.SetInsertPoint(mergeBB);
-    PHINode* PN = builder.CreatePHI(Type::getInt64Ty(getGlobalContext()), 2, "iftmp");
+    /*PHINode* PN = builder.CreatePHI(Type::getInt64Ty(getGlobalContext()), 2, "iftmp");
 
     PN->addIncoming(thenValue, thenBB);
     PN->addIncoming(elseValue, elseBB);
-    return PN;
+    return PN;*/
+    return 0;
 }
 
 Value* LoopAST::codegen()
@@ -338,17 +340,21 @@ Function* FunctionAST::codegen()
         builder.CreateStore(&arg, alloca);
         variables[arg.getName()] = alloca;
     }
-    if(Value* ret = body->codegen()) {
-        builder.CreateRet(ret);
-        verifyFunction(*f);
-        fpm->run(*f);
-        //        callstack.pop();
-        //        string previous = callstack.empty() ? "main" : callstack.top();
-        //        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
-        //        builder.SetInsertPoint(bb);
-        builder.SetInsertPoint(parent);
-        return f;
-    }
+    AllocaInst* alloca = createEntryBlockAlloca(f, proto->getReturnType(), proto->getName());
+    builder.CreateStore(Constant::getNullValue(proto->getReturnType()), alloca);
+    variables[proto->getOriginalName()] = alloca;
+    Value* ret = body->codegen();
+    if(!ret)
+        ret = builder.CreateLoad(variables[proto->getOriginalName()]);
+    builder.CreateRet(ret);
+    verifyFunction(*f);
+    fpm->run(*f);
+    //        callstack.pop();
+    //        string previous = callstack.empty() ? "main" : callstack.top();
+    //        BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
+    //        builder.SetInsertPoint(bb);
+    builder.SetInsertPoint(parent);
+    return f;
     /*callstack.pop();
     string previous = callstack.empty() ? "_main_v" : callstack.top();
     bb = BasicBlock::Create(getGlobalContext(), "resume", module->getFunction(previous));
@@ -360,7 +366,6 @@ Function* FunctionAST::codegen()
 Value* ReturnAST::codegen()
 {
     Value* ret = result->codegen();
-    // builder.CreateRet(ret);
     return ret;
 }
 Value* CustomTypeAST::codegen()
