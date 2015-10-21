@@ -11,6 +11,7 @@
 namespace Helen
 {
 unique_ptr<Module> AST::module = 0;
+unique_ptr<DataLayout> AST::dataLayout = 0;
 unique_ptr<legacy::FunctionPassManager> AST::fpm = 0;
 IRBuilder<> AST::builder(getGlobalContext());
 map<string, AllocaInst*> AST::variables;
@@ -177,11 +178,14 @@ Value* FunctionCallAST::codegen()
                     //                        return builder.CreateStore(v, var);
                     //                    }
                     return builder.CreateStore(right->codegen(), v);
-                } else if(arr->getType()->isStructTy()) {
+                } else if(arr->getType()->isPointerTy()) {
+                    Type* elTy = cast<PointerType>(arr->getType())->getElementType();
+                    if(!elTy->isStructTy())
+                        return Error::errorValue(ErrorType::IndexArgumentError);
                     if(!dynamic_cast<VariableAST*>(leftf->arguments[1].get()))
                         return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
                     string name = ((VariableAST*)(leftf->arguments[1].get()))->getName();
-                    vector<string> fie = fields[static_cast<StructType*>(arr->getType())->getName()];
+                    vector<string> fie = fields[static_cast<StructType*>(elTy)->getName()];
                     auto field = std::find(fie.begin(), fie.end(), name);
                     if(field == fie.end()) {
                         return Error::errorValue(ErrorType::UndeclaredVariable, { name });
@@ -193,10 +197,7 @@ Value* FunctionCallAST::codegen()
                     if(!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
                         return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
                     }
-                    AllocaInst* aarr = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());
-                    ;
-                    builder.CreateStore(arr, aarr);
-                    Value* tmpptr = builder.CreateInBoundsGEP(aarr, idx, "indtmpptr");
+                    Value* tmpptr = builder.CreateInBoundsGEP(arr, idx, "indtmpptr");
                     Value* v = builder.CreateStore(right->codegen(), tmpptr);
                     return v;
                 } else {
@@ -237,11 +238,14 @@ Value* FunctionCallAST::codegen()
             Value* tmpptr = builder.CreateInBoundsGEP(aleft, ind, "indtmpptr");
             return builder.CreateLoad(tmpptr, "indtmp");
 
-        } else if(left->getType()->isStructTy()) {
+        } else if(left->getType()->isPointerTy()) {
+            Type* elTy = cast<PointerType>(left->getType())->getElementType();
+            if(!elTy->isStructTy())
+                return Error::errorValue(ErrorType::IndexArgumentError);
             if(!dynamic_cast<VariableAST*>(arguments[1].get()))
                 return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
             string name = ((VariableAST*)arguments[1].get())->getName();
-            vector<string> fie = fields[static_cast<StructType*>(left->getType())->getName()];
+            vector<string> fie = fields[static_cast<StructType*>(elTy)->getName()];
             auto field = std::find(fie.begin(), fie.end(), name);
             if(field == fie.end()) {
                 return Error::errorValue(ErrorType::UndeclaredVariable, { name });
@@ -250,9 +254,9 @@ Value* FunctionCallAST::codegen()
             Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
             Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
             Value* right[] = { zero, ind };
-            AllocaInst* aleft = builder.CreateAlloca(left->getType(), 0, "atmp");
-            builder.CreateStore(left, aleft);
-            Value* tmpptr = builder.CreateInBoundsGEP(aleft, right, "indtmpptr");
+            /*AllocaInst* aleft = builder.CreateAlloca(left->getType(), 0, "atmp");
+            builder.CreateStore(left, aleft);*/
+            Value* tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
             return builder.CreateLoad(tmpptr, "indtmp");
         } else {
             return Error::errorValue(ErrorType::IndexArgumentError);
@@ -340,11 +344,13 @@ Function* FunctionAST::codegen()
         builder.CreateStore(&arg, alloca);
         variables[arg.getName()] = alloca;
     }
-    AllocaInst* alloca = createEntryBlockAlloca(f, proto->getReturnType(), proto->getName());
-    builder.CreateStore(Constant::getNullValue(proto->getReturnType()), alloca);
-    variables[proto->getOriginalName()] = alloca;
+    if(!proto->getReturnType()->isVoidTy()) {
+        AllocaInst* alloca = createEntryBlockAlloca(f, proto->getReturnType(), proto->getName());
+        builder.CreateStore(Constant::getNullValue(proto->getReturnType()), alloca);
+        variables[proto->getOriginalName()] = alloca;
+    }
     Value* ret = body->codegen();
-    if(!ret)
+    if(!ret && !proto->getReturnType()->isVoidTy())
         ret = builder.CreateLoad(variables[proto->getOriginalName()]);
     builder.CreateRet(ret);
     verifyFunction(*f);
@@ -386,5 +392,19 @@ void CustomTypeAST::compileTime()
     }
     fields[typeName] = fieldNames;
     types[typeName] = StructType::create(ArrayRef<Type*>(fieldTypes), typeName);
+}
+
+Value* NewAST::codegen()
+{
+    if(!type->isPointerTy())
+        return Error::errorValue(ErrorType::WrongArgumentType, { "non-struct type" });
+    if(!cast<PointerType>(type)->getElementType()->isStructTy())
+        return Error::errorValue(ErrorType::WrongArgumentType, { "non-struct type" });
+    Type* ptrType = type;
+    type = cast<PointerType>(type)->getElementType();
+    size_t size = dataLayout->getTypeStoreSize(type);
+    Value* memoryPtr = builder.CreateCall(
+        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+    return builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
 }
 }

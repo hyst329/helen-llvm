@@ -27,6 +27,7 @@ void BuiltinFunctions::createAllBuiltins()
 {
     createArith();
     createLnC();
+    createMemory();
     createIO();
     createIndex();
 }
@@ -176,4 +177,24 @@ void BuiltinFunctions::createIndex()
 {
     // The index function is temporary handled in AST.cpp
 }
+
+void BuiltinFunctions::createMemory()
+{
+    std::vector<Type*> malloc_types;
+    malloc_types.push_back(Type::getInt32Ty(getGlobalContext()));
+
+    FunctionType* malloc_type = FunctionType::get(Type::getInt8PtrTy(getGlobalContext()), malloc_types, false);
+
+    Function* malloc = Function::Create(malloc_type, Function::ExternalLinkage, "malloc", AST::module.get());
+    malloc->setCallingConv(CallingConv::C);
+    
+    std::vector<Type*> free_types;
+    free_types.push_back(Type::getInt8PtrTy(getGlobalContext()));
+
+    FunctionType* free_type = FunctionType::get(Type::getVoidTy(getGlobalContext()), free_types, false);
+
+    Function* free = Function::Create(free_type, Function::ExternalLinkage, "free", AST::module.get());
+    free->setCallingConv(CallingConv::C);
+}
+
 }

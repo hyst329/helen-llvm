@@ -19,6 +19,7 @@ private:
     static void createLnC(); // Logical and Comparison
     static void createIO();
     static void createIndex();
+    static void createMemory();
 };
 }
 

@@ -27,6 +27,7 @@ class AST
 public:
     virtual Value* codegen() = 0;
     static unique_ptr<Module> module;
+    static unique_ptr<DataLayout> dataLayout;
     static unique_ptr<legacy::FunctionPassManager> fpm;
     static IRBuilder<> builder;
     static map<string, AllocaInst*> variables;
@@ -280,6 +281,20 @@ public:
     }
     virtual Value* codegen();
     void compileTime();
+};
+
+class NewAST : public AST
+{
+    Type* type;
+    vector<shared_ptr<AST> > arguments;
+
+public:
+    NewAST(Type* type, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
+        : type(type)
+        , arguments(arguments)
+    {
+    }
+    virtual Value* codegen();
 };
 
 class NullAST : public AST

@@ -50,7 +50,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT DEBUGVAR
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING PTR
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING NEW PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -250,7 +250,7 @@ type: INT {
 }
 | ID {
     if(AST::types.find($1) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$1});
-    $$ = AST::types[$1];
+    $$ = $$ = llvm::PointerType::get(AST::types[$1], 0);
 }
 | INT LPAREN INTLIT RPAREN {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);
@@ -321,6 +321,9 @@ term: literal {
 }
 | SIZE ID {
     $$ = new FunctionCallAST("__size", {shared_ptr<AST>(new VariableAST($2))});
+}
+| NEW type {
+    $$ = new NewAST($2);
 }
 literal: INTLIT {
      $$ = new ConstantIntAST($1);

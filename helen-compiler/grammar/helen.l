@@ -40,6 +40,7 @@ in                       return IN;
 out                      return OUT;
 debugvar                 return DEBUGVAR;
 style                    return STYLE;
+new                      return NEW;
 ptr                      return PTR;
 mainmodule               return MAINMODULE;
 \n                       return NEWLINE;
