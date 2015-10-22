@@ -407,4 +407,21 @@ Value* NewAST::codegen()
         module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
     return builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
 }
+
+Value* DeleteAST::codegen()
+{
+    try {
+        Value* val = variables.at(var);
+        Value* addr = builder.CreateLoad(val, "freetmp");
+        if(!addr->getType()->isPointerTy())
+            return Error::errorValue(ErrorType::NonObjectType);
+        if(!cast<PointerType>(addr->getType())->getElementType()->isStructTy())
+            return Error::errorValue(ErrorType::NonObjectType);
+        addr = builder.CreateBitCast(addr, Type::getInt8PtrTy(getGlobalContext()), "freetmp");
+        builder.CreateCall(module->getFunction("free"), addr);
+    } catch(out_of_range) {
+        return Error::errorValue(ErrorType::UndeclaredVariable, { var });
+    }
+    return 0;
+}
 }

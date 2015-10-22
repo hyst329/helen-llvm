@@ -41,6 +41,7 @@ out                      return OUT;
 debugvar                 return DEBUGVAR;
 style                    return STYLE;
 new                      return NEW;
+delete                   return DELETE;
 ptr                      return PTR;
 mainmodule               return MAINMODULE;
 \n                       return NEWLINE;

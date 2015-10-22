@@ -20,6 +20,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::UnknownStyle, "Unknown linkage style ('C' and 'Helen' are currently allowed)" },
     { ErrorType::TypeRedefined, "Function %1% is redefined" },
     { ErrorType::UndeclaredType, "Undeclared type: %1%" },
+    { ErrorType::NonObjectType, "Type of the variable is probably non-object (i.e. primitive)" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

@@ -297,6 +297,18 @@ public:
     virtual Value* codegen();
 };
 
+class DeleteAST : public AST
+{
+    string var;
+
+public:
+    DeleteAST(string var)
+        : var(var)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class NullAST : public AST
 {
 public:

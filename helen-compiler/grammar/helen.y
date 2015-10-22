@@ -50,7 +50,8 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT DEBUGVAR
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING NEW PTR
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING
+%token NEW DELETE PTR
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -168,6 +169,9 @@ instruction: statement NEWLINE {
 | MAINMODULE {
     AST::isMainModule = true;
     $$ = new NullAST();
+}
+| DELETE ID {
+    $$ = new DeleteAST($2);
 }
 qid: qid COLON ID {
     $$ = strdup((std::string($1) + "-" + $3).c_str());
