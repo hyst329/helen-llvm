@@ -190,6 +190,9 @@ properties: properties property NEWLINE {
 property: type ID {
     $$ = new DeclarationAST($1, $2);
 }
+| DECLARE funprot {
+    $$ = $2;
+}
 statement: declaration {
     $$ = $1;
 }
