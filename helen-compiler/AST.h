@@ -235,6 +235,10 @@ public:
     {
         return returnType;
     }
+    string& getStyle()
+    {
+        return style;
+    }
     const vector<Type*>& getArgs() const
     {
         return args;

@@ -45,10 +45,10 @@ static bool lastTerm = 0;
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
-%token FUN ENDFUN DECLARE STYLE
+%token FUN ENDFUN DECLARE STYLE METHOD
 %token SIZE RESIZE
 %token RETURN
-%token IN OUT DEBUGVAR
+%token IN OUT
 %token USE MAINMODULE
 %token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING
 %token NEW DELETE PTR
@@ -202,9 +202,6 @@ statement: declaration {
 | OUT expression {
     $$ = new FunctionCallAST("__out", {shared_ptr<AST>($2)});
 }
-| DEBUGVAR {
-    $$ = new FunctionCallAST("__debugvar");
-}
 | expression {
     $$ = $1;
 }
@@ -223,6 +220,10 @@ funprot: ID LPAREN arglist RPAREN style {
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
+}
+| METHOD LPAREN ID RPAREN {
+    if(AST::types.find($3) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$3});
+    $$ = strdup((string("__method_") + $3).c_str());
 }
 | /* empty */ {
     $$ = "Helen";

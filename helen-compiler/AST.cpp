@@ -7,6 +7,7 @@
 #include "FunctionNameMangler.h"
 #include "BuiltinFunctions.h"
 #include <set>
+#include <boost/algorithm/string.hpp>
 
 namespace Helen
 {
@@ -309,10 +310,22 @@ Value* NullAST::codegen()
 Function* FunctionPrototypeAST::codegen()
 {
     set<string> styles = { "C", "Helen" };
+    string method = "__method_";
+    string className = "";
+    if(boost::algorithm::starts_with(style, method)) {
+        className = style.substr(method.size());
+        printf("Found a method %s of class %s\n", name.c_str(), className.c_str());
+        style = "Helen"; // methods can be only Helen-style
+    }
+    if(!className.empty()) {
+        // add 'this' parameter
+        args.insert(args.begin(), PointerType::get(types[className], 0));
+        argNames.insert(argNames.begin(), "this");
+    }
     if(!styles.count(style))
         return (Function*)Error::errorValue(ErrorType::UnknownStyle);
     FunctionType* ft = FunctionType::get(returnType, args, false);
-    name = FunctionNameMangler::mangleName(name, args, style);
+    name = FunctionNameMangler::mangleName(name, args, style, className);
     Function* f = Function::Create(ft, Function::ExternalLinkage, name, module.get());
     functions[name] = f;
 
@@ -376,6 +389,13 @@ Value* ReturnAST::codegen()
 }
 Value* CustomTypeAST::codegen()
 {
+    for(shared_ptr<AST> i : instructions) {
+        if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
+            FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
+            fpi->getStyle() = "__method_" + typeName;
+            fpi->codegen();
+        }
+    }
     return 0;
 }
 void CustomTypeAST::compileTime()
@@ -391,7 +411,7 @@ void CustomTypeAST::compileTime()
         }
         if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
-            printf("Got method '%s'\n", fpi->getOriginalName().c_str());
+            //printf("Got method '%s'\n", fpi->getOriginalName().c_str());
             fieldNames.push_back(fpi->getOriginalName());
             Type* pf = PointerType::get(FunctionType::get(fpi->getReturnType(), fpi->getArgs(), false), 0);
             fieldTypes.push_back(pf);

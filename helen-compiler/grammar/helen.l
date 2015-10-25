@@ -39,7 +39,7 @@ char                     return CHAR;
 string                   return STRING;
 in                       return IN;
 out                      return OUT;
-debugvar                 return DEBUGVAR;
+method                   return METHOD;
 style                    return STYLE;
 new                      return NEW;
 delete                   return DELETE;
