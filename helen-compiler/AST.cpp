@@ -389,6 +389,13 @@ void CustomTypeAST::compileTime()
             fieldNames.push_back(di->getName());
             fieldTypes.push_back(di->getType());
         }
+        if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
+            FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
+            printf("Got method '%s'\n", fpi->getOriginalName().c_str());
+            fieldNames.push_back(fpi->getOriginalName());
+            Type* pf = PointerType::get(FunctionType::get(fpi->getReturnType(), fpi->getArgs(), false), 0);
+            fieldTypes.push_back(pf);
+        }
     }
     fields[typeName] = fieldNames;
     types[typeName] = StructType::create(ArrayRef<Type*>(fieldTypes), typeName);

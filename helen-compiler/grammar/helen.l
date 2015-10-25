@@ -1,5 +1,6 @@
 %option case-insensitive
 %option yylineno
+%x COMMENT
 %{
 #include "../AST.h"
 #include "../Error.h"
@@ -55,6 +56,9 @@ mainmodule               return MAINMODULE;
 \:                       return COLON;
 \,                       return COMMA;
 \.                       return POINT;
+#                        BEGIN(COMMENT);
+<COMMENT>[^\n]*          ;
+<COMMENT>\n              BEGIN(INITIAL);
 [\+\-\*\/\<\>\=@]+       yylval.vstr = strdup(yytext); return OPERATOR;
 [\+\-]?[0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;
 [\+\-]?[0-9]+                   yylval.vint = atoi(yytext); return INTLIT;
