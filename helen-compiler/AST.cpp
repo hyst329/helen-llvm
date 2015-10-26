@@ -267,7 +267,6 @@ Value* FunctionCallAST::codegen()
                 Value* tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
                 Value* f = builder.CreateLoad(tmpptr, "indtmp");
                 return builder.CreateCall(f, vals, "calltmp");
-                // TODO: add 'real' method call!
             }
             if(!dynamic_cast<VariableAST*>(arguments[1].get()))
                 return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
