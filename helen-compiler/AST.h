@@ -170,7 +170,7 @@ class FunctionCallAST : public AST
 {
     string functionName;
     vector<shared_ptr<AST> > arguments;
-
+    string methodType = "";
 public:
     FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
         : functionName(functionName)
@@ -180,6 +180,10 @@ public:
     string getFunctionName()
     {
         return functionName;
+    }
+    string& getMethodType()
+    {
+        return methodType;
     }
     vector<shared_ptr<AST> >& getArguments()
     {
