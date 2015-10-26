@@ -53,28 +53,25 @@ Value* DeclarationAST::codegen()
     Function* f = builder.GetInsertBlock()->getParent();
 
     Value* initValue;
-    if (initialiser) {
+    if(initialiser) {
         initValue = initialiser->codegen();
-        if (!initValue)
+        if(!initValue)
             return nullptr;
     } else {
         initValue = Constant::getNullValue(type);
     }
     AllocaInst* alloca = createEntryBlockAlloca(f, type, name);
-    if (initValue)
+    if(initValue)
         builder.CreateStore(initValue, alloca);
     variables[name] = alloca;
 }
 
 Value* VariableAST::codegen()
 {
-    try
-    {
+    try {
         Value* val = variables.at(name);
         return builder.CreateLoad(val, name.c_str());
-    }
-    catch (out_of_range)
-    {
+    } catch(out_of_range) {
         return Error::errorValue(ErrorType::UndeclaredVariable, { name });
     }
 }
@@ -83,11 +80,11 @@ Value* ConditionAST::codegen()
 {
     Value* cond = condition->codegen();
     Type* condtype = cond->getType();
-    if (!cond)
+    if(!cond)
         return 0;
-    if (condtype->isIntegerTy())
+    if(condtype->isIntegerTy())
         cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "ifcond");
-    if (condtype->isDoubleTy())
+    if(condtype->isDoubleTy())
         cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype), "ifcond");
     Function* f = builder.GetInsertBlock()->getParent();
     BasicBlock* thenBB = BasicBlock::Create(getGlobalContext(), "then", f);
@@ -99,7 +96,7 @@ Value* ConditionAST::codegen()
     builder.SetInsertPoint(thenBB);
 
     Value* thenValue = thenBranch->codegen();
-    if (!thenValue)
+    if(!thenValue)
         thenValue = ConstantInt::get(IntegerType::get(getGlobalContext(), 64), 0);
 
     builder.CreateBr(mergeBB);
@@ -109,7 +106,7 @@ Value* ConditionAST::codegen()
     builder.SetInsertPoint(elseBB);
 
     Value* elseValue = elseBranch->codegen();
-    if (!elseValue)
+    if(!elseValue)
         elseValue = ConstantInt::get(IntegerType::get(getGlobalContext(), 64), 0);
 
     builder.CreateBr(mergeBB);
@@ -127,7 +124,7 @@ Value* ConditionAST::codegen()
 
 Value* LoopAST::codegen()
 {
-    if (initial)
+    if(initial)
         initial->codegen();
     Function* f = builder.GetInsertBlock()->getParent();
     BasicBlock* preheaderBB = builder.GetInsertBlock();
@@ -135,13 +132,13 @@ Value* LoopAST::codegen()
     builder.CreateBr(loopBB);
     builder.SetInsertPoint(loopBB);
     body->codegen();
-    if (iteration)
+    if(iteration)
         iteration->codegen();
     Value* cond = condition->codegen();
     Type* condtype = cond->getType();
-    if (condtype->isIntegerTy())
+    if(condtype->isIntegerTy())
         cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "condtmp");
-    if (condtype->isDoubleTy())
+    if(condtype->isDoubleTy())
         cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype), "condtmp");
     BasicBlock* loopEndBB = builder.GetInsertBlock();
     BasicBlock* afterBB = BasicBlock::Create(getGlobalContext(), "afterloop", f);
@@ -153,23 +150,23 @@ Value* LoopAST::codegen()
 Value* FunctionCallAST::codegen()
 {
     // Assignment is the special case
-    if (functionName == BuiltinFunctions::operatorMarker + "=") {
+    if(functionName == BuiltinFunctions::operatorMarker + "=") {
         shared_ptr<AST> left = arguments[0], right = arguments[1];
         FunctionCallAST* leftf = dynamic_cast<FunctionCallAST*>(left.get());
-        if (leftf) {
+        if(leftf) {
             string fname = leftf->getFunctionName();
             // Here must be check for reference
-            if (fname == "__index") {
+            if(fname == "__index") {
                 Value* arr = leftf->arguments[0]->codegen();
-                if (arr->getType()->isArrayTy()) {
+                if(arr->getType()->isArrayTy()) {
                     Value* idx = leftf->arguments[1]->codegen();
-                    if (!idx->getType()->isIntegerTy(64))
+                    if(!idx->getType()->isIntegerTy(64))
                         return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });
                     Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
                     Constant* zero = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0);
                     idx = builder.CreateSub(idx, one);
                     Value* ind[] = { zero, idx };
-                    if (!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
+                    if(!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
                         return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
                     }
                     AllocaInst* aarr = variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());
@@ -182,23 +179,23 @@ Value* FunctionCallAST::codegen()
                     //                        return builder.CreateStore(v, var);
                     //                    }
                     return builder.CreateStore(right->codegen(), v);
-                } else if (arr->getType()->isPointerTy()) {
+                } else if(arr->getType()->isPointerTy()) {
                     Type* elTy = cast<PointerType>(arr->getType())->getElementType();
-                    if (!elTy->isStructTy())
+                    if(!elTy->isStructTy())
                         return Error::errorValue(ErrorType::IndexArgumentError);
-                    if (!dynamic_cast<VariableAST*>(leftf->arguments[1].get()))
+                    if(!dynamic_cast<VariableAST*>(leftf->arguments[1].get()))
                         return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
                     string name = ((VariableAST*)(leftf->arguments[1].get()))->getName();
                     vector<string> fie = fields[static_cast<StructType*>(elTy)->getName()];
                     auto field = std::find(fie.begin(), fie.end(), name);
-                    if (field == fie.end()) {
+                    if(field == fie.end()) {
                         return Error::errorValue(ErrorType::UndeclaredVariable, { name });
                     }
                     int pos = field - fie.begin();
                     Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
                     Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
                     Value* idx[] = { zero, ind };
-                    if (!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
+                    if(!dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
                         return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
                     }
                     Value* tmpptr = builder.CreateInBoundsGEP(arr, idx, "indtmpptr");
@@ -210,61 +207,58 @@ Value* FunctionCallAST::codegen()
             }
         }
         VariableAST* lefte = dynamic_cast<VariableAST*>(left.get());
-        if (!lefte)
+        if(!lefte)
             return Error::errorValue(ErrorType::AssignmentError, { std::to_string((size_t)left.get()) });
         Value* v = right->codegen();
-        if (!v)
+        if(!v)
             return nullptr;
-        try
-        {
+        try {
             Value* var = variables.at(lefte->getName());
             builder.CreateStore(v, var);
             return v;
-        }
-        catch (out_of_range)
-        {
+        } catch(out_of_range) {
             return Error::errorValue(ErrorType::UndeclaredVariable, { lefte->getName() });
         }
     }
     // Index (temporary, should be in BuiltFunction::createIndex)
-    if (functionName == "__index") {
+    if(functionName == "__index") {
         Value* left = arguments[0]->codegen();
-        if (left->getType()->isArrayTy()) {
+        if(left->getType()->isArrayTy()) {
             Value* right = arguments[1]->codegen();
-            if (!right->getType()->isIntegerTy(64))
+            if(!right->getType()->isIntegerTy(64))
                 return Error::errorValue(ErrorType::WrongArgumentType, { "must be int" });
             Constant* one = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 1);
             Constant* zero = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0);
             right = builder.CreateSub(right, one);
             Value* ind[] = { zero, right };
             AllocaInst* aleft = dyn_cast<AllocaInst>(left);
-            if (!aleft) {
+            if(!aleft) {
                 aleft = builder.CreateAlloca(left->getType(), 0, "atmp");
                 builder.CreateStore(left, aleft);
             }
             Value* tmpptr = builder.CreateInBoundsGEP(aleft, ind, "indtmpptr");
             return builder.CreateLoad(tmpptr, "indtmp");
 
-        } else if (left->getType()->isPointerTy()) {
+        } else if(left->getType()->isPointerTy()) {
             Type* elTy = cast<PointerType>(left->getType())->getElementType();
-            if (!elTy->isStructTy())
+            if(!elTy->isStructTy())
                 return Error::errorValue(ErrorType::IndexArgumentError);
-            if (dynamic_cast<FunctionCallAST*>(arguments[1].get())) {
+            if(dynamic_cast<FunctionCallAST*>(arguments[1].get())) {
                 FunctionCallAST* fca = dynamic_cast<FunctionCallAST*>(arguments[1].get());
                 string tpn = cast<StructType>(elTy)->getName().str();
                 printf("Calling method '%s' of type '%s'", fca->getFunctionName().c_str(), tpn.c_str());
                 vector<Value*> vals;
                 vals.push_back(left);
-                for (auto a : fca->getArguments())
+                for(auto a : fca->getArguments())
                     vals.push_back(a->codegen());
                 vector<Type*> tps;
-                for (auto v : vals)
+                for(auto v : vals)
                     tps.push_back(v->getType());
                 string name = FunctionNameMangler::mangleName(fca->getFunctionName(), tps, "Helen", tpn);
                 vector<string> fie = fields[tpn];
                 auto field = std::find(fie.begin(), fie.end(), name);
-                if (field == fie.end()) {
-                    return Error::errorValue(ErrorType::UndeclaredFunction, { name });
+                if(field == fie.end()) {
+                    return Error::errorValue(ErrorType::UndeclaredFunction, { name, name });
                 }
                 int pos = field - fie.begin();
                 Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
@@ -272,15 +266,15 @@ Value* FunctionCallAST::codegen()
                 Value* right[] = { zero, ind };
                 Value* tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
                 Value* f = builder.CreateLoad(tmpptr, "indtmp");
-                return 0;
+                return builder.CreateCall(f, vals, "calltmp");
                 // TODO: add 'real' method call!
             }
-            if (!dynamic_cast<VariableAST*>(arguments[1].get()))
+            if(!dynamic_cast<VariableAST*>(arguments[1].get()))
                 return Error::errorValue(ErrorType::WrongArgumentType, { "must be ID" });
             string name = ((VariableAST*)arguments[1].get())->getName();
             vector<string> fie = fields[static_cast<StructType*>(elTy)->getName()];
             auto field = std::find(fie.begin(), fie.end(), name);
-            if (field == fie.end()) {
+            if(field == fie.end()) {
                 return Error::errorValue(ErrorType::UndeclaredVariable, { name });
             }
             int pos = field - fie.begin();
@@ -297,38 +291,38 @@ Value* FunctionCallAST::codegen()
     }
     std::vector<Value*> vargs;
     std::vector<Type*> types;
-    for (unsigned i = 0, e = arguments.size(); i != e; ++i) {
+    for(unsigned i = 0, e = arguments.size(); i != e; ++i) {
         // TODO: add type checking
         vargs.push_back(arguments[i]->codegen());
-        if (!vargs.back())
+        if(!vargs.back())
             return nullptr;
     }
-    for (Value* v : vargs)
+    for(Value* v : vargs)
         types.push_back(v->getType());
     // try to find mangled function, then unmangled one
     Function* f = 0;
     string oldFName = functionName;
-    for (string style : { "Helen", "C" }) {
+    for(string style : { "Helen", "C" }) {
         functionName = FunctionNameMangler::mangleName(oldFName, types, style, methodType);
         f = module->getFunction(functionName);
-        if (f)
+        if(f)
             break;
     }
     string hrName = FunctionNameMangler::humanReadableName(functionName);
-    if (!f)
+    if(!f)
         return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
     ArrayRef<Type*> params = f->getFunctionType()->params();
-    for (unsigned i = 0; i < vargs.size(); i++)
-        if (vargs[i]->getType() != params[i])
+    for(unsigned i = 0; i < vargs.size(); i++)
+        if(vargs[i]->getType() != params[i])
             return Error::errorValue(ErrorType::WrongArgumentType, { std::to_string(i) });
     return builder.CreateCall(f, vargs, "calltmp");
 }
 
 Value* SequenceAST::codegen()
 {
-    for (shared_ptr<Helen::AST>& a : instructions) {
+    for(shared_ptr<Helen::AST>& a : instructions) {
         Value* v = a->codegen();
-        if (dynamic_cast<ReturnAST*>(a.get()))
+        if(dynamic_cast<ReturnAST*>(a.get()))
             return v;
     }
     return 0;
@@ -344,17 +338,17 @@ Function* FunctionPrototypeAST::codegen()
     set<string> styles = { "C", "Helen" };
     string method = "__method_";
     string className = "";
-    if (boost::algorithm::starts_with(style, method)) {
+    if(boost::algorithm::starts_with(style, method)) {
         className = style.substr(method.size());
         printf("Found a method %s of class %s\n", name.c_str(), className.c_str());
         style = "Helen"; // methods can be only Helen-style
     }
-    if (!className.empty()) {
+    if(!className.empty()) {
         // add 'this' parameter
         args.insert(args.begin(), PointerType::get(types[className], 0));
         argNames.insert(argNames.begin(), "this");
     }
-    if (!styles.count(style))
+    if(!styles.count(style))
         return (Function*)Error::errorValue(ErrorType::UnknownStyle);
     FunctionType* ft = FunctionType::get(returnType, args, false);
     name = FunctionNameMangler::mangleName(name, args, style, className);
@@ -362,7 +356,7 @@ Function* FunctionPrototypeAST::codegen()
     functions[name] = f;
 
     unsigned i = 0;
-    for (auto& arg : f->args()) {
+    for(auto& arg : f->args()) {
         arg.setName(argNames[i++]);
     }
     return f;
@@ -372,30 +366,30 @@ Function* FunctionAST::codegen()
 {
     Function* f = module->getFunction(proto->getName());
 
-    if (!f)
+    if(!f)
         f = proto->codegen();
 
-    if (!f)
+    if(!f)
         return 0;
 
-    if (!f->empty())
+    if(!f->empty())
         return (Function*)Error::errorValue(ErrorType::FunctionRedefined, { proto->getName() });
     // callstack.push(proto->getName());
     BasicBlock* parent = builder.GetInsertBlock();
     BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     builder.SetInsertPoint(bb);
-    for (auto& arg : f->args()) {
+    for(auto& arg : f->args()) {
         AllocaInst* alloca = createEntryBlockAlloca(f, arg.getType(), arg.getName());
         builder.CreateStore(&arg, alloca);
         variables[arg.getName()] = alloca;
     }
-    if (!proto->getReturnType()->isVoidTy()) {
+    if(!proto->getReturnType()->isVoidTy()) {
         AllocaInst* alloca = createEntryBlockAlloca(f, proto->getReturnType(), proto->getName());
         builder.CreateStore(Constant::getNullValue(proto->getReturnType()), alloca);
         variables[proto->getOriginalName()] = alloca;
     }
     Value* ret = body->codegen();
-    if (!ret && !proto->getReturnType()->isVoidTy())
+    if(!ret && !proto->getReturnType()->isVoidTy())
         ret = builder.CreateLoad(variables[proto->getOriginalName()]);
     builder.CreateRet(ret);
     verifyFunction(*f);
@@ -421,15 +415,19 @@ Value* ReturnAST::codegen()
 }
 Value* CustomTypeAST::codegen()
 {
-    for (shared_ptr<AST> i : instructions) {
-        if (dynamic_cast<FunctionPrototypeAST*>(i.get())) {
+    int ind = 0;
+    for(shared_ptr<AST> i : instructions) {
+        if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
             fpi->getStyle() = "__method_" + typeName;
             fpi->codegen();
+            //string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
+            fields[typeName][ind] = fpi->getName();
         }
+        ind++;
     }
     StructType* t = cast<StructType>(types[typeName]);
-    for (int i = 0; i < t->getNumElements(); i++) {
+    for(int i = 0; i < t->getNumElements(); i++) {
     }
     return 0;
 }
@@ -438,53 +436,72 @@ void CustomTypeAST::compileTime()
 
     std::vector<string> fieldNames;
     std::vector<Type*> fieldTypes;
-    for (shared_ptr<AST> i : instructions) {
-        if (dynamic_cast<DeclarationAST*>(i.get())) {
+    StructType* st = StructType::create(getGlobalContext(), typeName);
+    for(shared_ptr<AST> i : instructions) {
+        if(dynamic_cast<DeclarationAST*>(i.get())) {
             DeclarationAST* di = (DeclarationAST*)i.get();
             fieldNames.push_back(di->getName());
             fieldTypes.push_back(di->getType());
         }
-        if (dynamic_cast<FunctionPrototypeAST*>(i.get())) {
+        if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
             // printf("Got method '%s'\n", fpi->getOriginalName().c_str());
             fieldNames.push_back(fpi->getOriginalName());
-            Type* pf = PointerType::get(FunctionType::get(fpi->getReturnType(), fpi->getArgs(), false), 0);
+            vector<Type*> args = fpi->getArgs();
+            args.insert(args.begin(), PointerType::get(st, 0));
+            Type* pf = PointerType::get(FunctionType::get(fpi->getReturnType(), args, false), 0);
             fieldTypes.push_back(pf);
         }
     }
+    st->setBody(ArrayRef<Type*>(fieldTypes), false);
     fields[typeName] = fieldNames;
-    types[typeName] = StructType::create(ArrayRef<Type*>(fieldTypes), typeName);
+    types[typeName] = st;
 }
 
 Value* NewAST::codegen()
 {
-    if (!type->isPointerTy())
+    if(!type->isPointerTy())
         return Error::errorValue(ErrorType::WrongArgumentType, { "non-struct type" });
-    if (!cast<PointerType>(type)->getElementType()->isStructTy())
+    if(!cast<PointerType>(type)->getElementType()->isStructTy())
         return Error::errorValue(ErrorType::WrongArgumentType, { "non-struct type" });
     Type* ptrType = type;
     type = cast<PointerType>(type)->getElementType();
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
         module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
-    return builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
+    Value* v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
+    if(((PointerType*)(v->getType()))->getElementType()->isStructTy()) {
+        StructType* s = (StructType*)(((PointerType*)(v->getType()))->getElementType());
+        for(int i = 0; i < s->getNumElements(); i++) {
+            if(s->getElementType(i)->isPointerTy()) {
+                if(((PointerType*)(s->getElementType(i)))->getElementType()->isFunctionTy()) {
+                    // Load the method
+                    Function* f = module->getFunction(fields[s->getName()][i]);
+                    Constant* idx = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), i);
+                    Constant* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+                    Value* ind[] = { zero, idx };
+                    Value* tmp = builder.CreateInBoundsGEP(v, ind, "tmp");
+                    Value* ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
+                    builder.CreateStore(ft, tmp);
+                }
+            }
+        }
+    }
+    return v;
 }
 
 Value* DeleteAST::codegen()
 {
-    try
-    {
+    try {
         Value* val = variables.at(var);
         Value* addr = builder.CreateLoad(val, "freetmp");
-        if (!addr->getType()->isPointerTy())
+        if(!addr->getType()->isPointerTy())
             return Error::errorValue(ErrorType::NonObjectType);
-        if (!cast<PointerType>(addr->getType())->getElementType()->isStructTy())
+        if(!cast<PointerType>(addr->getType())->getElementType()->isStructTy())
             return Error::errorValue(ErrorType::NonObjectType);
         addr = builder.CreateBitCast(addr, Type::getInt8PtrTy(getGlobalContext()), "freetmp");
         builder.CreateCall(module->getFunction("free"), addr);
-    }
-    catch (out_of_range)
-    {
+    } catch(out_of_range) {
         return Error::errorValue(ErrorType::UndeclaredVariable, { var });
     }
     return 0;
