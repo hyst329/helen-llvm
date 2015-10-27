@@ -279,12 +279,14 @@ public:
 class CustomTypeAST : public AST
 {
     string typeName;
+    string baseTypeName;
     vector<shared_ptr<AST> > instructions;
 
 public:
-    CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions)
+    CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions, string baseTypeName = "")
         : typeName(typeName)
         , instructions(instructions)
+        , baseTypeName(baseTypeName)
     {
     }
     virtual Value* codegen();

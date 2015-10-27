@@ -16,6 +16,7 @@ class AST;
 enum class ErrorType {
     UnknownError,
     SyntaxError,
+    FileNotFound,
     UndeclaredVariable,
     UndeclaredFunction,
     WrongArgumentType,

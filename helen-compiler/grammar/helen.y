@@ -76,6 +76,7 @@ static bool lastTerm = 0;
 %type<vstr> OPERATOR
 %type<vstr> ID
 %type<vstr> qid
+%type<vstr> basetype
 %type<vint> INTLIT
 %type<vreal> REALLIT
 %type<vchar> CHARLIT
@@ -161,9 +162,9 @@ instruction: statement NEWLINE {
     AST::types[$2] = $4;
     $$ = new NullAST();
 }
-| TYPE ID NEWLINE properties ENDTYPE {
+| TYPE ID basetype NEWLINE properties ENDTYPE {
     if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
-    $$ = new CustomTypeAST($2, *$4);
+    $$ = new CustomTypeAST($2, *$5, $3);
     ((CustomTypeAST*)$$)->compileTime();
 }
 | MAINMODULE {
@@ -172,6 +173,12 @@ instruction: statement NEWLINE {
 }
 | DELETE ID {
     $$ = new DeleteAST($2);
+}
+basetype: COLON ID {
+    $$ = $2;
+}
+| /* empty */ {
+    $$ = "";
 }
 qid: qid COLON ID {
     $$ = strdup((std::string($1) + "-" + $3).c_str());

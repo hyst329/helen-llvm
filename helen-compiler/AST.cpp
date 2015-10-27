@@ -246,7 +246,6 @@ Value* FunctionCallAST::codegen()
             if(dynamic_cast<FunctionCallAST*>(arguments[1].get())) {
                 FunctionCallAST* fca = dynamic_cast<FunctionCallAST*>(arguments[1].get());
                 string tpn = cast<StructType>(elTy)->getName().str();
-                printf("Calling method '%s' of type '%s'", fca->getFunctionName().c_str(), tpn.c_str());
                 vector<Value*> vals;
                 vals.push_back(left);
                 for(auto a : fca->getArguments())
@@ -339,7 +338,6 @@ Function* FunctionPrototypeAST::codegen()
     string className = "";
     if(boost::algorithm::starts_with(style, method)) {
         className = style.substr(method.size());
-        printf("Found a method %s of class %s\n", name.c_str(), className.c_str());
         style = "Helen"; // methods can be only Helen-style
     }
     if(!className.empty()) {
@@ -351,7 +349,9 @@ Function* FunctionPrototypeAST::codegen()
         return (Function*)Error::errorValue(ErrorType::UnknownStyle);
     FunctionType* ft = FunctionType::get(returnType, args, false);
     name = FunctionNameMangler::mangleName(name, args, style, className);
-    Function* f = Function::Create(ft, Function::ExternalLinkage, name, module.get());
+    Function* f = functions[name];
+    if(f) return f;
+    f = Function::Create(ft, Function::ExternalLinkage, name, module.get());
     functions[name] = f;
 
     unsigned i = 0;
@@ -432,9 +432,19 @@ Value* CustomTypeAST::codegen()
 }
 void CustomTypeAST::compileTime()
 {
-
     std::vector<string> fieldNames;
     std::vector<Type*> fieldTypes;
+    if(!baseTypeName.empty()) {
+        if(!types[baseTypeName]) {
+            Error::error(ErrorType::UndeclaredType, { baseTypeName });
+            return;
+        }
+        fieldNames = fields[baseTypeName];
+        Type* bs = types[baseTypeName];
+        StructType* bst = cast<StructType>(bs);
+        for(int i = 0; i < bst->getNumElements(); i++)
+            fieldTypes.push_back(bst->getElementType(i));
+    }
     StructType* st = StructType::create(getGlobalContext(), typeName);
     for(shared_ptr<AST> i : instructions) {
         if(dynamic_cast<DeclarationAST*>(i.get())) {
@@ -444,7 +454,6 @@ void CustomTypeAST::compileTime()
         }
         if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
-            // printf("Got method '%s'\n", fpi->getOriginalName().c_str());
             fieldNames.push_back(fpi->getOriginalName());
             vector<Type*> args = fpi->getArgs();
             args.insert(args.begin(), PointerType::get(st, 0));

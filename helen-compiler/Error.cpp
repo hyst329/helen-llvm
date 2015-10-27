@@ -9,6 +9,7 @@ bool Error::errorFlag = 0;
 
 map<ErrorType, string> Error::errorMessages = {
     { ErrorType::SyntaxError, "Syntax error: %1%" },
+    { ErrorType::FileNotFound, "Cannot find include file: %1%" },
     { ErrorType::UndeclaredVariable, "Undeclared variable: %1%" },
     { ErrorType::UndeclaredFunction, "Undeclared function: %1% (mangled name: %2%)" },
     { ErrorType::WrongArgumentType, "Wrong argument type: %1%" },
