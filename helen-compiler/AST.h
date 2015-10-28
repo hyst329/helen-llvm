@@ -281,7 +281,8 @@ class CustomTypeAST : public AST
     string typeName;
     string baseTypeName;
     vector<shared_ptr<AST> > instructions;
-
+    int bstc; // helper field
+    vector<string> overriddenMethods; // helper field
 public:
     CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions, string baseTypeName = "")
         : typeName(typeName)

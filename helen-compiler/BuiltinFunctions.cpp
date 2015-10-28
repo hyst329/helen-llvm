@@ -195,6 +195,16 @@ void BuiltinFunctions::createMemory()
 
     Function* free = Function::Create(free_type, Function::ExternalLinkage, "free", AST::module.get());
     free->setCallingConv(CallingConv::C);
+    
+    std::vector<Type*> memset_types;
+    memset_types.push_back(Type::getInt8PtrTy(getGlobalContext()));
+    memset_types.push_back(Type::getInt32Ty(getGlobalContext()));
+    memset_types.push_back(Type::getInt32Ty(getGlobalContext()));
+
+    FunctionType* memset_type = FunctionType::get(Type::getInt8PtrTy(getGlobalContext()), memset_types, false);
+    
+    Function* memset = Function::Create(memset_type, Function::ExternalLinkage, "memset", AST::module.get());
+    memset->setCallingConv(CallingConv::C);
 }
 
 }

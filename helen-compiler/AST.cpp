@@ -419,15 +419,60 @@ Value* ReturnAST::codegen()
 Value* CustomTypeAST::codegen()
 {
     int ind = 0;
+    if(!baseTypeName.empty())
+        ind = ((StructType*)types[baseTypeName])->getNumElements();
     for(shared_ptr<AST> i : instructions) {
+        printf("ind=%d\n", ind);
         if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
             fpi->getStyle() = "__method_" + typeName;
             fpi->codegen();
-            // string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
-            fields[typeName][ind] = fpi->getName();
+            string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
+            if(find(fields[typeName].begin(), fields[typeName].end(), name) == fields[typeName].end()) {
+                fields[typeName][ind] = fpi->getName();
+                ind++;
+            }
+        } else
+            ind++;
+    }
+    vector<string> fieldNames = fields[typeName];
+    vector<Type*> fieldTypes = ((StructType*)types[typeName])->elements();
+    for(int i = 0; i < bstc; i++) {
+        if(fieldTypes[i]->isPointerTy()) {
+            if(((PointerType*)(fieldTypes[i]))->getElementType()->isFunctionTy() &&
+               find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
+                printf("Method '%s' generated as base-class\n", fieldNames[i].c_str());
+                string mname = fieldNames[i];
+                string bmname = mname;
+                // Replace method type name
+                boost::algorithm::replace_first(bmname, typeName + "-", baseTypeName + "-");
+                // Replace type parameter for 'this'
+                boost::algorithm::replace_first(bmname, "_type." + typeName, "_type." + baseTypeName);
+                printf("The base class method is '%s'\n", bmname.c_str());
+                FunctionType* ft = cast<FunctionType>(((PointerType*)(fieldTypes[i]))->getElementType());
+                Function* f = Function::Create(ft, Function::ExternalLinkage, mname, module.get());
+                BasicBlock* parent = builder.GetInsertBlock();
+                BasicBlock* bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+                builder.SetInsertPoint(bb);
+                vector<Value*> baseargs;
+                Function* bf = module->getFunction(bmname);
+                // TODO: error if not bf
+                int idx = 0;
+                for(auto& arg : f->args()) {
+                    arg.setName(((Argument*)(bf->arg_begin()))[idx++].getName());
+                    AllocaInst* alloca = createEntryBlockAlloca(f, arg.getType(), arg.getName());
+                    builder.CreateStore(&arg, alloca);
+                    variables[arg.getName()] = alloca;
+                    baseargs.push_back(builder.CreateLoad(alloca));
+                }
+                Value* basethis =
+                    builder.CreateBitCast(builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
+                baseargs[0] = basethis;
+                Value* ret = builder.CreateCall(bf, baseargs, "calltmp");
+                builder.CreateRet(ret);
+                builder.SetInsertPoint(parent);
+            }
         }
-        ind++;
     }
     StructType* t = cast<StructType>(types[typeName]);
     for(int i = 0; i < t->getNumElements(); i++) {
@@ -436,9 +481,10 @@ Value* CustomTypeAST::codegen()
 }
 void CustomTypeAST::compileTime()
 {
-    std::vector<string> fieldNames;
-    std::vector<Type*> fieldTypes;
+    vector<string> fieldNames;
+    vector<Type*> fieldTypes;
     StructType* st = StructType::create(getGlobalContext(), typeName);
+    bstc = 0;
     if(!baseTypeName.empty()) {
         if(!types[baseTypeName]) {
             Error::error(ErrorType::UndeclaredType, { baseTypeName });
@@ -447,7 +493,8 @@ void CustomTypeAST::compileTime()
         fieldNames = fields[baseTypeName];
         Type* bs = types[baseTypeName];
         StructType* bst = cast<StructType>(bs);
-        for(int i = 0; i < bst->getNumElements(); i++) {
+        bstc = bst->getNumElements();
+        for(int i = 0; i < bstc; i++) {
             Type* tp = bst->getElementType(i);
             if(tp->isPointerTy()) {
                 if(((PointerType*)tp)->getElementType()->isFunctionTy()) {
@@ -458,6 +505,7 @@ void CustomTypeAST::compileTime()
                     ft = FunctionType::get(ret, params, false);
                     tp = PointerType::get(ft, 0);
                     // must mangle here
+                    printf("Mangling %s [%d]\n", fieldNames[i].c_str(), i);
                     fieldNames[i] = FunctionNameMangler::mangleName(fieldNames[i], params, "Helen", typeName);
                 }
             }
@@ -483,12 +531,13 @@ void CustomTypeAST::compileTime()
             if(find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||
                find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
                 // No need for error, re-declaration means override
+                overriddenMethods.push_back(mname);
                 continue;
             }
             fieldNames.push_back(fpi->getOriginalName());
-            Type* pf = PointerType::get(FunctionType::get(fpi->getReturnType(), args, false), 0);
+            FunctionType* ft = FunctionType::get(fpi->getReturnType(), args, false);
+            Type* pf = PointerType::get(ft, 0);
             fieldTypes.push_back(pf);
-            // TODO: Generate default implementation
         }
     }
     st->setBody(ArrayRef<Type*>(fieldTypes), false);
@@ -507,6 +556,10 @@ Value* NewAST::codegen()
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
         module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+    builder.CreateCall(module->getFunction("memset"),
+                       { memoryPtr,
+                         ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
+                         ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) });
     Value* v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
     if(((PointerType*)(v->getType()))->getElementType()->isStructTy()) {
         StructType* s = (StructType*)(((PointerType*)(v->getType()))->getElementType());
