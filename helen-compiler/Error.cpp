@@ -22,6 +22,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::TypeRedefined, "Function %1% is redefined" },
     { ErrorType::UndeclaredType, "Undeclared type: %1%" },
     { ErrorType::NonObjectType, "Type of the variable is probably non-object (i.e. primitive)" },
+    { ErrorType::UncastableTypes, "Value cannot be casted to type" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

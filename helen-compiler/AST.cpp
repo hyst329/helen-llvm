@@ -607,4 +607,19 @@ Value* DeleteAST::codegen()
     }
     return 0;
 }
+#include <llvm/Support/raw_ostream.h>
+Value* CastAST::codegen()
+{
+    Value* v = value->codegen();
+    v->getType()->dump();
+    destinationType->dump();
+    if (CastInst::isCastable(v->getType(), destinationType)) {
+        auto opc = CastInst::getCastOpcode(v, true, destinationType, true);
+        return builder.CreateCast(opc, v, destinationType, "casttmp");
+    }
+    else if (CastInst::isBitOrNoopPointerCastable(v->getType(), destinationType)) {
+        return builder.CreateBitOrPointerCast(v, destinationType, "casttmp");
+    }
+    else return Error::errorValue(ErrorType::UncastableTypes);
+}
 }

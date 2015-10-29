@@ -28,7 +28,8 @@ enum class ErrorType {
     UnknownStyle,
     TypeRedefined,
     UndeclaredType,
-    NonObjectType
+    NonObjectType,
+    UncastableTypes
 };
 
 class Error

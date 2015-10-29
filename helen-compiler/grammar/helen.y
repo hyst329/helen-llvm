@@ -51,7 +51,7 @@ static bool lastTerm = 0;
 %token IN OUT
 %token USE MAINMODULE
 %token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING
-%token NEW DELETE PTR
+%token NEW DELETE PTR CAST TO
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -339,6 +339,9 @@ term: literal {
 }
 | NEW type {
     $$ = new NewAST($2);
+}
+| CAST expression TO type {
+    $$ = new CastAST(shared_ptr<AST>($2), $4);
 }
 literal: INTLIT {
      $$ = new ConstantIntAST($1);

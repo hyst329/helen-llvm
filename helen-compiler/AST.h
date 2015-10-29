@@ -62,8 +62,7 @@ class ConstantRealAST : public AST
     double value;
 
 public:
-    ConstantRealAST(double value)
-        : value(value)
+    ConstantRealAST(double value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -74,8 +73,7 @@ class ConstantCharAST : public AST
     char value;
 
 public:
-    ConstantCharAST(char value)
-        : value(value)
+    ConstantCharAST(char value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -86,8 +84,7 @@ class ConstantStringAST : public AST
     string value;
 
 public:
-    ConstantStringAST(string value)
-        : value(value)
+    ConstantStringAST(string value) : value(value)
     {
     }
     virtual Value* codegen();
@@ -98,8 +95,7 @@ class VariableAST : public AST
     string name;
 
 public:
-    VariableAST(string name)
-        : name(name)
+    VariableAST(string name) : name(name)
     {
     }
     const string& getName() const
@@ -171,6 +167,7 @@ class FunctionCallAST : public AST
     string functionName;
     vector<shared_ptr<AST> > arguments;
     string methodType = "";
+
 public:
     FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
         : functionName(functionName)
@@ -202,8 +199,7 @@ public:
         return instructions;
     }
 
-    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
-        : instructions(instructions)
+    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >()) : instructions(instructions)
     {
     }
     virtual Value* codegen();
@@ -269,8 +265,7 @@ class ReturnAST : public AST
     shared_ptr<AST> result;
 
 public:
-    ReturnAST(shared_ptr<AST> result)
-        : result(result)
+    ReturnAST(shared_ptr<AST> result) : result(result)
     {
     }
     virtual Value* codegen();
@@ -281,7 +276,7 @@ class CustomTypeAST : public AST
     string typeName;
     string baseTypeName;
     vector<shared_ptr<AST> > instructions;
-    int bstc; // helper field
+    int bstc;                         // helper field
     vector<string> overriddenMethods; // helper field
 public:
     CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions, string baseTypeName = "")
@@ -313,8 +308,21 @@ class DeleteAST : public AST
     string var;
 
 public:
-    DeleteAST(string var)
-        : var(var)
+    DeleteAST(string var) : var(var)
+    {
+    }
+    virtual Value* codegen();
+};
+
+class CastAST : public AST
+{
+    shared_ptr<AST> value;
+    Type* destinationType;
+
+public:
+    CastAST(shared_ptr<AST> value, Type* destinationType)
+        : value(value)
+        , destinationType(destinationType)
     {
     }
     virtual Value* codegen();

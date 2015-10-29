@@ -52,6 +52,8 @@ style                    return STYLE;
 new                      return NEW;
 delete                   return DELETE;
 ptr                      return PTR;
+cast                     return CAST;
+to                       return TO;
 mainmodule               return MAINMODULE;
 include                  BEGIN(INCLUDE);
 \n                       return NEWLINE;
