@@ -84,7 +84,7 @@ static bool lastTerm = 0;
 %right OPERATOR
 %start program
 %parse-param {Helen::AST *&result}
-
+%define parse.error verbose
 %code requires {
     struct NamedArgs {
         std::vector<Type*> types;
