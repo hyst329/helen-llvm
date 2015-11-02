@@ -31,6 +31,7 @@ else                     return ELSE;
 endif                    return ENDIF;
 fun                      return FUN;
 endfun                   return ENDFUN;
+operator                 return OPERATORKW;
 declare                  return DECLARE;
 loop                     return LOOP;
 endloop                  return ENDLOOP;

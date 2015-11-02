@@ -45,7 +45,7 @@ static bool lastTerm = 0;
 %}
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
-%token FUN ENDFUN DECLARE STYLE METHOD
+%token FUN ENDFUN DECLARE STYLE METHOD OPERATORKW
 %token SIZE RESIZE
 %token RETURN
 %token IN OUT
@@ -224,6 +224,13 @@ funprot: ID LPAREN arglist RPAREN style {
 }
 | ID LPAREN arglist RPAREN RARROW type style {
     $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6, $7);
+}
+| OPERATORKW OPERATOR LPAREN arglist RPAREN RARROW type {
+    if(!prec.count(operatorMarker + $2)) {
+        // TODO: Warning
+        prec[operatorMarker + $2] = 5; // default value
+    }
+    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen");
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
