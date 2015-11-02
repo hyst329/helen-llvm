@@ -171,6 +171,9 @@ instruction: statement NEWLINE {
     AST::isMainModule = true;
     $$ = new NullAST();
 }
+| OPERATORKW OPERATOR USE REALLIT {
+    prec[operatorMarker + $2] = $4;
+}
 | DELETE ID {
     $$ = new DeleteAST($2);
 }
