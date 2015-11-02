@@ -173,6 +173,7 @@ instruction: statement NEWLINE {
 }
 | OPERATORKW OPERATOR USE REALLIT {
     prec[operatorMarker + $2] = $4;
+    $$ = new NullAST();
 }
 | DELETE ID {
     $$ = new DeleteAST($2);
