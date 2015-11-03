@@ -82,4 +82,4 @@ crashlytics-build.properties
 helen-compiler/grammar/*.cpp
 helen-compiler/grammar/*.hpp
 
-helen_compiler/grammar/*.log
+helen_compiler/grammar/*.output
