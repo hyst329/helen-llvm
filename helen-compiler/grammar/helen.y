@@ -50,7 +50,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING ARRAY
 %token NEW DELETE PTR CAST TO
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -281,8 +281,8 @@ type: INT {
 | INT LPAREN INTLIT RPAREN {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);
 }
-| type POINT INTLIT {
-    $$ = llvm::ArrayType::get($1, $3);
+| ARRAY LPAREN INTLIT RPAREN type {
+    $$ = llvm::ArrayType::get($5, $3);
 }
 | PTR type {
     $$ = llvm::PointerType::get($2, 0);

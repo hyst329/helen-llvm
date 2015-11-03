@@ -46,6 +46,7 @@ real                     return REAL;
 logical                  return LOGICAL;
 char                     return CHAR;
 string                   return STRING;
+array                    return ARRAY;
 in                       return IN;
 out                      return OUT;
 method                   return METHOD;
