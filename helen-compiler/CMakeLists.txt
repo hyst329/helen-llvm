@@ -13,7 +13,7 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 BISON_TARGET(HelenParser grammar/helen.y
-             ${PROJECT_SOURCE_DIR}/grammar/helen.parser.cpp VERBOSE ${PROJECT_SOURCE_DIR}/grammar/bison.log)
+             ${PROJECT_SOURCE_DIR}/grammar/helen.parser.cpp VERBOSE bison.log)
 FLEX_TARGET(HelenScanner grammar/helen.l
             ${PROJECT_SOURCE_DIR}/grammar/helen.lexer.cpp)
 ADD_FLEX_BISON_DEPENDENCY(HelenScanner HelenParser)
