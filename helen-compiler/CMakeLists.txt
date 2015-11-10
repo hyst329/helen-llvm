@@ -34,4 +34,4 @@ add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader scalaropts bitwriter ipo)
 
-target_link_libraries(helen_compiler ${llvm_libs})
+target_link_libraries(helen_compiler ${Boost_LIBRARIES} ${llvm_libs})

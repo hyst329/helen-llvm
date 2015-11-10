@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <iostream>
 #include <boost/program_options.hpp>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -11,12 +12,29 @@
 
 namespace po = boost::program_options;
 using namespace Helen;
+using namespace std;
 
 int yyparse(AST*& ast);
 extern FILE* yyin;
 
 int main(int argc, char** argv)
 {
+    // Boost Program Options setup
+    po::options_description desc("Compiler options");
+    desc.add_options()
+    ("help,h", "display this help")
+    ("version,v", "display version")
+    ("input-file", po::value<string>(), "input file")
+    ;
+    po::positional_options_description p;
+    p.add("input-file", -1);
+    po::variables_map vm;
+    po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+    po::notify(vm);
+    if (vm.count("help") || vm.empty()) {
+        cout << desc << "\n";
+        return 1;
+    }
     AST::module = llvm::make_unique<Module>("__helenmodule__", getGlobalContext());
     AST::fpm = llvm::make_unique<legacy::FunctionPassManager>(AST::module.get());
     AST::dataLayout = llvm::make_unique<DataLayout>(AST::module.get());
@@ -30,14 +48,17 @@ int main(int argc, char** argv)
     legacy::PassManager pm;
     pm.add(createAlwaysInlinerPass());
     AST::fpm->doInitialization();
-    yyin = (argc == 1) ? stdin : fopen(argv[1], "r");
+    yyin = fopen(vm["input-file"].as<string>().c_str(), "r");
     AST::isMainModule = false;
     AST* result;
     yyparse(result);
+    if (Error::errorFlag) { // don't even try to compile if syntax errors present
+        fprintf(stderr, "Fatal errors detected: translation terminated\n");
+        return 1;
+    }
     BuiltinFunctions::createMainFunction(AST::isMainModule);
     result->codegen();
-    if (Error::errorFlag) 
-    {
+    if (Error::errorFlag) {
         fprintf(stderr, "Fatal errors detected: translation terminated\n");
         return 1;
     }
