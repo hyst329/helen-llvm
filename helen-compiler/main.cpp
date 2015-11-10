@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     AST::builder.CreateRet(ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0));
     pm.run(*(AST::module.get()));
     AST::module->dump();
+    //TODO: Add output file to program options
     string filename = (argc >= 3) ? argv[2] : (argv[1] + string(".bc"));
     std::error_code ec;
     raw_fd_ostream fdos(filename, ec, sys::fs::OpenFlags::F_None);

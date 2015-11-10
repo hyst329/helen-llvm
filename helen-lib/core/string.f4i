@@ -3,3 +3,6 @@ type string
     int capacity
     ptr char cstr
 endtype
+
+declare operator + (string s, char c) -> string
+declare operator + (string s1, string s2) -> string
