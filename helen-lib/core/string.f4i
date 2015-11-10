@@ -1,6 +1,6 @@
 type string
-    int length
-    int capacity
+    int(32) length
+    int(32) capacity
     ptr char cstr
 endtype
 

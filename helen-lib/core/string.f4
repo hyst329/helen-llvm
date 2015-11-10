@@ -1,0 +1,23 @@
+include string.f4i
+# TODO: Implement constructors!!!
+
+declare malloc(int(32) n) -> ptr char style(C)
+declare realloc(ptr char c, int(32) n) -> ptr char style(C)
+declare free(ptr char) style(C)
+
+fun constr string()
+    this.length = 0
+    this.capacity = 1
+    this.cstr = malloc(this.capacity)
+endfun
+
+fun operator + (string s, char c) -> string
+    # TODO: Copy s
+    if s.length == s.capacity
+        s.capacity = 2 * s.capacity
+        s.cstr = realloc(s.cstr, s.capacity)
+    endif
+    s.length = s.length + 1
+    # TODO: Assign newly allocated char to c!!!
+    # TODO: Return new s
+endfun
