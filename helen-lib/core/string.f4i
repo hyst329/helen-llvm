@@ -1,0 +1,5 @@
+type string
+    int length
+    int capacity
+    ptr char cstr
+endtype
