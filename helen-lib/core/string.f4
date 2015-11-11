@@ -5,7 +5,7 @@ declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)
 declare free(ptr char) style(C)
 
-fun constr string()
+fun constructor string()
     this.length = 0
     this.capacity = 1
     this.cstr = malloc(this.capacity)

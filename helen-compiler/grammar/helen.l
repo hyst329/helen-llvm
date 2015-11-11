@@ -50,6 +50,8 @@ array                    return ARRAY;
 in                       return IN;
 out                      return OUT;
 method                   return METHOD;
+constructor              return CONSTRUCTOR;
+destructor               return DESTRUCTOR;
 style                    return STYLE;
 new                      return NEW;
 delete                   return DELETE;

@@ -2,6 +2,7 @@ type string
     int(32) length
     int(32) capacity
     ptr char cstr
+    declare constructor string()
 endtype
 
 declare operator + (string s, char c) -> string

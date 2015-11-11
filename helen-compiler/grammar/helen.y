@@ -46,6 +46,7 @@ static bool lastTerm = 0;
 %token IF ELSE ENDIF
 %token LOOP ENDLOOP
 %token FUN ENDFUN DECLARE STYLE METHOD OPERATORKW
+%token CONSTRUCTOR DESTRUCTOR
 %token SIZE RESIZE
 %token RETURN
 %token IN OUT
@@ -235,6 +236,14 @@ funprot: ID LPAREN arglist RPAREN style {
         prec[operatorMarker + $2] = 5; // default value
     }
     $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen");
+}
+| CONSTRUCTOR ID LPAREN arglist RPAREN {
+    $$ = new FunctionPrototypeAST("__ctor", $4->types, $4->names,
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
+}
+| DESTRUCTOR ID LPAREN RPAREN {
+    $$ = new FunctionPrototypeAST("__ctor", std::vector<Type*>(), std::vector<std::string>(),
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
