@@ -242,7 +242,7 @@ funprot: ID LPAREN arglist RPAREN style {
                                   llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
 }
 | DESTRUCTOR ID LPAREN RPAREN {
-    $$ = new FunctionPrototypeAST("__ctor", std::vector<Type*>(), std::vector<std::string>(),
+    $$ = new FunctionPrototypeAST("__dtor", std::vector<Type*>(), std::vector<std::string>(),
                                   llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
 }
 style: STYLE LPAREN ID RPAREN {
@@ -359,6 +359,9 @@ term: literal {
 }
 | NEW type {
     $$ = new NewAST($2);
+}
+| NEW type LPAREN exprlist RPAREN {
+    $$ = new NewAST($2, *$4);
 }
 | CAST expression TO type {
     $$ = new CastAST(shared_ptr<AST>($2), $4);

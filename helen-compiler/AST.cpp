@@ -303,7 +303,8 @@ Value* FunctionCallAST::codegen()
     // try to find mangled function, then unmangled one
     Function* f = 0;
     string oldFName = functionName;
-    for(string style : { "Helen", "C" }) {
+    for(string style : { "Helen", "C"
+                       }) {
         functionName = FunctionNameMangler::mangleName(oldFName, types, style, methodType);
         f = module->getFunction(functionName);
         if(f)
@@ -466,7 +467,7 @@ Value* CustomTypeAST::codegen()
                     baseargs.push_back(builder.CreateLoad(alloca));
                 }
                 Value* basethis = builder.CreateBitCast(
-                    builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
+                                      builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
                 baseargs[0] = basethis;
                 Value* ret = builder.CreateCall(bf, baseargs, "calltmp");
                 builder.CreateRet(ret);
@@ -555,10 +556,11 @@ Value* NewAST::codegen()
     type = cast<PointerType>(type)->getElementType();
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
-        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+                           module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
     Value* msvals[] = { memoryPtr,
                         ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
-                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) };
+                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size)
+                      };
     builder.CreateCall(module->getFunction("memset"), msvals);
     Value* v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
     if(((PointerType*)(v->getType()))->getElementType()->isStructTy()) {
@@ -579,6 +581,22 @@ Value* NewAST::codegen()
                 }
             }
         }
+    }
+    std::vector<Value*> argValues = { v };
+    std::vector<Type*> argTypes = { v->getType() };
+    for(shared_ptr<AST> a : arguments) {
+        Value* av = a->codegen();
+        argValues.push_back(av);
+        argTypes.push_back(av->getType());
+    }
+    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes,
+                      "Helen", ((StructType*)type)->getName());
+    Function* ctor = functions[ctorname];
+    printf("ctor=%d %s\n", ctor, ctorname.c_str());
+    if(ctor) {
+        builder.CreateCall(ctor, argValues);
+    } else if(!arguments.empty()) {
+        // TODO: Error
     }
     return v;
 }
