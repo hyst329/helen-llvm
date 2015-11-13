@@ -605,6 +605,14 @@ Value* DeleteAST::codegen()
 {
     try {
         Value* val = variables.at(var);
+        Type* type = val->getType();
+        string dtorname = FunctionNameMangler::mangleName("__dtor", vector<Type*>(),
+                          "Helen", ((StructType*)type)->getName());
+        Function* dtor = functions[dtorname];
+        printf("dtor=%d %s\n", dtor, dtorname.c_str());
+        if(dtor) {
+            builder.CreateCall(dtor, {});
+        }
         Value* addr = builder.CreateLoad(val, "freetmp");
         if(!addr->getType()->isPointerTy())
             return Error::errorValue(ErrorType::NonObjectType);
