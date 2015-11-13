@@ -3,6 +3,8 @@ type string
     int(32) capacity
     ptr char cstr
     declare constructor string()
+    declare destructor string()
+    declare copy() -> string
 endtype
 
 declare operator + (string s, char c) -> string

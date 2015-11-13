@@ -1,9 +1,9 @@
 include string.f4i
-# TODO: Implement constructors!!!
 
 declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)
-declare free(ptr char) style(C)
+declare free(ptr char c) style(C)
+declare strcpy(ptr char c1, ptr char c2) -> ptr char style(C)
 
 fun constructor string()
     this.length = 0
@@ -11,13 +11,26 @@ fun constructor string()
     this.cstr = malloc(this.capacity)
 endfun
 
+fun destructor string()
+    free(this.cstr)
+endfun
+
+fun copy() -> string method(string)
+    string ns = new string
+    ns.length = this.length
+    ns.capacity = this.capacity
+    ns.cstr = realloc(ns.cstr, ns.capacity)
+    strcpy(ns.cstr, this.cstr)
+    return ns
+endfun
+
 fun operator + (string s, char c) -> string
-    # TODO: Copy s
-    if s.length == s.capacity
-        s.capacity = 2 * s.capacity
-        s.cstr = realloc(s.cstr, s.capacity)
+    string ns = ns.copy()
+    if ns.length == ns.capacity
+        ns.capacity = 2 * ns.capacity
+        ns.cstr = realloc(ns.cstr, ns.capacity)
     endif
-    s.length = s.length + 1
+    ns.length = ns.length + 1
     # TODO: Assign newly allocated char to c!!!
-    # TODO: Return new s
+    return ns
 endfun

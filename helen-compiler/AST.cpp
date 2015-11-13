@@ -605,19 +605,19 @@ Value* DeleteAST::codegen()
 {
     try {
         Value* val = variables.at(var);
-        Type* type = val->getType();
-        string dtorname = FunctionNameMangler::mangleName("__dtor", vector<Type*>(),
-                          "Helen", ((StructType*)type)->getName());
-        Function* dtor = functions[dtorname];
-        printf("dtor=%d %s\n", dtor, dtorname.c_str());
-        if(dtor) {
-            builder.CreateCall(dtor, {});
-        }
         Value* addr = builder.CreateLoad(val, "freetmp");
         if(!addr->getType()->isPointerTy())
             return Error::errorValue(ErrorType::NonObjectType);
         if(!cast<PointerType>(addr->getType())->getElementType()->isStructTy())
             return Error::errorValue(ErrorType::NonObjectType);
+        Type* type = cast<PointerType>(addr->getType())->getElementType();
+        string dtorname = FunctionNameMangler::mangleName("__dtor", vector<Type*>(),
+                          "Helen", ((StructType*)type)->getName());
+        Function* dtor = 0;//functions[dtorname];
+        printf("dtor=%d %s\n", dtor, dtorname.c_str());
+        if(dtor) {
+            builder.CreateCall(dtor, addr);
+        }
         addr = builder.CreateBitCast(addr, Type::getInt8PtrTy(getGlobalContext()), "freetmp");
         builder.CreateCall(module->getFunction("free"), addr);
     } catch(out_of_range) {
