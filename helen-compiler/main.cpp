@@ -14,6 +14,8 @@ namespace po = boost::program_options;
 using namespace Helen;
 using namespace std;
 
+vector<string> includePaths;
+
 int yyparse(AST*& ast);
 extern FILE* yyin;
 
@@ -25,6 +27,7 @@ int main(int argc, char** argv)
     ("help,h", "display this help")
     ("version,v", "display version")
     ("input-file", po::value<string>(), "input file")
+    ("include-path,I", po::value<vector<string> >(), "path to include files")
     ;
     po::positional_options_description p;
     p.add("input-file", -1);
@@ -35,6 +38,10 @@ int main(int argc, char** argv)
         cout << desc << "\n";
         return 1;
     }
+    if(vm.count("include-path"))
+        includePaths = vm["include-path"].as<vector<string> >();
+    includePaths.push_back(".");
+    //TODO: add stdlib dirs to include paths
     AST::module = llvm::make_unique<Module>("__helenmodule__", getGlobalContext());
     AST::fpm = llvm::make_unique<legacy::FunctionPassManager>(AST::module.get());
     AST::dataLayout = llvm::make_unique<DataLayout>(AST::module.get());
