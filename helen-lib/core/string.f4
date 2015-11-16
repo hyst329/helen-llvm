@@ -5,18 +5,18 @@ declare realloc(ptr char c, int(32) n) -> ptr char style(C)
 declare free(ptr char c) style(C)
 declare strcpy(ptr char c1, ptr char c2) -> ptr char style(C)
 
-fun constructor string()
+fun constructor String()
     this.length = 0
     this.capacity = 1
     this.cstr = malloc(this.capacity)
 endfun
 
-fun destructor string()
+fun destructor String()
     free(this.cstr)
 endfun
 
-fun copy() -> string method(string)
-    string ns = new string
+fun copy() -> String method(String)
+    String ns = new String
     ns.length = this.length
     ns.capacity = this.capacity
     ns.cstr = realloc(ns.cstr, ns.capacity)
@@ -24,8 +24,8 @@ fun copy() -> string method(string)
     return ns
 endfun
 
-fun operator + (string s, char c) -> string
-    string ns = ns.copy()
+fun operator + (String s, char c) -> String
+    String ns = ns.copy()
     if ns.length == ns.capacity
         ns.capacity = 2 * ns.capacity
         ns.cstr = realloc(ns.cstr, ns.capacity)
