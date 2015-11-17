@@ -7,7 +7,7 @@ message(STATUS "Found Flex ${FLEX_VERSION}")
 message(STATUS "Found Bison ${BISON_VERSION}")
 
 find_package(LLVM REQUIRED CONFIG)
-find_package(Boost 1.55 REQUIRED COMPONENTS program_options)
+find_package(Boost 1.55 REQUIRED COMPONENTS program_options filesystem system)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")

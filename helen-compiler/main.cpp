@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include "AST.h"
@@ -11,6 +12,7 @@
 #include <llvm/Transforms/IPO.h>
 
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 using namespace Helen;
 using namespace std;
 
