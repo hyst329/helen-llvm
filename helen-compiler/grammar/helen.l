@@ -59,6 +59,7 @@ ptr                      return PTR;
 cast                     return CAST;
 to                       return TO;
 mainmodule               return MAINMODULE;
+shiftby                  return SHIFTBY;
 include                  BEGIN(INCLUDE);
 \n                       return NEWLINE;
 [ \t]                    ;
