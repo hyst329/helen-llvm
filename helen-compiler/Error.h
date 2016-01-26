@@ -29,7 +29,8 @@ enum class ErrorType {
     TypeRedefined,
     UndeclaredType,
     NonObjectType,
-    UncastableTypes
+    UncastableTypes,
+    InvalidShiftbyUse
 };
 
 class Error

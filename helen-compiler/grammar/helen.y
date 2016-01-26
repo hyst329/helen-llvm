@@ -357,6 +357,9 @@ term: literal {
 | SIZE ID {
     $$ = new FunctionCallAST("__size", {shared_ptr<AST>(new VariableAST($2))});
 }
+| term SHIFTBY term {
+    $$ = new ShiftbyAST(shared_ptr<AST>($1), shared_ptr<AST>($3));
+}
 | NEW type {
     $$ = new NewAST($2);
 }

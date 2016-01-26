@@ -303,8 +303,7 @@ Value* FunctionCallAST::codegen()
     // try to find mangled function, then unmangled one
     Function* f = 0;
     string oldFName = functionName;
-    for(string style : { "Helen", "C"
-                       }) {
+    for(string style : { "Helen", "C" }) {
         functionName = FunctionNameMangler::mangleName(oldFName, types, style, methodType);
         f = module->getFunction(functionName);
         if(f)
@@ -412,6 +411,15 @@ Function* FunctionAST::codegen()
     builder.SetInsertPoint(parent);
     return nullptr;
 }
+
+Value* ShiftbyAST::codegen()
+{
+    Value *ptr = pointer->codegen(), *amt = amount->codegen();
+    if(!ptr->getType()->isPointerTy() || !amt->getType()->isIntegerTy())
+        return Error::errorValue(ErrorType::InvalidShiftbyUse);
+    return builder.CreateGEP(ptr, amt);
+}
+
 Value* ReturnAST::codegen()
 {
     Value* ret = result->codegen();
@@ -441,7 +449,7 @@ Value* CustomTypeAST::codegen()
     for(int i = 0; i < bstc; i++) {
         if(fieldTypes[i]->isPointerTy()) {
             if(((PointerType*)(fieldTypes[i]))->getElementType()->isFunctionTy() &&
-               find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
+                find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
                 printf("Method '%s' generated as base-class\n", fieldNames[i].c_str());
                 string mname = fieldNames[i];
                 string bmname = mname;
@@ -467,7 +475,7 @@ Value* CustomTypeAST::codegen()
                     baseargs.push_back(builder.CreateLoad(alloca));
                 }
                 Value* basethis = builder.CreateBitCast(
-                                      builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
+                    builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
                 baseargs[0] = basethis;
                 Value* ret = builder.CreateCall(bf, baseargs, "calltmp");
                 builder.CreateRet(ret);
@@ -530,7 +538,7 @@ void CustomTypeAST::compileTime()
             // Finding mangled name inherited from parent class
             string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), args, "Helen", typeName);
             if(find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||
-               find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
+                find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
                 // No need for error, re-declaration means override
                 overriddenMethods.push_back(mname);
                 continue;
@@ -556,11 +564,9 @@ Value* NewAST::codegen()
     type = cast<PointerType>(type)->getElementType();
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
-                           module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
-    Value* msvals[] = { memoryPtr,
-                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
-                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size)
-                      };
+        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+    Value* msvals[] = { memoryPtr, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
+        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) };
     builder.CreateCall(module->getFunction("memset"), msvals);
     Value* v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
     if(((PointerType*)(v->getType()))->getElementType()->isStructTy()) {
@@ -589,8 +595,7 @@ Value* NewAST::codegen()
         argValues.push_back(av);
         argTypes.push_back(av->getType());
     }
-    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes,
-                      "Helen", ((StructType*)type)->getName());
+    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
     Function* ctor = functions[ctorname];
     printf("ctor=%d %s\n", ctor, ctorname.c_str());
     if(ctor) {
@@ -611,9 +616,9 @@ Value* DeleteAST::codegen()
         if(!cast<PointerType>(addr->getType())->getElementType()->isStructTy())
             return Error::errorValue(ErrorType::NonObjectType);
         Type* type = cast<PointerType>(addr->getType())->getElementType();
-        string dtorname = FunctionNameMangler::mangleName("__dtor", vector<Type*>(),
-                          "Helen", ((StructType*)type)->getName());
-        Function* dtor = 0;//functions[dtorname];
+        string dtorname =
+            FunctionNameMangler::mangleName("__dtor", vector<Type*>(), "Helen", ((StructType*)type)->getName());
+        Function* dtor = 0; // functions[dtorname];
         printf("dtor=%d %s\n", dtor, dtorname.c_str());
         if(dtor) {
             builder.CreateCall(dtor, addr);

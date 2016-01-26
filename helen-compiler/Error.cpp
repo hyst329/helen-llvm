@@ -23,6 +23,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::UndeclaredType, "Undeclared type: %1%" },
     { ErrorType::NonObjectType, "Type of the variable is probably non-object (i.e. primitive)" },
     { ErrorType::UncastableTypes, "Value cannot be casted to type" },
+    { ErrorType::InvalidShiftbyUse, "Invalid use of SHIFTBY instruction" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)
