@@ -51,7 +51,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING ARRAY
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY
 %token NEW DELETE PTR CAST TO SHIFTBY
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -276,9 +276,6 @@ type: INT {
 }
 | CHAR {
     $$ = llvm::Type::getInt8Ty(getGlobalContext());
-}
-| STRING {
-    $$ = llvm::Type::getInt8PtrTy(getGlobalContext());
 }
 | LOGICAL {
     $$ = llvm::Type::getInt1Ty(getGlobalContext());
