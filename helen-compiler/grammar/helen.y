@@ -281,8 +281,12 @@ type: INT {
     $$ = llvm::Type::getInt1Ty(getGlobalContext());
 }
 | ID {
-    if(AST::types.find($1) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$1});
-    $$ = $$ = llvm::PointerType::get(AST::types[$1], 0);
+    if(AST::types.find($1) == AST::types.end()) {
+        // maybe it's a type currently being declared?
+        $$ = 0;
+        //Error::error(ErrorType::UndeclaredType, {$1});
+    }
+    else $$ = llvm::PointerType::get(AST::types[$1], 0);
 }
 | INT LPAREN INTLIT RPAREN {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);

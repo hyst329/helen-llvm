@@ -350,7 +350,7 @@ Function* FunctionPrototypeAST::codegen()
     }
     if(!styles.count(style))
         return (Function*)Error::errorValue(ErrorType::UnknownStyle);
-    FunctionType* ft = FunctionType::get(returnType, args, false);
+    FunctionType* ft = FunctionType::get(returnType ?: PointerType::get(types[className], 0), args, false);
     name = FunctionNameMangler::mangleName(name, args, style, className);
     Function* f = functions[name];
     if(f)
@@ -544,7 +544,7 @@ void CustomTypeAST::compileTime()
                 continue;
             }
             fieldNames.push_back(fpi->getOriginalName());
-            FunctionType* ft = FunctionType::get(fpi->getReturnType(), args, false);
+            FunctionType* ft = FunctionType::get(fpi->getReturnType() ?: st, args, false);
             Type* pf = PointerType::get(ft, 0);
             fieldTypes.push_back(pf);
         }
