@@ -62,7 +62,8 @@ class ConstantRealAST : public AST
     double value;
 
 public:
-    ConstantRealAST(double value) : value(value)
+    ConstantRealAST(double value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -73,7 +74,8 @@ class ConstantCharAST : public AST
     char value;
 
 public:
-    ConstantCharAST(char value) : value(value)
+    ConstantCharAST(char value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -84,7 +86,8 @@ class ConstantStringAST : public AST
     string value;
 
 public:
-    ConstantStringAST(string value) : value(value)
+    ConstantStringAST(string value)
+        : value(value)
     {
     }
     virtual Value* codegen();
@@ -95,7 +98,8 @@ class VariableAST : public AST
     string name;
 
 public:
-    VariableAST(string name) : name(name)
+    VariableAST(string name)
+        : name(name)
     {
     }
     const string& getName() const
@@ -199,7 +203,8 @@ public:
         return instructions;
     }
 
-    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >()) : instructions(instructions)
+    SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
+        : instructions(instructions)
     {
     }
     virtual Value* codegen();
@@ -260,12 +265,27 @@ public:
     Function* codegen();
 };
 
+class ShiftbyAST : public AST
+{
+    shared_ptr<AST> pointer;
+    shared_ptr<AST> amount;
+
+public:
+    ShiftbyAST(shared_ptr<AST> pointer, shared_ptr<AST> amount)
+        : pointer(pointer)
+        , amount(amount)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class ReturnAST : public AST
 {
     shared_ptr<AST> result;
 
 public:
-    ReturnAST(shared_ptr<AST> result) : result(result)
+    ReturnAST(shared_ptr<AST> result)
+        : result(result)
     {
     }
     virtual Value* codegen();
@@ -308,7 +328,8 @@ class DeleteAST : public AST
     string var;
 
 public:
-    DeleteAST(string var) : var(var)
+    DeleteAST(string var)
+        : var(var)
     {
     }
     virtual Value* codegen();

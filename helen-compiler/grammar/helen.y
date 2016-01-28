@@ -51,8 +51,8 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR STRING ARRAY
-%token NEW DELETE PTR CAST TO
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY
+%token NEW DELETE PTR CAST TO SHIFTBY
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
 %token NEWLINE
@@ -277,15 +277,16 @@ type: INT {
 | CHAR {
     $$ = llvm::Type::getInt8Ty(getGlobalContext());
 }
-| STRING {
-    $$ = llvm::Type::getInt8PtrTy(getGlobalContext());
-}
 | LOGICAL {
     $$ = llvm::Type::getInt1Ty(getGlobalContext());
 }
 | ID {
-    if(AST::types.find($1) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$1});
-    $$ = $$ = llvm::PointerType::get(AST::types[$1], 0);
+    if(AST::types.find($1) == AST::types.end()) {
+        // maybe it's a type currently being declared?
+        $$ = 0;
+        //Error::error(ErrorType::UndeclaredType, {$1});
+    }
+    else $$ = llvm::PointerType::get(AST::types[$1], 0);
 }
 | INT LPAREN INTLIT RPAREN {
     $$ = llvm::IntegerType::get(getGlobalContext(), $3);
@@ -356,6 +357,9 @@ term: literal {
 }
 | SIZE ID {
     $$ = new FunctionCallAST("__size", {shared_ptr<AST>(new VariableAST($2))});
+}
+| term SHIFTBY term {
+    $$ = new ShiftbyAST(shared_ptr<AST>($1), shared_ptr<AST>($3));
 }
 | NEW type {
     $$ = new NewAST($2);

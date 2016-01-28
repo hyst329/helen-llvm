@@ -25,12 +25,25 @@ fun copy() -> String method(String)
 endfun
 
 fun operator + (String s, char c) -> String
-    String ns = ns.copy()
+    String ns = s.copy()
     if ns.length == ns.capacity
         ns.capacity = 2 * ns.capacity
         ns.cstr = realloc(ns.cstr, ns.capacity)
     endif
+    ptr char nch = ns.cstr shiftby ns.length
     ns.length = ns.length + 1
     # TODO: Assign newly allocated char to c!!!
+    return ns
+endfun
+
+fun operator + (String s1, String s2) -> String
+    # TODO: Adjust capacity (make it power of 2)
+    String ns = s1.copy()
+    if s1.length + s2.length > ns.capacity
+        ns.capacity = s1.length + s2.length
+        ns.cstr = realloc(ns.cstr, ns.capacity)
+    endif
+    ptr char nch = ns.cstr shiftby ns.length
+    strcpy(ns.cstr, s2.cstr)
     return ns
 endfun
