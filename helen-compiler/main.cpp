@@ -21,6 +21,11 @@ vector<string> includePaths;
 int yyparse(AST*& ast);
 extern FILE* yyin;
 
+string checkPath()
+{
+    
+}
+
 int main(int argc, char** argv)
 {
     // Boost Program Options setup
