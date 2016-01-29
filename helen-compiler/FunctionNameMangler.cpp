@@ -29,12 +29,10 @@ string FunctionNameMangler::mangleName(string name, vector<Type*> args, string s
                     t = et;
                 }
             }
-            if(t == Type::getInt64Ty(getGlobalContext()))
-                mangledName += "i";
+            if(t->isIntegerTy())
+                mangledName += "i" + std::to_string(t->getPrimitiveSizeInBits());
             if(t == Type::getDoubleTy(getGlobalContext()))
                 mangledName += "r";
-            if(t == Type::getInt8Ty(getGlobalContext()))
-                mangledName += "c";
             if(t == Type::getInt8PtrTy(getGlobalContext()))
                 mangledName += "s";
         }
@@ -61,12 +59,10 @@ string FunctionNameMangler::humanReadableName(string mangledName)
             name += "array ";
             strs[i] = strs[i].substr(1);
         }
-        if(strs[i] == "i")
+        if(strs[i][0] == 'i')
             name += "int";
         if(strs[i] == "r")
             name += "real";
-        if(strs[i] == "c")
-            name += "char";
         if(strs[i] == "s")
             name += "string";
         if(strs[i] == "v")
