@@ -477,8 +477,9 @@ Value* CustomTypeAST::codegen()
                 Value* basethis = builder.CreateBitCast(
                     builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
                 baseargs[0] = basethis;
-                Value* ret = builder.CreateCall(bf, baseargs, "calltmp");
-                builder.CreateRet(ret);
+                Value* ret = bf->getReturnType()->isVoidTy() ? builder.CreateCall(bf, baseargs) :
+                                                               builder.CreateCall(bf, baseargs, "calltmp");
+                bf->getReturnType()->isVoidTy() ? builder.CreateRetVoid() : builder.CreateRet(ret);
                 builder.SetInsertPoint(parent);
             }
         }
@@ -596,7 +597,7 @@ Value* NewAST::codegen()
         argTypes.push_back(av->getType());
     }
     string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
-    Function* ctor = functions[ctorname];
+    Function* ctor = module->getFunction(ctorname); // functions[ctorname];
     printf("ctor=%d %s\n", ctor, ctorname.c_str());
     if(ctor) {
         builder.CreateCall(ctor, argValues);
@@ -618,7 +619,7 @@ Value* DeleteAST::codegen()
         Type* type = cast<PointerType>(addr->getType())->getElementType();
         string dtorname =
             FunctionNameMangler::mangleName("__dtor", vector<Type*>(), "Helen", ((StructType*)type)->getName());
-        Function* dtor = 0; // functions[dtorname];
+        Function* dtor = module->getFunction(dtorname); // functions[dtorname];
         printf("dtor=%d %s\n", dtor, dtorname.c_str());
         if(dtor) {
             builder.CreateCall(dtor, addr);
