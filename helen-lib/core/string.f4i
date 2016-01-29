@@ -3,6 +3,7 @@ type String
     int(32) capacity
     ptr char cstr
     declare constructor String()
+    declare constructor String(ptr char source, int(32) length)
     declare destructor String()
     declare copy() -> String
 endtype

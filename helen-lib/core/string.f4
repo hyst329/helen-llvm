@@ -3,12 +3,19 @@ include string.f4i
 declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)
 declare free(ptr char c) style(C)
-declare strcpy(ptr char c1, ptr char c2) -> ptr char style(C)
+declare memcpy(ptr char c1, ptr char c2, int(32) num) -> ptr char style(C)
 
 fun constructor String()
     this.length = 0
     this.capacity = 1
     this.cstr = malloc(this.capacity)
+endfun
+
+fun constructor String(ptr char source, int(32) length)
+    this.length = length
+    this.capacity = length
+    this.cstr = malloc(this.capacity)
+    memcpy(this.cstr, source, length)
 endfun
 
 fun destructor String()
@@ -20,7 +27,7 @@ fun copy() -> String method(String)
     ns.length = this.length
     ns.capacity = this.capacity
     ns.cstr = realloc(ns.cstr, ns.capacity)
-    strcpy(ns.cstr, this.cstr)
+    memcpy(ns.cstr, this.cstr, this.length)
     return ns
 endfun
 
@@ -43,7 +50,8 @@ fun operator + (String s1, String s2) -> String
         ns.capacity = s1.length + s2.length
         ns.cstr = realloc(ns.cstr, ns.capacity)
     endif
-    ptr char nch = ns.cstr shiftby ns.length
-    strcpy(ns.cstr, s2.cstr)
+    ptr char nch = ns.cstr shiftby s1.length
+    memcpy(ns.cstr, s2.cstr, s2.length)
+    ns.length = s1.length + s2.length
     return ns
 endfun
