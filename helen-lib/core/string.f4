@@ -1,15 +1,15 @@
-include string.f4i
+#include string.f4i
 
 declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)
 declare free(ptr char c) style(C)
 declare memcpy(ptr char c1, ptr char c2, int(32) num) -> ptr char style(C)
 
-fun constructor String()
-    this.length = 0
-    this.capacity = 1
-    this.cstr = malloc(this.capacity)
-endfun
+#fun constructor String()
+#    this.length = 0
+#    this.capacity = 1
+#    this.cstr = malloc(this.capacity)
+#endfun
 
 fun constructor String(ptr char source, int(32) length)
     this.length = length

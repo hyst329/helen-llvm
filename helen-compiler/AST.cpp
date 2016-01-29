@@ -47,9 +47,31 @@ Value* ConstantStringAST::codegen()
 {
     if(types.find("String") == types.end())
         return Error::errorValue(ErrorType::UndeclaredType, { "String" });
-    Value* v = ConstantDataArray::getString(getGlobalContext(), StringRef(value));
+    Constant* v = ConstantDataArray::getString(getGlobalContext(), StringRef(value));
     Value* len = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), value.size());
-    
+    Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
+    Constant* ind[] = { zero, zero };
+    v = ConstantExpr::getGetElementPtr(v->getType(), v, ind);
+    Type* type = types["String"];
+    Type* ptrType = PointerType::get(type, 0);
+    size_t size = dataLayout->getTypeStoreSize(type);
+    Value* memoryPtr = builder.CreateCall(
+        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+    Value* msvals[] = { memoryPtr, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
+        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) };
+    builder.CreateCall(module->getFunction("memset"), msvals);
+    Value* str = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
+    std::vector<Value*> argValues = { str, v, len };
+    std::vector<Type*> argTypes = { str->getType(), v->getType(), len->getType() };
+    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
+    Function* ctor = module->getFunction(ctorname); // functions[ctorname];
+    printf("ctor=%d %s\n", ctor, ctorname.c_str());
+    if(ctor) {
+        builder.CreateCall(ctor, argValues);
+    } else {
+        // TODO: Error
+    }
+    return str;
 }
 
 Value* DeclarationAST::codegen()
