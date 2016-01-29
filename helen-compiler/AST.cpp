@@ -45,7 +45,11 @@ Value* ConstantCharAST::codegen()
 
 Value* ConstantStringAST::codegen()
 {
-    return ConstantDataArray::getString(getGlobalContext(), StringRef(value)); // TODO: String
+    if(types.find("String") == types.end())
+        return Error::errorValue(ErrorType::UndeclaredType, { "String" });
+    Value* v = ConstantDataArray::getString(getGlobalContext(), StringRef(value));
+    Value* len = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), value.size());
+    
 }
 
 Value* DeclarationAST::codegen()
