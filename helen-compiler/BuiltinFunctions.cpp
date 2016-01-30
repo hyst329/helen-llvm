@@ -155,7 +155,7 @@ void BuiltinFunctions::createIO()
         Constant* fmt = ConstantDataArray::getString(getGlobalContext(), StringRef(fmtstr));
         Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), fmtstr.size() + 1);
         GlobalVariable* var =
-            new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::PrivateLinkage, fmt, ".str");
+            new GlobalVariable(*AST::module.get(), stype, true, GlobalValue::PrivateLinkage, fmt, ".pfstr");
         Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
         Constant* ind[] = { zero, zero };
 #if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7

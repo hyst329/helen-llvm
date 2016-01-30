@@ -47,11 +47,17 @@ Value* ConstantStringAST::codegen()
 {
     if(types.find("String") == types.end())
         return Error::errorValue(ErrorType::UndeclaredType, { "String" });
-    Constant* v = ConstantDataArray::getString(getGlobalContext(), StringRef(value));
-    Value* len = ConstantInt::get(Type::getInt8Ty(getGlobalContext()), value.size());
+    Constant* gs = ConstantDataArray::getString(getGlobalContext(), StringRef(value));
+    Type* stype = ArrayType::get(IntegerType::get(getGlobalContext(), 8), value.size() + 1);
+    GlobalVariable* var = new GlobalVariable(*module.get(), stype, true, GlobalValue::PrivateLinkage, gs, ".strconst");
     Constant* zero = Constant::getNullValue(llvm::IntegerType::getInt32Ty(getGlobalContext()));
     Constant* ind[] = { zero, zero };
-    v = ConstantExpr::getGetElementPtr(v->getType(), v, ind);
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7
+    Constant* v = ConstantExpr::getGetElementPtr(stype, var, ind);
+#else
+    Constant* v = ConstantExpr::getGetElementPtr(var, ind);
+#endif
+    Value* len = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), value.size());
     Type* type = types["String"];
     Type* ptrType = PointerType::get(type, 0);
     size_t size = dataLayout->getTypeStoreSize(type);
@@ -105,9 +111,9 @@ Value* VariableAST::codegen()
 Value* ConditionAST::codegen()
 {
     Value* cond = condition->codegen();
-    Type* condtype = cond->getType();
     if(!cond)
         return 0;
+    Type* condtype = cond->getType();
     if(condtype->isIntegerTy())
         cond = builder.CreateICmpNE(cond, Constant::getNullValue(condtype), "ifcond");
     if(condtype->isDoubleTy())
@@ -342,7 +348,7 @@ Value* FunctionCallAST::codegen()
     for(unsigned i = 0; i < vargs.size(); i++)
         if(vargs[i]->getType() != params[i])
             return Error::errorValue(ErrorType::WrongArgumentType, { std::to_string(i) });
-    return builder.CreateCall(f, vargs, "calltmp");
+    return f->getReturnType()->isVoidTy() ? builder.CreateCall(f, vargs) : builder.CreateCall(f, vargs, "calltmp");
 }
 
 Value* SequenceAST::codegen()
@@ -571,7 +577,7 @@ void CustomTypeAST::compileTime()
                 continue;
             }
             fieldNames.push_back(fpi->getOriginalName());
-            FunctionType* ft = FunctionType::get(fpi->getReturnType() ?: st, args, false);
+            FunctionType* ft = FunctionType::get(fpi->getReturnType() ?: PointerType::get(st, 0), args, false);
             Type* pf = PointerType::get(ft, 0);
             fieldTypes.push_back(pf);
         }
@@ -660,6 +666,8 @@ Value* DeleteAST::codegen()
 Value* CastAST::codegen()
 {
     Value* v = value->codegen();
+    if(!v)
+        return 0;
     v->getType()->dump();
     destinationType->dump();
     if(CastInst::isCastable(v->getType(), destinationType)) {
