@@ -23,7 +23,9 @@ stack<YY_BUFFER_STATE> includeStack;
 set<string> includedFiles;
 stack<string> filenameStack;
 string currentFilename;
+extern vector<string> includePaths;
 extern void yy_switch_to_buffer(YY_BUFFER_STATE);
+extern bool checkPath(string, string&);
 %}
 %%
 if                       return IF;
@@ -76,13 +78,16 @@ include                  BEGIN(INCLUDE);
 <COMMENT>\n              BEGIN(INITIAL);
 <INCLUDE>[ \t]*          ;
 <INCLUDE>[^ \t\n]+ {
-                         string path = yytext; // checkFilename(yytext);
+                         string path = yytext;
+                         string abspath;
                          if(includedFiles.count(path)) goto begin;
                          includedFiles.insert(path);
                          currentFilename = path;
                          filenameStack.push(path);
                          includeStack.push(YY_CURRENT_BUFFER);
-                         yyin = fopen(path.c_str(), "r");
+                         if(!checkPath(path, abspath)) 
+                             Error::error(ErrorType::FileNotFound, { path });
+                         yyin = fopen(abspath.c_str(), "r");
                          if(!yyin)
                              Error::error(ErrorType::FileNotFound, { path });
                          yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
