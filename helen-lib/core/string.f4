@@ -1,4 +1,4 @@
-#include string.f4i
+include string.f4i
 
 declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)

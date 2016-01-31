@@ -79,7 +79,7 @@ include                  BEGIN(INCLUDE);
 <INCLUDE>[ \t]*          ;
 <INCLUDE>[^ \t\n]+ {
                          string path = yytext;
-                         string abspath;
+                         string abspath, filecurrent;
                          if(includedFiles.count(path)) goto begin;
                          includedFiles.insert(path);
                          currentFilename = path;
@@ -87,9 +87,20 @@ include                  BEGIN(INCLUDE);
                          includeStack.push(YY_CURRENT_BUFFER);
                          if(!checkPath(path, abspath)) 
                              Error::error(ErrorType::FileNotFound, { path });
+                         filecurrent = abspath;
+                         while(!filecurrent.empty())
+                         {
+                             if (filecurrent.back() != '/' && filecurrent.back() != '\\')
+                                filecurrent.pop_back();
+                             else break;                             
+                         }
+                         if(filecurrent == "")
+                             filecurrent = ".";
+                         else filecurrent.pop_back();
                          yyin = fopen(abspath.c_str(), "r");
                          if(!yyin)
                              Error::error(ErrorType::FileNotFound, { path });
+                         includePaths.insert(includePaths.begin(), filecurrent);
                          yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
                          begin:
                          BEGIN(INITIAL);        
@@ -111,6 +122,7 @@ include                  BEGIN(INCLUDE);
                              includeStack.pop();
                              currentFilename = filenameStack.top();
                              filenameStack.pop();
+                             includePaths.erase(includePaths.begin());
                          }
 }
 %%

@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     pm.run(*(AST::module.get()));
     AST::module->dump();
     // FIXME: Replace with positional options
-    string filename = (argc >= 3) ? argv[2] : (argv[1] + string(".bc"));
+    string filename = vm["input-file"].as<string>() + ".bc";
     std::error_code ec;
     raw_fd_ostream fdos(filename, ec, sys::fs::OpenFlags::F_None);
     WriteBitcodeToFile(AST::module.get(), fdos);
