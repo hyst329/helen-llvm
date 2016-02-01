@@ -73,4 +73,25 @@ string FunctionNameMangler::humanReadableName(string mangledName)
     name += ")";
     return name;
 }
+string FunctionNameMangler::functionName(string mangledName)
+{
+    const string operatorMarker = "__operator_";
+    if(mangledName[0] != '_')
+        return mangledName;
+    mangledName = mangledName.substr(1);
+    // check if it's an operator
+    if(boost::starts_with(mangledName, operatorMarker)) {
+        mangledName = mangledName.substr(operatorMarker.size());
+        auto it = boost::find_first(mangledName, "_");
+        return operatorMarker + string(mangledName.begin(), it.begin());
+    }
+    // it isn't an operator, so run the "normal" algorithm
+    for(auto it = mangledName.begin(); it != mangledName.end(); it++) {
+        if (*it == '_' && *(it - 1) != '_' && *(it + 1) != '_') {
+            // here parameters begin
+            return string(mangledName.begin(), it);
+        }
+    }
+    return "";
+}
 }

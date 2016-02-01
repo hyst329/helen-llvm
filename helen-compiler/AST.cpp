@@ -342,8 +342,12 @@ Value* FunctionCallAST::codegen()
             break;
     }
     string hrName = FunctionNameMangler::humanReadableName(functionName);
-    if(!f)
+    string fName = FunctionNameMangler::functionName(functionName);
+    printf("hrName = %s; fName = %s\n", hrName.c_str(), fName.c_str());
+    if(!f) {
+        //TODO: Try to find the suitable function with same name but different signature
         return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
+    }
     ArrayRef<Type*> params = f->getFunctionType()->params();
     for(unsigned i = 0; i < vargs.size(); i++)
         if(vargs[i]->getType() != params[i])
