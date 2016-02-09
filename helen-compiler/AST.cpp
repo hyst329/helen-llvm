@@ -62,9 +62,10 @@ Value* ConstantStringAST::codegen()
     Type* ptrType = PointerType::get(type, 0);
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
-        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+                           module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
     Value* msvals[] = { memoryPtr, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
-        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) };
+                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size)
+                      };
     builder.CreateCall(module->getFunction("memset"), msvals);
     Value* str = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
     std::vector<Value*> argValues = { str, v, len };
@@ -346,6 +347,12 @@ Value* FunctionCallAST::codegen()
     printf("hrName = %s; fName = %s\n", hrName.c_str(), fName.c_str());
     if(!f) {
         //TODO: Try to find the suitable function with same name but different signature
+        vector<Function*> suitableFunctions;
+        for(Function& f : module->getFunctionList()) {
+            if (FunctionNameMangler::functionName(f.getName()) == fName) {
+                //TODO: Check for arguments' castability, then call the most suitable
+            }
+        }
         return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
     }
     ArrayRef<Type*> params = f->getFunctionType()->params();
@@ -485,7 +492,7 @@ Value* CustomTypeAST::codegen()
     for(int i = 0; i < bstc; i++) {
         if(fieldTypes[i]->isPointerTy()) {
             if(((PointerType*)(fieldTypes[i]))->getElementType()->isFunctionTy() &&
-                find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
+               find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
                 printf("Method '%s' generated as base-class\n", fieldNames[i].c_str());
                 string mname = fieldNames[i];
                 string bmname = mname;
@@ -511,10 +518,10 @@ Value* CustomTypeAST::codegen()
                     baseargs.push_back(builder.CreateLoad(alloca));
                 }
                 Value* basethis = builder.CreateBitCast(
-                    builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
+                                      builder.CreateLoad(variables["this"]), PointerType::get(types[baseTypeName], 0), "base");
                 baseargs[0] = basethis;
                 Value* ret = bf->getReturnType()->isVoidTy() ? builder.CreateCall(bf, baseargs) :
-                                                               builder.CreateCall(bf, baseargs, "calltmp");
+                             builder.CreateCall(bf, baseargs, "calltmp");
                 bf->getReturnType()->isVoidTy() ? builder.CreateRetVoid() : builder.CreateRet(ret);
                 builder.SetInsertPoint(parent);
             }
@@ -575,7 +582,7 @@ void CustomTypeAST::compileTime()
             // Finding mangled name inherited from parent class
             string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), args, "Helen", typeName);
             if(find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||
-                find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
+               find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
                 // No need for error, re-declaration means override
                 overriddenMethods.push_back(mname);
                 continue;
@@ -601,9 +608,10 @@ Value* NewAST::codegen()
     type = cast<PointerType>(type)->getElementType();
     size_t size = dataLayout->getTypeStoreSize(type);
     Value* memoryPtr = builder.CreateCall(
-        module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+                           module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
     Value* msvals[] = { memoryPtr, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
-        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size) };
+                        ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size)
+                      };
     builder.CreateCall(module->getFunction("memset"), msvals);
     Value* v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
     if(((PointerType*)(v->getType()))->getElementType()->isStructTy()) {
