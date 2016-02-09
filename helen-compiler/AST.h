@@ -47,11 +47,9 @@ class ConstantIntAST : public AST
 public:
     ConstantIntAST(int64_t value, int bitwidth = 64)
         : value(value)
-        , bitwidth(bitwidth)
-    {
+        , bitwidth(bitwidth) {
     }
-    int64_t getValue()
-    {
+    int64_t getValue() {
         return value;
     }
     virtual Value* codegen();
@@ -63,8 +61,7 @@ class ConstantRealAST : public AST
 
 public:
     ConstantRealAST(double value)
-        : value(value)
-    {
+        : value(value) {
     }
     virtual Value* codegen();
 };
@@ -75,8 +72,7 @@ class ConstantCharAST : public AST
 
 public:
     ConstantCharAST(char value)
-        : value(value)
-    {
+        : value(value) {
     }
     virtual Value* codegen();
 };
@@ -87,8 +83,7 @@ class ConstantStringAST : public AST
 
 public:
     ConstantStringAST(string value)
-        : value(value)
-    {
+        : value(value) {
     }
     virtual Value* codegen();
 };
@@ -99,11 +94,9 @@ class VariableAST : public AST
 
 public:
     VariableAST(string name)
-        : name(name)
-    {
+        : name(name) {
     }
-    const string& getName() const
-    {
+    const string& getName() const {
         return name;
     }
     virtual Value* codegen();
@@ -119,15 +112,12 @@ public:
     DeclarationAST(Type* type, string name, shared_ptr<AST> initialiser = 0)
         : type(type)
         , name(name)
-        , initialiser(initialiser)
-    {
+        , initialiser(initialiser) {
     }
-    Type* getType()
-    {
+    Type* getType() {
         return type;
     }
-    string getName()
-    {
+    string getName() {
         return name;
     }
     virtual Value* codegen();
@@ -143,8 +133,7 @@ public:
     ConditionAST(shared_ptr<AST> condition, shared_ptr<AST> thenBranch, shared_ptr<AST> elseBranch)
         : condition(condition)
         , thenBranch(thenBranch)
-        , elseBranch(elseBranch)
-    {
+        , elseBranch(elseBranch) {
     }
     virtual Value* codegen();
 };
@@ -161,8 +150,7 @@ public:
         : initial(initial)
         , condition(condition)
         , iteration(iteration)
-        , body(body)
-    {
+        , body(body) {
     }
     virtual Value* codegen();
 };
@@ -175,19 +163,15 @@ class FunctionCallAST : public AST
 public:
     FunctionCallAST(string functionName, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
         : functionName(functionName)
-        , arguments(arguments)
-    {
+        , arguments(arguments) {
     }
-    string getFunctionName()
-    {
+    string getFunctionName() {
         return functionName;
     }
-    string& getMethodType()
-    {
+    string& getMethodType() {
         return methodType;
     }
-    vector<shared_ptr<AST> >& getArguments()
-    {
+    vector<shared_ptr<AST> >& getArguments() {
         return arguments;
     }
     virtual Value* codegen();
@@ -198,14 +182,12 @@ class SequenceAST : public AST
     vector<shared_ptr<AST> > instructions;
 
 public:
-    vector<shared_ptr<AST> >& getInstructions()
-    {
+    vector<shared_ptr<AST> >& getInstructions() {
         return instructions;
     }
 
     SequenceAST(vector<shared_ptr<AST> > instructions = vector<shared_ptr<AST> >())
-        : instructions(instructions)
-    {
+        : instructions(instructions) {
     }
     virtual Value* codegen();
 };
@@ -225,27 +207,21 @@ public:
         , args(args)
         , argNames(argNames)
         , returnType(returnType)
-        , style(style)
-    {
+        , style(style) {
     }
-    const string& getName() const
-    {
+    const string& getName() const {
         return name;
     }
-    const string& getOriginalName() const
-    {
+    const string& getOriginalName() const {
         return origName;
     }
-    Type* getReturnType() const
-    {
+    Type* getReturnType() const {
         return returnType;
     }
-    string& getStyle()
-    {
+    string& getStyle() {
         return style;
     }
-    const vector<Type*>& getArgs() const
-    {
+    const vector<Type*>& getArgs() const {
         return args;
     }
     Function* codegen();
@@ -259,8 +235,7 @@ class FunctionAST : public AST
 public:
     FunctionAST(shared_ptr<FunctionPrototypeAST> proto, shared_ptr<AST> body)
         : proto(proto)
-        , body(body)
-    {
+        , body(body) {
     }
     Function* codegen();
 };
@@ -273,8 +248,7 @@ class ShiftbyAST : public AST
 public:
     ShiftbyAST(shared_ptr<AST> pointer, shared_ptr<AST> amount)
         : pointer(pointer)
-        , amount(amount)
-    {
+        , amount(amount) {
     }
     virtual Value* codegen();
 };
@@ -285,8 +259,7 @@ class ReturnAST : public AST
 
 public:
     ReturnAST(shared_ptr<AST> result)
-        : result(result)
-    {
+        : result(result) {
     }
     virtual Value* codegen();
 };
@@ -295,15 +268,19 @@ class CustomTypeAST : public AST
 {
     string typeName;
     string baseTypeName;
+    bool isInterface;
+    vector<string> baseInterfaces;
     vector<shared_ptr<AST> > instructions;
     int bstc;                         // helper field
     vector<string> overriddenMethods; // helper field
 public:
-    CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions, string baseTypeName = "")
+    CustomTypeAST(string typeName, vector<shared_ptr<AST> > instructions, string baseTypeName = "",
+                  bool isInterface = 0, vector<string> baseInterfaces = vector<string>())
         : typeName(typeName)
         , instructions(instructions)
-        , baseTypeName(baseTypeName)
-    {
+        , baseTypeName(baseTypeName) 
+        , isInterface(isInterface) 
+        , baseInterfaces(baseInterfaces) {
     }
     virtual Value* codegen();
     void compileTime();
@@ -317,8 +294,7 @@ class NewAST : public AST
 public:
     NewAST(Type* type, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
         : type(type)
-        , arguments(arguments)
-    {
+        , arguments(arguments) {
     }
     virtual Value* codegen();
 };
@@ -329,8 +305,7 @@ class DeleteAST : public AST
 
 public:
     DeleteAST(string var)
-        : var(var)
-    {
+        : var(var) {
     }
     virtual Value* codegen();
 };
@@ -343,8 +318,7 @@ class CastAST : public AST
 public:
     CastAST(shared_ptr<AST> value, Type* destinationType)
         : value(value)
-        , destinationType(destinationType)
-    {
+        , destinationType(destinationType) {
     }
     virtual Value* codegen();
 };
