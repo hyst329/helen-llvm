@@ -206,11 +206,6 @@ Value* FunctionCallAST::codegen()
                     ;
                     builder.CreateStore(arr, aarr);
                     Value* v = builder.CreateInBoundsGEP(aarr, ind, "indtmpptr");
-                    //                    if (dynamic_cast<VariableAST*>(leftf->arguments[0].get())) {
-                    //                        Value* var =
-                    //                        variables.at(((VariableAST*)(leftf->arguments[0].get()))->getName());
-                    //                        return builder.CreateStore(v, var);
-                    //                    }
                     return builder.CreateStore(right->codegen(), v);
                 } else if(arr->getType()->isPointerTy()) {
                     Type* elTy = cast<PointerType>(arr->getType())->getElementType();
@@ -315,8 +310,6 @@ Value* FunctionCallAST::codegen()
             Value* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
             Value* ind = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), pos);
             Value* right[] = { zero, ind };
-            /*AllocaInst* aleft = builder.CreateAlloca(left->getType(), 0, "atmp");
-            builder.CreateStore(left, aleft);*/
             Value* tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
             return builder.CreateLoad(tmpptr, "indtmp");
         } else {
