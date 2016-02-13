@@ -5,3 +5,4 @@ set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(helen-compiler)
 add_subdirectory(helen-ide)
+add_subdirectory(helen-lib)

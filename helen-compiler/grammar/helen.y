@@ -96,7 +96,7 @@ static bool lastTerm = 0;
 
 %union
 {
-    char *vstr;
+    char* vstr;
     double vreal;
     uint64_t vint;
     char vchar;
