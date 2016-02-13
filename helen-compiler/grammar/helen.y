@@ -51,7 +51,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY INTERFACE
 %token NEW DELETE PTR CAST TO SHIFTBY
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -78,6 +78,7 @@ static bool lastTerm = 0;
 %type<vstr> ID
 %type<vstr> qid
 %type<vstr> basetype
+%type<vint> interface
 %type<vint> INTLIT
 %type<vreal> REALLIT
 %type<vchar> CHARLIT
@@ -163,9 +164,9 @@ instruction: statement NEWLINE {
     AST::types[$2] = $4;
     $$ = new NullAST();
 }
-| TYPE ID basetype NEWLINE properties ENDTYPE {
-    if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
-    $$ = new CustomTypeAST($2, *$5, $3);
+| TYPE interface ID basetype NEWLINE properties ENDTYPE {
+    if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
+    $$ = new CustomTypeAST($3, *$6, $4, $2);
     ((CustomTypeAST*)$$)->compileTime();
 }
 | MAINMODULE {
@@ -185,6 +186,12 @@ basetype: COLON ID {
 | /* empty */ {
     $$ = "";
 }
+interface: INTERFACE {
+    $$ = 1;
+}
+| /* empty */ {
+    $$ = 0;
+} 
 qid: qid COLON ID {
     $$ = strdup((std::string($1) + "-" + $3).c_str());
 }

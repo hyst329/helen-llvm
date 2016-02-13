@@ -48,6 +48,7 @@ real                     return REAL;
 logical                  return LOGICAL;
 char                     return CHAR;
 array                    return ARRAY;
+interface                return INTERFACE;
 in                       return IN;
 out                      return OUT;
 method                   return METHOD;
