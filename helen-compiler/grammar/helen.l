@@ -49,6 +49,7 @@ logical                  return LOGICAL;
 char                     return CHAR;
 array                    return ARRAY;
 interface                return INTERFACE;
+alias                    return ALIAS;
 in                       return IN;
 out                      return OUT;
 method                   return METHOD;

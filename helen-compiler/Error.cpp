@@ -24,6 +24,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::NonObjectType, "Type of the variable is probably non-object (i.e. primitive)" },
     { ErrorType::UncastableTypes, "Value cannot be casted to type" },
     { ErrorType::InvalidShiftbyUse, "Invalid use of SHIFTBY instruction" },
+    { ErrorType::InterfaceInheritedFromType, "Interface cannot inherit from regular type" },
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

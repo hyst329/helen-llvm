@@ -561,6 +561,10 @@ void CustomTypeAST::compileTime()
     StructType* st = StructType::create(getGlobalContext(), typeName);
     bstc = 0;
     if(!baseTypeName.empty()) {
+        if(isInterface) {
+            Error::error(ErrorType::InterfaceInheritedFromType);
+            return;
+        }
         if(!types[baseTypeName]) {
             Error::error(ErrorType::UndeclaredType, { baseTypeName });
             return;

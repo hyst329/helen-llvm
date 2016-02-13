@@ -51,7 +51,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY INTERFACE
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY INTERFACE ALIAS
 %token NEW DELETE PTR CAST TO SHIFTBY
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -158,10 +158,10 @@ instruction: statement NEWLINE {
 | RESIZE ID LPAREN expression RPAREN {
     $$ = new FunctionCallAST("__resize", {shared_ptr<AST>($4)});
 }
-| TYPE ID OPERATOR type {
-    if(strcmp($3, "=")) Error::error(ErrorType::UnexpectedOperator, {$3});
-    if(AST::types.find($2) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$2});
-    AST::types[$2] = $4;
+| TYPE ALIAS ID OPERATOR type {
+    if(strcmp($4, "=")) Error::error(ErrorType::UnexpectedOperator, {$4});
+    if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
+    AST::types[$3] = $5;
     $$ = new NullAST();
 }
 | TYPE interface ID basetype NEWLINE properties ENDTYPE {

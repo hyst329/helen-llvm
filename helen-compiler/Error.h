@@ -30,7 +30,8 @@ enum class ErrorType {
     UndeclaredType,
     NonObjectType,
     UncastableTypes,
-    InvalidShiftbyUse
+    InvalidShiftbyUse,
+    InterfaceInheritedFromType
 };
 
 class Error
