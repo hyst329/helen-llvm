@@ -345,22 +345,42 @@ Value* FunctionCallAST::codegen()
     string hrName = FunctionNameMangler::humanReadableName(functionName);
     string fName = FunctionNameMangler::functionName(functionName);
     printf("hrName = %s; fName = %s\n", hrName.c_str(), fName.c_str());
+    bool shouldCast = 0;
     if(!f) {
         //TODO: Try to find the suitable function with same name but different signature
         vector<Function*> suitableFunctions;
         for(Function& fu : module->getFunctionList()) {
-            if (FunctionNameMangler::functionName(f.getName()) == fName) {
+            if (FunctionNameMangler::functionName(fu.getName()) == fName) {
                 //TODO: Check for arguments' castability, then call the most suitable
-                if (fu.getArgumentList().size() != vargs.size()) continue;
-                ArrayRef<Type*> params = fu->getFunctionType()->params();
+                ArrayRef<Type*> params = fu.getFunctionType()->params();
+                if (params.size() != vargs.size()) continue;
+                bool available = 1;
+                for(unsigned i = 0; i < vargs.size(); i++)
+                    if (!CastInst::isCastable(vargs[i]->getType(), params[i])) 
+                    {
+                        available = 0;
+                        break;
+                    }
+                if(!available) continue;
+                suitableFunctions.push_back(&fu);
             }
         }
-        return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
+        if(suitableFunctions.empty())
+            return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
+        printf("%d function candidates found\n", suitableFunctions.size());
+        f = suitableFunctions[0];
+        shouldCast = 1;
+        //TODO: 
     }
     ArrayRef<Type*> params = f->getFunctionType()->params();
     for(unsigned i = 0; i < vargs.size(); i++)
-        if(vargs[i]->getType() != params[i])
+        if(!shouldCast && vargs[i]->getType() != params[i])
             return Error::errorValue(ErrorType::WrongArgumentType, { std::to_string(i) });
+    if (shouldCast)
+        for(unsigned i = 0; i < vargs.size(); i++) {
+            auto opc = CastInst::getCastOpcode(vargs[i], true, params[i], true);
+            vargs[i] = builder.CreateCast(opc, vargs[i], params[i]);
+        }
     return f->getReturnType()->isVoidTy() ? builder.CreateCall(f, vargs) : builder.CreateCall(f, vargs, "calltmp");
 }
 
