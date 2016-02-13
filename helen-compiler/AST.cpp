@@ -348,9 +348,11 @@ Value* FunctionCallAST::codegen()
     if(!f) {
         //TODO: Try to find the suitable function with same name but different signature
         vector<Function*> suitableFunctions;
-        for(Function& f : module->getFunctionList()) {
+        for(Function& fu : module->getFunctionList()) {
             if (FunctionNameMangler::functionName(f.getName()) == fName) {
                 //TODO: Check for arguments' castability, then call the most suitable
+                if (fu.getArgumentList().size() != vargs.size()) continue;
+                ArrayRef<Type*> params = fu->getFunctionType()->params();
             }
         }
         return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
