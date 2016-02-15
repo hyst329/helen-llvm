@@ -60,7 +60,7 @@ string FunctionNameMangler::humanReadableName(string mangledName)
             strs[i] = strs[i].substr(1);
         }
         if(strs[i][0] == 'i')
-            name += "int";
+            name += "int" + strs[i].substr(1);
         if(strs[i] == "r")
             name += "real";
         if(strs[i] == "s")
