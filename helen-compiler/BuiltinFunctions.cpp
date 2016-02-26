@@ -39,12 +39,18 @@ void BuiltinFunctions::createArith()
     BasicBlock* bb;
     string name;
     Value* left, *right, *res;
-    Type* i = Type::getInt64Ty(getGlobalContext());
-    Type* r = Type::getDoubleTy(getGlobalContext());
+    Type* i8 = Type::getInt8Ty(getGlobalContext());
+    Type* i16 = Type::getInt16Ty(getGlobalContext());
+    Type* i32 = Type::getInt32Ty(getGlobalContext());
+    Type* i64 = Type::getInt64Ty(getGlobalContext());
+    Type* r64 = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (char c : { '+', '-', '*', '/' }) {
-        for (Type* t : { i, r }) {
-            ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
+    for (char c : { '+', '-', '*', '/'
+                  }) {
+        for (Type* t : {
+                 i8, i16, i32, i64, r64
+             }) {
+            ft = FunctionType::get(t, vector<Type*> { t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
@@ -55,17 +61,16 @@ void BuiltinFunctions::createArith()
             right = it;
             switch (c) {
             case '+':
-                res = t == i ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
                 break;
             case '-':
-                res = t == i ? AST::builder.CreateSub(left, right, "tmp") : AST::builder.CreateFSub(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateSub(left, right, "tmp") : AST::builder.CreateFSub(left, right, "tmp");
                 break;
             case '*':
-                res = t == i ? AST::builder.CreateMul(left, right, "tmp") : AST::builder.CreateFMul(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateMul(left, right, "tmp") : AST::builder.CreateFMul(left, right, "tmp");
                 break;
             case '/':
-                res =
-                    t == i ? AST::builder.CreateSDiv(left, right, "tmp") : AST::builder.CreateFDiv(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateSDiv(left, right, "tmp") : AST::builder.CreateFDiv(left, right, "tmp");
                 break;
             }
             AST::builder.CreateRet(res);
@@ -84,9 +89,12 @@ void BuiltinFunctions::createLnC()
     Type* log = Type::getInt1Ty(getGlobalContext());
     Type* r = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (string s : { "<", ">", "<=", ">=", "==", "!=" }) {
-        for (Type* t : { i, r }) {
-            ft = FunctionType::get(log, vector<Type*>{ t, t }, false);
+    for (string s : { "<", ">", "<=", ">=", "==", "!="
+                    }) {
+        for (Type* t : {
+                 i, r
+             }) {
+            ft = FunctionType::get(log, vector<Type*> { t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
@@ -97,22 +105,22 @@ void BuiltinFunctions::createLnC()
             right = it;
             if (s == "<")
                 res = t == i ? AST::builder.CreateICmpSLT(left, right, "tmp") :
-                               AST::builder.CreateFCmpOLT(left, right, "tmp");
+                      AST::builder.CreateFCmpOLT(left, right, "tmp");
             if (s == "<=")
                 res = t == i ? AST::builder.CreateICmpSLE(left, right, "tmp") :
-                               AST::builder.CreateFCmpOLE(left, right, "tmp");
+                      AST::builder.CreateFCmpOLE(left, right, "tmp");
             if (s == ">")
                 res = t == i ? AST::builder.CreateICmpSGT(left, right, "tmp") :
-                               AST::builder.CreateFCmpOGT(left, right, "tmp");
+                      AST::builder.CreateFCmpOGT(left, right, "tmp");
             if (s == ">=")
                 res = t == i ? AST::builder.CreateICmpSGE(left, right, "tmp") :
-                               AST::builder.CreateFCmpOGE(left, right, "tmp");
+                      AST::builder.CreateFCmpOGE(left, right, "tmp");
             if (s == "==")
                 res = t == i ? AST::builder.CreateICmpEQ(left, right, "tmp") :
-                               AST::builder.CreateFCmpOEQ(left, right, "tmp");
+                      AST::builder.CreateFCmpOEQ(left, right, "tmp");
             if (s == "!=")
                 res = t == i ? AST::builder.CreateICmpNE(left, right, "tmp") :
-                               AST::builder.CreateFCmpONE(left, right, "tmp");
+                      AST::builder.CreateFCmpONE(left, right, "tmp");
             AST::builder.CreateRet(res);
         }
     }
@@ -134,7 +142,9 @@ void BuiltinFunctions::createIO()
     Type* c = Type::getInt8Ty(getGlobalContext());
     Type* s = PointerType::get(c, 0);
     Type* v = Type::getVoidTy(getGlobalContext());
-    for (Type* t : { i, r, c, s }) {
+    for (Type* t : {
+             i, r, c, s
+         }) {
         string fmtstr;
         if (t == i)
             fmtstr = "%lld\n";
@@ -187,7 +197,7 @@ void BuiltinFunctions::createMemory()
 
     Function* malloc = Function::Create(malloc_type, Function::ExternalLinkage, "malloc", AST::module.get());
     malloc->setCallingConv(CallingConv::C);
-    
+
     std::vector<Type*> free_types;
     free_types.push_back(Type::getInt8PtrTy(getGlobalContext()));
 
@@ -195,14 +205,14 @@ void BuiltinFunctions::createMemory()
 
     Function* free = Function::Create(free_type, Function::ExternalLinkage, "free", AST::module.get());
     free->setCallingConv(CallingConv::C);
-    
+
     std::vector<Type*> memset_types;
     memset_types.push_back(Type::getInt8PtrTy(getGlobalContext()));
     memset_types.push_back(Type::getInt32Ty(getGlobalContext()));
     memset_types.push_back(Type::getInt32Ty(getGlobalContext()));
 
     FunctionType* memset_type = FunctionType::get(Type::getInt8PtrTy(getGlobalContext()), memset_types, false);
-    
+
     Function* memset = Function::Create(memset_type, Function::ExternalLinkage, "memset", AST::module.get());
     memset->setCallingConv(CallingConv::C);
 }
