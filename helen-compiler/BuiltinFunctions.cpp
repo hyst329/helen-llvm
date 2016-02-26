@@ -85,16 +85,19 @@ void BuiltinFunctions::createLnC()
     BasicBlock* bb;
     string name;
     Value* left, *right, *res;
-    Type* i = Type::getInt64Ty(getGlobalContext());
-    Type* log = Type::getInt1Ty(getGlobalContext());
-    Type* r = Type::getDoubleTy(getGlobalContext());
+    Type* i8 = Type::getInt8Ty(getGlobalContext());
+    Type* i16 = Type::getInt16Ty(getGlobalContext());
+    Type* i32 = Type::getInt32Ty(getGlobalContext());
+    Type* i64 = Type::getInt64Ty(getGlobalContext());
+    Type* i1 = Type::getInt1Ty(getGlobalContext());
+    Type* r64 = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
     for (string s : { "<", ">", "<=", ">=", "==", "!="
                     }) {
         for (Type* t : {
-                 i, r
+                 i8, i16, i32, i64, r64
              }) {
-            ft = FunctionType::get(log, vector<Type*> { t, t }, false);
+            ft = FunctionType::get(i1, vector<Type*> { t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
@@ -104,22 +107,22 @@ void BuiltinFunctions::createLnC()
             left = it++;
             right = it;
             if (s == "<")
-                res = t == i ? AST::builder.CreateICmpSLT(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpSLT(left, right, "tmp") :
                       AST::builder.CreateFCmpOLT(left, right, "tmp");
             if (s == "<=")
-                res = t == i ? AST::builder.CreateICmpSLE(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpSLE(left, right, "tmp") :
                       AST::builder.CreateFCmpOLE(left, right, "tmp");
             if (s == ">")
-                res = t == i ? AST::builder.CreateICmpSGT(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpSGT(left, right, "tmp") :
                       AST::builder.CreateFCmpOGT(left, right, "tmp");
             if (s == ">=")
-                res = t == i ? AST::builder.CreateICmpSGE(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpSGE(left, right, "tmp") :
                       AST::builder.CreateFCmpOGE(left, right, "tmp");
             if (s == "==")
-                res = t == i ? AST::builder.CreateICmpEQ(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpEQ(left, right, "tmp") :
                       AST::builder.CreateFCmpOEQ(left, right, "tmp");
             if (s == "!=")
-                res = t == i ? AST::builder.CreateICmpNE(left, right, "tmp") :
+                res = t->isIntegerTy() ? AST::builder.CreateICmpNE(left, right, "tmp") :
                       AST::builder.CreateFCmpONE(left, right, "tmp");
             AST::builder.CreateRet(res);
         }
@@ -137,25 +140,31 @@ void BuiltinFunctions::createIO()
     printf->setCallingConv(CallingConv::C);
 
     // __out
-    Type* i = Type::getInt64Ty(getGlobalContext());
-    Type* r = Type::getDoubleTy(getGlobalContext());
-    Type* c = Type::getInt8Ty(getGlobalContext());
-    Type* s = PointerType::get(c, 0);
+    Type* i16 = Type::getInt64Ty(getGlobalContext());
+    Type* i32 = Type::getInt64Ty(getGlobalContext());
+    Type* i64 = Type::getInt64Ty(getGlobalContext());
+    Type* r64 = Type::getDoubleTy(getGlobalContext());
+    Type* i8 = Type::getInt8Ty(getGlobalContext());
+    Type* s = PointerType::get(i8, 0);
     Type* v = Type::getVoidTy(getGlobalContext());
     for (Type* t : {
-             i, r, c, s
+             i16, i32, i64, r64, i8, s
          }) {
         string fmtstr;
-        if (t == i)
+        if (t == i16)
+            fmtstr = "%hd\n";
+        if (t == i32)
+            fmtstr = "%d\n";
+        if (t == i64)
             fmtstr = "%lld\n";
-        if (t == r)
+        if (t == r64)
             fmtstr = "%lf\n";
-        if (t == c)
+        if (t == i8)
             fmtstr = "%c\n";
         if (t == s)
             fmtstr = "%s\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
-        FunctionType* ft = FunctionType::get(i, { t }, false);
+        FunctionType* ft = FunctionType::get(i64, { t }, false);
         Function* f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
         f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
         BasicBlock* parent = AST::builder.GetInsertBlock();
