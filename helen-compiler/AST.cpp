@@ -72,7 +72,7 @@ Value* ConstantStringAST::codegen()
     std::vector<Type*> argTypes = { str->getType(), v->getType(), len->getType() };
     string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
     Function* ctor = module->getFunction(ctorname); // functions[ctorname];
-    printf("ctor=%d %s\n", ctor, ctorname.c_str());
+    //printf("ctor=%d %s\n", ctor, ctorname.c_str());
     if(ctor) {
         builder.CreateCall(ctor, argValues);
     } else {
@@ -284,9 +284,9 @@ Value* FunctionCallAST::codegen()
                 string name = FunctionNameMangler::mangleName(fca->getFunctionName(), tps, "Helen", tpn);
                 vector<string> fie = fields[tpn];
                 auto field = std::find(fie.begin(), fie.end(), name);
-                printf("***fie***\n");
-                for(auto f : fie)
-                    printf("%s\n\n", f.c_str());
+                //printf("***fie***\n");
+                //for(auto f : fie)
+                //    printf("%s\n\n", f.c_str());
                 if(field == fie.end()) {
                     return Error::errorValue(ErrorType::UndeclaredFunction, { name, name });
                 }
@@ -337,7 +337,7 @@ Value* FunctionCallAST::codegen()
     }
     string hrName = FunctionNameMangler::humanReadableName(functionName);
     string fName = FunctionNameMangler::functionName(functionName);
-    printf("hrName = %s; fName = %s\n", hrName.c_str(), fName.c_str());
+    //printf("hrName = %s; fName = %s\n", hrName.c_str(), fName.c_str());
     bool shouldCast = 0;
     if(!f) {
         //TODO: Try to find the suitable function with same name but different signature
@@ -360,7 +360,7 @@ Value* FunctionCallAST::codegen()
         }
         if(suitableFunctions.empty())
             return Error::errorValue(ErrorType::UndeclaredFunction, { hrName, functionName });
-        printf("%d function candidates found\n", suitableFunctions.size());
+        //printf("%d function candidates found\n", suitableFunctions.size());
         f = suitableFunctions[0];
         shouldCast = 1;
         //TODO: 
@@ -477,13 +477,15 @@ Value* CustomTypeAST::codegen()
     if(!baseTypeName.empty())
         ind = ((StructType*)types[baseTypeName])->getNumElements();
     for(shared_ptr<AST> i : instructions) {
-        printf("ind=%d\n", ind);
+        //printf("ind=%d\n", ind);
         if(dynamic_cast<FunctionPrototypeAST*>(i.get())) {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*)i.get();
             fpi->getStyle() = "__method_" + typeName;
             fpi->codegen();
             string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
             if(find(fields[typeName].begin(), fields[typeName].end(), name) == fields[typeName].end()) {
+                //printf("ind=%d f=%s\n", ind, fpi->getName().c_str());
+                //fflush(stdout);
                 fields[typeName][ind] = fpi->getName();
                 ind++;
             }
@@ -496,14 +498,14 @@ Value* CustomTypeAST::codegen()
         if(fieldTypes[i]->isPointerTy()) {
             if(((PointerType*)(fieldTypes[i]))->getElementType()->isFunctionTy() &&
                find(overriddenMethods.begin(), overriddenMethods.end(), fieldNames[i]) == overriddenMethods.end()) {
-                printf("Method '%s' generated as base-class\n", fieldNames[i].c_str());
+                //printf("Method '%s' generated as base-class\n", fieldNames[i].c_str());
                 string mname = fieldNames[i];
                 string bmname = mname;
                 // Replace method type name
                 boost::algorithm::replace_first(bmname, typeName + "-", baseTypeName + "-");
                 // Replace type parameter for 'this'
                 boost::algorithm::replace_first(bmname, "_type." + typeName, "_type." + baseTypeName);
-                printf("The base class method is '%s'\n", bmname.c_str());
+                //printf("The base class method is '%s'\n", bmname.c_str());
                 FunctionType* ft = cast<FunctionType>(((PointerType*)(fieldTypes[i]))->getElementType());
                 Function* f = Function::Create(ft, Function::ExternalLinkage, mname, module.get());
                 BasicBlock* parent = builder.GetInsertBlock();
@@ -565,7 +567,7 @@ void CustomTypeAST::compileTime()
                     ft = FunctionType::get(ret, params, false);
                     tp = PointerType::get(ft, 0);
                     // must mangle here
-                    printf("Mangling %s [%d]\n", fieldNames[i].c_str(), i);
+                    //printf("Mangling %s [%d]\n", fieldNames[i].c_str(), i);
                     fieldNames[i] = FunctionNameMangler::mangleName(fieldNames[i], params, "Helen", typeName);
                 }
             }
@@ -602,6 +604,8 @@ void CustomTypeAST::compileTime()
     }
     st->setBody(ArrayRef<Type*>(fieldTypes), false);
     fields[typeName] = fieldNames;
+    //printf("length=%d\n", fieldNames.size());
+    //fflush(stdout);
     types[typeName] = st;
 }
 
@@ -649,7 +653,7 @@ Value* NewAST::codegen()
     }
     string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
     Function* ctor = module->getFunction(ctorname); // functions[ctorname];
-    printf("ctor=%d %s\n", ctor, ctorname.c_str());
+    //printf("ctor=%d %s\n", ctor, ctorname.c_str());
     if(ctor) {
         builder.CreateCall(ctor, argValues);
     } else if(!arguments.empty()) {
@@ -671,7 +675,7 @@ Value* DeleteAST::codegen()
         string dtorname =
             FunctionNameMangler::mangleName("__dtor", vector<Type*>(), "Helen", ((StructType*)type)->getName());
         Function* dtor = module->getFunction(dtorname); // functions[dtorname];
-        printf("dtor=%d %s\n", dtor, dtorname.c_str());
+        //printf("dtor=%d %s\n", dtor, dtorname.c_str());
         if(dtor) {
             builder.CreateCall(dtor, addr);
         }
@@ -687,8 +691,8 @@ Value* CastAST::codegen()
     Value* v = value->codegen();
     if(!v)
         return 0;
-    v->getType()->dump();
-    destinationType->dump();
+    //v->getType()->dump();
+    //destinationType->dump();
     if(CastInst::isCastable(v->getType(), destinationType)) {
         auto opc = CastInst::getCastOpcode(v, true, destinationType, true);
         return builder.CreateCast(opc, v, destinationType, "casttmp");
