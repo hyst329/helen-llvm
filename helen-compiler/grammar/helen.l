@@ -17,7 +17,7 @@ extern "C" int yywrap() {
 void yyerror(Helen::AST* ast, const char* msg) {
     /* To be fixed*/
     printf("%s in line %d", msg, yylineno);
-    Error::error(ErrorType::SyntaxError, {msg});
+    Error::error(ErrorType::SyntaxError, {msg + string("\n")});
 }
 stack<YY_BUFFER_STATE> includeStack;
 set<string> includedFiles;
@@ -107,7 +107,7 @@ include                  BEGIN(INCLUDE);
                          begin:
                          BEGIN(INITIAL);        
 }
-[\+\-\*\/\<\>\=@]+       yylval.vstr = strdup(yytext); return OPERATOR;
+[\+\-\*\/\<\>\=@\&\|]+       yylval.vstr = strdup(yytext); return OPERATOR;
 [\+\-]?[0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;
 [\+\-]?[0-9]+                   yylval.vint = atoi(yytext); return INTLIT;
 '[^(')]'                 yylval.vchar = yytext[1]; return CHARLIT;
@@ -116,6 +116,7 @@ include                  BEGIN(INCLUDE);
                          if (includeStack.empty())
                          {
                              yyterminate();
+                             return NEWLINE;
                          }
                          else
                          {
@@ -126,5 +127,6 @@ include                  BEGIN(INCLUDE);
                              filenameStack.pop();
                              includePaths.erase(includePaths.begin());
                          }
+                         return NEWLINE;
 }
 %%

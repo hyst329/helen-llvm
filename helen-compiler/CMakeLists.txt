@@ -1,4 +1,6 @@
-project(helen_compiler)
+project(helen_compiler VERSION "0.1.0")
+
+configure_file(${PROJECT_SOURCE_DIR}/cmake/config.h.cmake ${PROJECT_SOURCE_DIR}/cmake/config.h)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
