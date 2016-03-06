@@ -5,7 +5,7 @@ type String
     declare constructor String()
     #declare constructor String(ptr char src, int(32) len)
     declare destructor String()
-    #declare copy() -> String
+    declare copy() -> String
 endtype
 
 declare operator + (String s, char c) -> String

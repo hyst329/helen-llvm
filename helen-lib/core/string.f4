@@ -23,14 +23,14 @@ fun destructor String()
     free(this.cstr)
 endfun
 
-#fun copy() -> String method(String)
-#  String ns = new String
-#    ns.length = this.length
-#    ns.capacity = this.capacity
-#   ns.cstr = realloc(ns.cstr, ns.capacity)
-#    memcpy(ns.cstr, this.cstr, this.length)
-#    return ns
-#endfun
+fun copy() -> String method(String)
+    String ns = new String
+    ns.length = this.length
+    ns.capacity = this.capacity
+    ns.cstr = realloc(ns.cstr, ns.capacity)
+    memcpy(ns.cstr, this.cstr, this.length)
+    return ns
+endfun
 
 #fun operator + (String s, char c) -> String
 #    String ns = s.copy()
