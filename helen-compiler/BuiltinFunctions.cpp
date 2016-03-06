@@ -13,7 +13,8 @@ const std::string BuiltinFunctions::unaryOperatorMarker = "__unary_operator_";
 void BuiltinFunctions::createMainFunction(bool isMainModule)
 {
     createAllBuiltins();
-    if(!isMainModule) return;
+    if(!isMainModule)
+        return;
     vector<Type*> v;
     FunctionType* ft = FunctionType::get(Type::getInt32Ty(getGlobalContext()), v, false);
     string name = "main";
@@ -38,19 +39,16 @@ void BuiltinFunctions::createArith()
     Function* f;
     BasicBlock* bb;
     string name;
-    Value* left, *right, *res;
+    Value *left, *right, *res;
     Type* i8 = Type::getInt8Ty(getGlobalContext());
     Type* i16 = Type::getInt16Ty(getGlobalContext());
     Type* i32 = Type::getInt32Ty(getGlobalContext());
     Type* i64 = Type::getInt64Ty(getGlobalContext());
     Type* r64 = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (char c : { '+', '-', '*', '/'
-                  }) {
-        for (Type* t : {
-                 i8, i16, i32, i64, r64
-             }) {
-            ft = FunctionType::get(t, vector<Type*> { t, t }, false);
+    for(char c : { '+', '-', '*', '/' }) {
+        for(Type* t : { i8, i16, i32, i64, r64 }) {
+            ft = FunctionType::get(t, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + c, { t, t });
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
@@ -59,18 +57,22 @@ void BuiltinFunctions::createArith()
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            switch (c) {
+            switch(c) {
             case '+':
-                res = t->isIntegerTy() ? AST::builder.CreateAdd(left, right, "tmp") : AST::builder.CreateFAdd(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateAdd(left, right, "tmp") :
+                                         AST::builder.CreateFAdd(left, right, "tmp");
                 break;
             case '-':
-                res = t->isIntegerTy() ? AST::builder.CreateSub(left, right, "tmp") : AST::builder.CreateFSub(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateSub(left, right, "tmp") :
+                                         AST::builder.CreateFSub(left, right, "tmp");
                 break;
             case '*':
-                res = t->isIntegerTy() ? AST::builder.CreateMul(left, right, "tmp") : AST::builder.CreateFMul(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateMul(left, right, "tmp") :
+                                         AST::builder.CreateFMul(left, right, "tmp");
                 break;
             case '/':
-                res = t->isIntegerTy() ? AST::builder.CreateSDiv(left, right, "tmp") : AST::builder.CreateFDiv(left, right, "tmp");
+                res = t->isIntegerTy() ? AST::builder.CreateSDiv(left, right, "tmp") :
+                                         AST::builder.CreateFDiv(left, right, "tmp");
                 break;
             }
             AST::builder.CreateRet(res);
@@ -84,7 +86,7 @@ void BuiltinFunctions::createLnC()
     Function* f;
     BasicBlock* bb;
     string name;
-    Value* left, *right, *res;
+    Value *left, *right, *res;
     Type* i8 = Type::getInt8Ty(getGlobalContext());
     Type* i16 = Type::getInt16Ty(getGlobalContext());
     Type* i32 = Type::getInt32Ty(getGlobalContext());
@@ -92,12 +94,9 @@ void BuiltinFunctions::createLnC()
     Type* i1 = Type::getInt1Ty(getGlobalContext());
     Type* r64 = Type::getDoubleTy(getGlobalContext());
     //_operator_(int, int), _operator_(real, real)
-    for (string s : { "<", ">", "<=", ">=", "==", "!="
-                    }) {
-        for (Type* t : {
-                 i8, i16, i32, i64, r64
-             }) {
-            ft = FunctionType::get(i1, vector<Type*> { t, t }, false);
+    for(string s : { "<", ">", "<=", ">=", "==", "!=" }) {
+        for(Type* t : { i8, i16, i32, i64, r64 }) {
+            ft = FunctionType::get(i1, vector<Type*>{ t, t }, false);
             name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
@@ -106,26 +105,44 @@ void BuiltinFunctions::createLnC()
             auto it = f->arg_begin();
             left = it++;
             right = it;
-            if (s == "<")
+            if(s == "<")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpSLT(left, right, "tmp") :
-                      AST::builder.CreateFCmpOLT(left, right, "tmp");
-            if (s == "<=")
+                                         AST::builder.CreateFCmpOLT(left, right, "tmp");
+            if(s == "<=")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpSLE(left, right, "tmp") :
-                      AST::builder.CreateFCmpOLE(left, right, "tmp");
-            if (s == ">")
+                                         AST::builder.CreateFCmpOLE(left, right, "tmp");
+            if(s == ">")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpSGT(left, right, "tmp") :
-                      AST::builder.CreateFCmpOGT(left, right, "tmp");
-            if (s == ">=")
+                                         AST::builder.CreateFCmpOGT(left, right, "tmp");
+            if(s == ">=")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpSGE(left, right, "tmp") :
-                      AST::builder.CreateFCmpOGE(left, right, "tmp");
-            if (s == "==")
+                                         AST::builder.CreateFCmpOGE(left, right, "tmp");
+            if(s == "==")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpEQ(left, right, "tmp") :
-                      AST::builder.CreateFCmpOEQ(left, right, "tmp");
-            if (s == "!=")
+                                         AST::builder.CreateFCmpOEQ(left, right, "tmp");
+            if(s == "!=")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpNE(left, right, "tmp") :
-                      AST::builder.CreateFCmpONE(left, right, "tmp");
+                                         AST::builder.CreateFCmpONE(left, right, "tmp");
             AST::builder.CreateRet(res);
         }
+    }
+    for(string s : { "&", "|", "@" }) {
+        ft = FunctionType::get(i1, vector<Type*>{ i1, i1 }, false);
+        name = FunctionNameMangler::mangleName(operatorMarker + s, { i1, i1 });
+        f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+        f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+        bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+        AST::builder.SetInsertPoint(bb);
+        auto it = f->arg_begin();
+        left = it++;
+        right = it;
+        if(s == "&")
+            res = AST::builder.CreateAnd(left, right, "tmp");
+        if(s == "|")
+            res = AST::builder.CreateOr(left, right, "tmp");
+        if(s == "@")
+            res = AST::builder.CreateXor(left, right, "tmp");
+        AST::builder.CreateRet(res);
     }
 }
 
@@ -147,21 +164,19 @@ void BuiltinFunctions::createIO()
     Type* i8 = Type::getInt8Ty(getGlobalContext());
     Type* s = PointerType::get(i8, 0);
     Type* v = Type::getVoidTy(getGlobalContext());
-    for (Type* t : {
-             i16, i32, i64, r64, i8, s
-         }) {
+    for(Type* t : { i16, i32, i64, r64, i8, s }) {
         string fmtstr;
-        if (t == i16)
+        if(t == i16)
             fmtstr = "%hd\n";
-        if (t == i32)
+        if(t == i32)
             fmtstr = "%d\n";
-        if (t == i64)
+        if(t == i64)
             fmtstr = "%lld\n";
-        if (t == r64)
+        if(t == r64)
             fmtstr = "%lf\n";
-        if (t == i8)
+        if(t == i8)
             fmtstr = "%c\n";
-        if (t == s)
+        if(t == s)
             fmtstr = "%s\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i64, { t }, false);
@@ -225,5 +240,4 @@ void BuiltinFunctions::createMemory()
     Function* memset = Function::Create(memset_type, Function::ExternalLinkage, "memset", AST::module.get());
     memset->setCallingConv(CallingConv::C);
 }
-
 }
