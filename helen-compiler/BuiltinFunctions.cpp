@@ -162,9 +162,10 @@ void BuiltinFunctions::createIO()
     Type* i64 = Type::getInt64Ty(getGlobalContext());
     Type* r64 = Type::getDoubleTy(getGlobalContext());
     Type* i8 = Type::getInt8Ty(getGlobalContext());
+    Type* i1 = Type::getInt1Ty(getGlobalContext());
     Type* s = PointerType::get(i8, 0);
     Type* v = Type::getVoidTy(getGlobalContext());
-    for(Type* t : { i16, i32, i64, r64, i8, s }) {
+    for(Type* t : { i16, i32, i64, r64, i8, i1, s }) {
         string fmtstr;
         if(t == i16)
             fmtstr = "%hd\n";
@@ -178,6 +179,8 @@ void BuiltinFunctions::createIO()
             fmtstr = "%c\n";
         if(t == s)
             fmtstr = "%s\n";
+        if(t == i1)
+            fmtstr = "%d\n";
         string name = FunctionNameMangler::mangleName("__out", { t });
         FunctionType* ft = FunctionType::get(i64, { t }, false);
         Function* f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
