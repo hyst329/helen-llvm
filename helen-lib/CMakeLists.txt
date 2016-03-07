@@ -32,10 +32,12 @@ foreach(HelstdSrcFile ${HelstdSrcFiles})
   add_custom_command(TARGET helen_lib_copy PRE_BUILD
                      COMMAND llc ${CMAKE_BINARY_DIR}/include/${HelstdSrcFile}.bc -filetype=obj
                      -o ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o)
-  #set(HelstdObjFiles "${HelstdObjFiles} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o")  
+  set(HelstdObjFiles "${HelstdObjFiles} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o")  
 endforeach()
+string(STRIP ${HelstdObjFiles} HelstdObjFiles)
+message("HSOF ${HelstdObjFiles}")
 #set(HelstdObjFiles ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/*.o)
-file(GLOB HelstdObjFiles ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/*.o)
+message("HSOF ${HelstdObjFiles}")
 #add_custom_command(TARGET helen_lib_copy POST_BUILD
 #                   COMMAND ar rcs ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libhelstd.a ${HelstdObjFiles})
 add_library(helstd STATIC ${HelstdObjFiles})
