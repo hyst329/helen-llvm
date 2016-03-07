@@ -32,27 +32,27 @@ fun copy() -> String method(String)
     return ns
 endfun
 
-#fun operator + (String s, char c) -> String
-#    String ns = s.copy()
-#    if ns.length == ns.capacity
-#        ns.capacity = 2 * ns.capacity
-#        ns.cstr = realloc(ns.cstr, ns.capacity)
-#    endif
-#    ptr char nch = ns.cstr shiftby ns.length
-#    ns.length = ns.length + 1
-#    memset(nch, cast c to int(32), 1)
-#    return ns
-#endfun
+fun operator + (String s, char c) -> String
+    String ns = s.copy()
+    if ns.length == ns.capacity
+        ns.capacity = 2:32 * ns.capacity
+        ns.cstr = realloc(ns.cstr, ns.capacity)
+    endif
+    # TODO: revise yacc grammar
+    ptr char nch = (ns.cstr) shiftby ns.length 
+    ns.length = ns.length + 1:32
+    memset(nch, cast c to int(32), 1:32)
+    return ns
+endfun
 
-#fun operator + (String s1, String s2) -> String
-#    # TODO: Adjust capacity (make it power of 2)
-#    String ns = s1.copy()
-#    if s1.length + s2.length > ns.capacity
-#        ns.capacity = s1.length + s2.length
-#        ns.cstr = realloc(ns.cstr, ns.capacity)
-#    endif
-#    ptr char nch = ns.cstr shiftby s1.length
-#    memcpy(ns.cstr, s2.cstr, s2.length)
-#    ns.length = s1.length + s2.length
-#    return ns
-#endfun
+fun operator + (String s1, String s2) -> String
+    # TODO: Adjust capacity (make it power of 2)
+    String ns = s1.copy()
+    if s1.length + s2.length > ns.capacity
+        ns.capacity = s1.length + s2.length
+        ns.cstr = realloc(ns.cstr, ns.capacity)
+    endif
+    memcpy(ns.cstr, s2.cstr, s2.length)
+    ns.length = s1.length + s2.length
+    return ns
+endfun
