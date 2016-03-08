@@ -45,3 +45,7 @@ add_dependencies(helstd helen_lib_copy)
 set_source_files_properties(${HelstdObjFiles} PROPERTIES EXTERNAL_OBJECT true GENERATED true)
 set_target_properties(helstd PROPERTIES LINKER_LANGUAGE C
                       ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+                      
+install(FILES ${HelstdFiles} DESTINATION include)
+install(DIRECTORY ${HelstdDirs} DESTINATION include FILES_MATCHING PATTERN "*.f4i")
+install(TARGETS helstd DESTINATION lib)

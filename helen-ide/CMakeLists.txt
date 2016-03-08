@@ -16,3 +16,4 @@ set(SOURCE_FILES main.cpp
 add_executable(helen_ide ${SOURCE_FILES})
 
 target_link_libraries(helen_ide ${GTKMM_LIBRARIES} ${GTKSOURCEVIEWMM_LIBRARIES})
+install(TARGETS helen_ide DESTINATION bin)
