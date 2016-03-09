@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 3.0)
-project(helen VERSION 0.1.0)
+project(helen VERSION 0.1.1)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(helen-compiler)
-add_subdirectory(helen-ide)
 add_subdirectory(helen-lib)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
 SET(CPACK_PACKAGE_VERSION_MINOR "1")
-SET(CPACK_PACKAGE_VERSION_PATCH "0")
+SET(CPACK_PACKAGE_VERSION_PATCH "1")
 SET(CPACK_NSIS_MODIFY_PATH ON)
 
 if(UNIX AND NOT APPLE)
   SET(CPACK_GENERATOR "DEB")
   SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Gerry King")
-  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "llvm (>= 3.6~) gtk+3.0 (>= 3.12~) libboost-dev (>= 1.55~)")
+  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "llvm (>= 3.6~) libboost-dev (>= 1.55~)")
 endif(UNIX AND NOT APPLE)
 
 if(WIN32)
