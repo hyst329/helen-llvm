@@ -484,7 +484,7 @@ Value* CustomTypeAST::codegen()
             fpi->codegen();
             string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
             if(find(fields[typeName].begin(), fields[typeName].end(), name) == fields[typeName].end()) {
-                //printf("ind=%d f=%s\n", ind, fpi->getName().c_str());
+                //printf("ind=%d f=%40s len=%d\n", ind, fpi->getName().c_str(), fields[typeName].size());
                 //fflush(stdout);
                 fields[typeName][ind] = fpi->getName();
                 ind++;
@@ -590,7 +590,8 @@ void CustomTypeAST::compileTime()
             args.insert(args.begin(), PointerType::get(st, 0));
             // Finding mangled name inherited from parent class
             string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), args, "Helen", typeName);
-            if(find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||
+            // workaround, not sure for full correctness
+            if(/*find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||*/
                find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end()) {
                 // No need for error, re-declaration means override
                 overriddenMethods.push_back(mname);

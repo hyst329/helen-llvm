@@ -1,9 +1,9 @@
 include string.f4i
 
-declare malloc(int(32) n) -> ptr char style(C)
+#declare malloc(int(32) n) -> ptr char style(C)
 declare realloc(ptr char c, int(32) n) -> ptr char style(C)
-declare free(ptr char c) style(C)
-declare memset(ptr char p, int(32) val, int(32) n) style(C)
+#declare free(ptr char c) style(C)
+#declare memset(ptr char p, int(32) val, int(32) n) style(C)
 declare memcpy(ptr char c1, ptr char c2, int(32) num) -> ptr char style(C)
 
 fun constructor String()
@@ -12,12 +12,12 @@ fun constructor String()
     this.cstr = malloc(this.capacity)
 endfun
 
-#fun constructor String(ptr char src, int(32) len)
-#    this.length = len
-#    this.capacity = len
-#    this.cstr = malloc(this.capacity)
-#    memcpy(this.cstr, src, len)
-#endfun
+fun constructor String(ptr char src, int(32) len)
+    this.length = len
+    this.capacity = len
+    this.cstr = malloc(this.capacity)
+    memcpy(this.cstr, src, len)
+endfun
 
 fun destructor String()
     free(this.cstr)
