@@ -48,11 +48,12 @@ endfun
 fun operator + (String s1, String s2) -> String
     # TODO: Adjust capacity (make it power of 2)
     String ns = s1.copy()
+    ptr char nch = (ns.cstr) shiftby ns.length
     if s1.length + s2.length > ns.capacity
         ns.capacity = s1.length + s2.length
         ns.cstr = realloc(ns.cstr, ns.capacity)
     endif
-    memcpy(ns.cstr, s2.cstr, s2.length)
+    memcpy(nch, s2.cstr, s2.length)
     ns.length = s1.length + s2.length
     return ns
 endfun
