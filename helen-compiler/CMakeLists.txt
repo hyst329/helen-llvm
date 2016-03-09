@@ -1,4 +1,4 @@
-project(helen_compiler VERSION "0.1.0")
+project(helen_compiler VERSION "0.1.1")
 
 configure_file(${PROJECT_SOURCE_DIR}/cmake/config.h.cmake ${PROJECT_SOURCE_DIR}/cmake/config.h)
 
