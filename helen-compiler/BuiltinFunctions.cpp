@@ -78,8 +78,31 @@ void BuiltinFunctions::createArith()
             AST::builder.CreateRet(res);
         }
     }
+    // unary operators
+    for(char c : { '+', '-' }) {
+        for(Type* t : { i8, i16, i32, i64, r64 }) {
+            ft = FunctionType::get(t, vector<Type*>{ t }, false);
+            name = FunctionNameMangler::mangleName(unaryOperatorMarker + c, { t });
+            f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+            f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+            bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+            printf("Creating function %s", name.c_str());
+            fflush(stdout);
+            AST::builder.SetInsertPoint(bb);
+            auto it = f->arg_begin();
+            left = it;
+            switch(c) {
+            case '+':
+                res = left;
+                break;
+            case '-':
+                res = t->isIntegerTy() ? AST::builder.CreateNeg(left, "tmp") : AST::builder.CreateFNeg(left, "tmp");
+                break;
+            }
+            AST::builder.CreateRet(res);
+        }
+    }
 }
-
 void BuiltinFunctions::createLnC()
 {
     FunctionType* ft;
@@ -126,6 +149,41 @@ void BuiltinFunctions::createLnC()
             AST::builder.CreateRet(res);
         }
     }
+    for(string s : { "~&", "~|", "~@" }) {
+        for(Type* t : { i8, i16, i32, i64 }) {
+            ft = FunctionType::get(i1, vector<Type*>{ t, t }, false);
+            name = FunctionNameMangler::mangleName(operatorMarker + s, { t, t });
+            f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+            f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+            bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+            AST::builder.SetInsertPoint(bb);
+            auto it = f->arg_begin();
+            left = it++;
+            right = it;
+            if(s == "~&")
+                res = AST::builder.CreateAnd(left, right, "tmp");
+            if(s == "~|")
+                res = AST::builder.CreateOr(left, right, "tmp");
+            if(s == "~@")
+                res = AST::builder.CreateXor(left, right, "tmp");
+            AST::builder.CreateRet(res);
+        }
+    }
+    // unary bitwise NOT operator
+    for(Type* t : { i8, i16, i32, i64 }) {
+        ft = FunctionType::get(t, vector<Type*>{ t }, false);
+        name = FunctionNameMangler::mangleName(unaryOperatorMarker + "~!", { t });
+        f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+        f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+        bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+        printf("Creating function %s", name.c_str());
+        fflush(stdout);
+        AST::builder.SetInsertPoint(bb);
+        auto it = f->arg_begin();
+        left = it;
+        res = AST::builder.CreateNot(left, "tmp");
+        AST::builder.CreateRet(res);
+    }
     for(string s : { "&", "|", "@" }) {
         ft = FunctionType::get(i1, vector<Type*>{ i1, i1 }, false);
         name = FunctionNameMangler::mangleName(operatorMarker + s, { i1, i1 });
@@ -144,6 +202,19 @@ void BuiltinFunctions::createLnC()
             res = AST::builder.CreateXor(left, right, "tmp");
         AST::builder.CreateRet(res);
     }
+    // unary NOT operator
+    ft = FunctionType::get(i1, vector<Type*>{ i1 }, false);
+    name = FunctionNameMangler::mangleName(unaryOperatorMarker + '!', { i1 });
+    f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
+    f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
+    bb = BasicBlock::Create(getGlobalContext(), "entry", f);
+    printf("Creating function %s", name.c_str());
+    fflush(stdout);
+    AST::builder.SetInsertPoint(bb);
+    auto it = f->arg_begin();
+    left = it;
+    res = AST::builder.CreateNot(left, "tmp");
+    AST::builder.CreateRet(res);
 }
 
 void BuiltinFunctions::createIO()
