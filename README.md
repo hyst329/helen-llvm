@@ -8,4 +8,3 @@ Dependencies
 * Boost (especially `program_options` library, for the main interface)
 * LLVM (for the language infrastructure)
 * Flex & Bison (for the lexer and parser)
-* GTK+ and GTKMM version 3 (for the IDE)
