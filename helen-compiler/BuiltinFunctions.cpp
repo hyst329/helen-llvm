@@ -86,8 +86,6 @@ void BuiltinFunctions::createArith()
             f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
-            printf("Creating function %s", name.c_str());
-            fflush(stdout);
             AST::builder.SetInsertPoint(bb);
             auto it = f->arg_begin();
             left = it;
@@ -176,8 +174,6 @@ void BuiltinFunctions::createLnC()
         f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
         f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
         bb = BasicBlock::Create(getGlobalContext(), "entry", f);
-        printf("Creating function %s", name.c_str());
-        fflush(stdout);
         AST::builder.SetInsertPoint(bb);
         auto it = f->arg_begin();
         left = it;
@@ -208,8 +204,6 @@ void BuiltinFunctions::createLnC()
     f = Function::Create(ft, Function::LinkOnceODRLinkage, name, AST::module.get());
     f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
     bb = BasicBlock::Create(getGlobalContext(), "entry", f);
-    printf("Creating function %s", name.c_str());
-    fflush(stdout);
     AST::builder.SetInsertPoint(bb);
     auto it = f->arg_begin();
     left = it;
