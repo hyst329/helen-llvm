@@ -81,8 +81,11 @@ crashlytics-build.properties
 ### Flex/Bison files
 helen-compiler/grammar/*.cpp
 helen-compiler/grammar/*.hpp
+helmake/grammar/*.cpp
+helmake/grammar/*.hpp
 
 helen-compiler/grammar/*.output
+helmake/grammar/*.output
 
 # CMAKE generated config files
 helen-compiler/cmake/*.h
