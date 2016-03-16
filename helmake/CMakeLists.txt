@@ -7,7 +7,7 @@ message(STATUS "Found Flex ${FLEX_VERSION}")
 message(STATUS "Found Bison ${BISON_VERSION}")
 
 set(SOURCE_FILES main.cpp)
-find_package(Boost 1.55 REQUIRED COMPONENTS program_options filesystem system)
+find_package(Boost 1.55 REQUIRED COMPONENTS filesystem system)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -lpthread")
@@ -21,4 +21,6 @@ ADD_FLEX_BISON_DEPENDENCY(HelmakeScanner HelmakeParser)
 set(GENERATED_SOURCE_FILES ${BISON_HelmakeParser_OUTPUTS} ${FLEX_HelmakeScanner_OUTPUTS})
 
 add_executable(helmake ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
+target_link_libraries(helmake ${Boost_LIBRARIES})
+
 install(TARGETS helmake DESTINATION bin)
