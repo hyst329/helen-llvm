@@ -4,8 +4,8 @@ project(helen VERSION 0.1.1)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_subdirectory(helen-compiler)
-add_subdirectory(helen-lib)
+add_subdirectory(helc)
+add_subdirectory(helstd)
 add_subdirectory(helmake)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")

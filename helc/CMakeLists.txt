@@ -1,4 +1,4 @@
-project(helen_compiler VERSION "0.1.1")
+project(helc VERSION "0.1.1")
 
 configure_file(${PROJECT_SOURCE_DIR}/cmake/config.h.cmake ${PROJECT_SOURCE_DIR}/cmake/config.h)
 
@@ -32,10 +32,10 @@ set(SOURCE_FILES main.cpp
                  FunctionNameMangler.cpp FunctionNameMangler.h
                  BuiltinFunctions.cpp BuiltinFunctions.h)
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
-add_executable(helen_compiler ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
+add_executable(helc ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader scalaropts bitwriter ipo)
 
-target_link_libraries(helen_compiler ${Boost_LIBRARIES} ${llvm_libs})
+target_link_libraries(helc ${Boost_LIBRARIES} ${llvm_libs})
 
-install(TARGETS helen_compiler DESTINATION bin)
+install(TARGETS helc DESTINATION bin)
