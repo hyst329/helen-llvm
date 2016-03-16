@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <iostream>
 #include <sys/stat.h>
-#include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Bitcode/ReaderWriter.h>
@@ -11,9 +10,9 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/IPO.h>
+#include <llvm/Support/CommandLine.h>
 #include "cmake/config.h"
 
-namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 using namespace Helen;
 using namespace std;
@@ -41,8 +40,16 @@ bool checkPath(string relative, string& absolute)
 
 int main(int argc, char** argv)
 {
+    cl::OptionCategory helcOptions("Helen compiler options");
+    cl::opt<string> inputFilename(cl::Positional, cl::desc("<input file>"), cl::Required, cl::cat(helcOptions));
+    cl::opt<string> outputFilename("o", cl::desc("Specify output filename"), cl::value_desc("filename"),
+        cl::init(inputFilename + ".bc"), cl::cat(helcOptions));
+    cl::opt<bool> dump("D", cl::desc("Dump LL output to stdout (for debug)"), cl::cat(helcOptions));
+    cl::list<string> includePath("I", cl::desc("Path to include files"), cl::cat(helcOptions));
+    cl::alias includePathAlias("include-path", cl::desc("same as -I"), cl::cat(helcOptions), cl::aliasopt(includePath));
+    cl::ParseCommandLineOptions(argc, argv);
     // Boost Program Options setup
-    po::options_description desc("Compiler options");
+    /*po::options_description desc("Compiler options");
     desc.add_options()
         ("help,h", "display this help")
         ("version,v", "display version")
@@ -53,8 +60,8 @@ int main(int argc, char** argv)
     p.add("input-file", -1);
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-    po::notify(vm);
-    if(vm.count("help") || vm.empty()) {
+    po::notify(vm);*/
+    /*if(vm.count("help") || vm.empty()) {
         cout << desc << "\n";
         return 0;
     }
@@ -63,7 +70,9 @@ int main(int argc, char** argv)
         return 0;
     }
     if(vm.count("include-path"))
-        includePaths = vm["include-path"].as<vector<string> >();
+        includePaths = vm["include-path"].as<vector<string> >();*/
+    if(!includePath.empty())
+        includePaths = includePath;
     includePaths.insert(includePaths.begin(), ".");
     // TODO: add stdlib dirs to include paths
     AST::module = llvm::make_unique<Module>("__helenmodule__", getGlobalContext());
@@ -79,7 +88,8 @@ int main(int argc, char** argv)
     legacy::PassManager pm;
     pm.add(createAlwaysInlinerPass());
     AST::fpm->doInitialization();
-    yyin = fopen(vm["input-file"].as<string>().c_str(), "r");
+    // yyin = fopen(vm["input-file"].as<string>().c_str(), "r");
+    yyin = fopen(inputFilename.c_str(), "r");
     AST::isMainModule = false;
     AST* result;
     yyparse(result);
@@ -95,14 +105,18 @@ int main(int argc, char** argv)
     }
     AST::builder.CreateRet(ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0));
     pm.run(*(AST::module.get()));
-    if(vm.count("dump")) {
+    /*if(vm.count("dump")) {
+        AST::module->dump();
+        fflush(stdout);
+    }*/
+    if(dump) {
         AST::module->dump();
         fflush(stdout);
     }
     // FIXME: Replace with positional options
-    string filename = vm["input-file"].as<string>() + ".bc";
+    // string filename = vm["input-file"].as<string>() + ".bc";
     std::error_code ec;
-    raw_fd_ostream fdos(filename, ec, sys::fs::OpenFlags::F_None);
+    raw_fd_ostream fdos(outputFilename, ec, sys::fs::OpenFlags::F_None);
     WriteBitcodeToFile(AST::module.get(), fdos);
     return 0;
 }

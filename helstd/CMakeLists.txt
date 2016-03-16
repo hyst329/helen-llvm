@@ -25,9 +25,9 @@ foreach(HelstdSrcFile ${HelstdSrcFiles})
   get_filename_component(DIR ${HelstdSrcFile} DIRECTORY)
   get_filename_component(SRC_FN ${HelstdSrcFile} NAME)
   add_custom_command(TARGET helstd_copy PRE_BUILD
-                     COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/helen_compiler
-                     --include-path=${CMAKE_BINARY_DIR}/include
-                     --include-path=${CMAKE_BINARY_DIR}/include/${DIR}
+                     COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/helc
+                     -I=${CMAKE_BINARY_DIR}/include
+                     -I=${CMAKE_BINARY_DIR}/include/${DIR}
                      ${CMAKE_BINARY_DIR}/include/${HelstdSrcFile})
   add_custom_command(TARGET helstd_copy PRE_BUILD
                      COMMAND llc ${CMAKE_BINARY_DIR}/include/${HelstdSrcFile}.bc -filetype=obj
