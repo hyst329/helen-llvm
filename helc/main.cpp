@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     cl::OptionCategory helcOptions("Helen compiler options");
     cl::opt<string> inputFilename(cl::Positional, cl::desc("<input file>"), cl::Required, cl::cat(helcOptions));
     cl::opt<string> outputFilename("o", cl::desc("Specify output filename"), cl::value_desc("filename"),
-        cl::init(inputFilename + ".bc"), cl::cat(helcOptions));
+        cl::init("-"), cl::cat(helcOptions));
     cl::opt<bool> dump("D", cl::desc("Dump LL output to stdout (for debug)"), cl::cat(helcOptions));
     cl::list<string> includePath("I", cl::desc("Path to include files"), cl::cat(helcOptions));
     cl::alias includePathAlias("include-path", cl::desc("same as -I"), cl::cat(helcOptions), cl::aliasopt(includePath));
@@ -116,6 +116,7 @@ int main(int argc, char** argv)
     // FIXME: Replace with positional options
     // string filename = vm["input-file"].as<string>() + ".bc";
     std::error_code ec;
+    if(outputFilename == "-") outputFilename = inputFilename + ".bc";
     raw_fd_ostream fdos(outputFilename, ec, sys::fs::OpenFlags::F_None);
     WriteBitcodeToFile(AST::module.get(), fdos);
     return 0;
