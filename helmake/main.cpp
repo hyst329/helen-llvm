@@ -13,11 +13,13 @@ map<string, vector<boost::any> > variableMap;
 int yyparse();
 extern FILE* yyin;
 
-int main()
+int main(int argc, char** argv)
 {
-    yyin = fopen("helmkf", "r");
+    fs::path p = argc < 2 ? "./build" : argv[1];
+    fs::path src = argc < 3 ? "." : argv[2];
+    yyin = fopen((src / "helmkf").generic_string().c_str(), "r");
     if(!yyin) {
-        fprintf(stderr, "*** No helmkf file in the current dir. Stop. ***\n");
+        fprintf(stderr, "*** No helmkf file in the specified dir. Stop. ***\n");
         return 1;
     }
     // Setting default values
@@ -32,7 +34,6 @@ int main()
         fprintf(stderr, "*** Provided helmkf file contains no SOURCES variable. Stop. ***\n");
         return 1;
     }
-    fs::path p = "./build";
     fs::create_directories(p);
     FILE* makefile = fopen((p / "Makefile").generic_string().c_str(), "w");
     string helc = boost::any_cast<string>(variableMap["HELEN_COMPILER"][0]);
