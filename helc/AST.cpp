@@ -68,6 +68,24 @@ Value* ConstantStringAST::codegen()
                       };
     builder.CreateCall(module->getFunction("memset"), msvals);
     Value* str = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
+    // Loading methods
+    StructType* s = (StructType*)type;
+    for(int i = 0; i < s->getNumElements(); i++) {
+        if(s->getElementType(i)->isPointerTy()) {
+            if(((PointerType*)(s->getElementType(i)))->getElementType()->isFunctionTy()) {
+                // Load the method
+                Function* f = module->getFunction(fields[s->getName()][i]);
+                Constant* idx = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), i);
+                Constant* zero = ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0);
+                Value* ind[] = { zero, idx };
+                Value* tmp = builder.CreateInBoundsGEP(str, ind, "tmp");
+                if(f) {
+                    Value* ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
+                    builder.CreateStore(ft, tmp);
+                }
+            }
+        }
+    }
     std::vector<Value*> argValues = { str, v, len };
     std::vector<Type*> argTypes = { str->getType(), v->getType(), len->getType() };
     string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*)type)->getName());
