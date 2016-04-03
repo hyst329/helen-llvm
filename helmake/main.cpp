@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     fprintf(makefile, "\t$(LD) ");
     for(boost::any& s : sources) {
         fs::path p = boost::any_cast<string>(s);
-        string abs = fs::canonical(p).generic_string();
+        string abs = fs::canonical(p).stem().generic_string();
         fprintf(makefile, "%s.obj ", abs.c_str());
     }
     fprintf(makefile, "-o %s -L$(HLIB) -lhelstd\n\n", project.c_str());
