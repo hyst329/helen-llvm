@@ -1,4 +1,4 @@
-project(helc VERSION "0.1.3")
+project(helc VERSION "0.1.4")
 
 configure_file(${PROJECT_SOURCE_DIR}/cmake/config.h.cmake ${PROJECT_SOURCE_DIR}/cmake/config.h)
 
