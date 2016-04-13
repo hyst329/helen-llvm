@@ -30,7 +30,8 @@ set(SOURCE_FILES main.cpp
                  AST.cpp AST.h
                  Error.cpp Error.h
                  FunctionNameMangler.cpp FunctionNameMangler.h
-                 BuiltinFunctions.cpp BuiltinFunctions.h)
+                 BuiltinFunctions.cpp BuiltinFunctions.h
+                 Generics.cpp Generics.h)
 set(GENERATED_SOURCE_FILES ${BISON_HelenParser_OUTPUTS} ${FLEX_HelenScanner_OUTPUTS})
 add_executable(helc ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
