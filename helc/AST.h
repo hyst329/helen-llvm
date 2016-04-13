@@ -199,15 +199,17 @@ class FunctionPrototypeAST : public AST
     vector<string> argNames;
     Type* returnType;
     string style;
+    vector<string> genericParams;
 
 public:
-    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style)
+    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style, vector<string> genericParams)
         : name(name)
         , origName(name)
         , args(args)
         , argNames(argNames)
         , returnType(returnType)
-        , style(style) {
+        , style(style) 
+        , genericParams(genericParams) {
     }
     const string& getName() const {
         return name;

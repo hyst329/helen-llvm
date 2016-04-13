@@ -51,7 +51,7 @@ static bool lastTerm = 0;
 %token RETURN
 %token IN OUT
 %token USE MAINMODULE
-%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY INTERFACE ALIAS
+%token TYPE ENDTYPE INT REAL LOGICAL CHAR ARRAY INTERFACE ALIAS GENERIC
 %token NEW DELETE PTR CAST TO SHIFTBY
 %token INTLIT REALLIT CHARLIT STRLIT
 %token ID OPERATOR
@@ -232,25 +232,25 @@ declaration: type ID OPERATOR expression {
     $$ = new DeclarationAST($1, $2);
 }
 funprot: ID LPAREN arglist RPAREN style {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()), $5);
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()), $5, vector<string>());
 }
 | ID LPAREN arglist RPAREN RARROW type style {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6, $7);
+    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6, $7, vector<string>());
 }
 | OPERATORKW OPERATOR LPAREN arglist RPAREN RARROW type {
     if(!prec.count(operatorMarker + $2)) {
         // TODO: Warning
         prec[operatorMarker + $2] = 5; // default value
     }
-    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen");
+    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen", vector<string>());
 }
 | CONSTRUCTOR ID LPAREN arglist RPAREN {
     $$ = new FunctionPrototypeAST("__ctor", $4->types, $4->names,
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>());
 }
 | DESTRUCTOR ID LPAREN RPAREN {
     $$ = new FunctionPrototypeAST("__dtor", std::vector<Type*>(), std::vector<std::string>(),
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2);
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>());
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
