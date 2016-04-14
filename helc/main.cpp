@@ -30,8 +30,9 @@ inline bool exists_test(const std::string& name)
 
 bool checkPath(string relative, string& absolute)
 {
-    for(string p : includePaths)
-        if(exists_test(p + "/" + relative)) {
+    for (string p : includePaths)
+        if (exists_test(p + "/" + relative))
+        {
             absolute = p + "/" + relative;
             return true;
         }
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
     cl::OptionCategory helcOptions("Helen compiler options");
     cl::opt<string> inputFilename(cl::Positional, cl::desc("<input file>"), cl::Required, cl::cat(helcOptions));
     cl::opt<string> outputFilename("o", cl::desc("Specify output filename"), cl::value_desc("filename"),
-        cl::init("-"), cl::cat(helcOptions));
+                                   cl::init("-"), cl::cat(helcOptions));
     cl::opt<bool> dump("D", cl::desc("Dump LL output to stdout (for debug)"), cl::cat(helcOptions));
     cl::list<string> includePath("I", cl::desc("Path to include files"), cl::cat(helcOptions));
     cl::alias includePathAlias("include-path", cl::desc("same as -I"), cl::cat(helcOptions), cl::aliasopt(includePath));
@@ -71,7 +72,7 @@ int main(int argc, char** argv)
     }
     if(vm.count("include-path"))
         includePaths = vm["include-path"].as<vector<string> >();*/
-    if(!includePath.empty())
+    if (!includePath.empty())
         includePaths = includePath;
     includePaths.insert(includePaths.begin(), ".");
     // TODO: add stdlib dirs to include paths
@@ -93,13 +94,15 @@ int main(int argc, char** argv)
     AST::isMainModule = false;
     AST* result;
     yyparse(result);
-    if(Error::errorFlag) { // don't even try to compile if syntax errors present
+    if (Error::errorFlag)
+    { // don't even try to compile if syntax errors present
         fprintf(stderr, "Fatal errors detected: translation terminated\n");
         return 1;
     }
     BuiltinFunctions::createMainFunction(AST::isMainModule);
     result->codegen();
-    if(Error::errorFlag) {
+    if (Error::errorFlag)
+    {
         fprintf(stderr, "Fatal errors detected: translation terminated\n");
         return 1;
     }
@@ -109,14 +112,15 @@ int main(int argc, char** argv)
         AST::module->dump();
         fflush(stdout);
     }*/
-    if(dump) {
+    if (dump)
+    {
         AST::module->dump();
         fflush(stdout);
     }
     // FIXME: Replace with positional options
     // string filename = vm["input-file"].as<string>() + ".bc";
     std::error_code ec;
-    if(outputFilename == "-") outputFilename = inputFilename + ".bc";
+    if (outputFilename == "-") outputFilename = inputFilename + ".bc";
     raw_fd_ostream fdos(outputFilename, ec, sys::fs::OpenFlags::F_None);
     WriteBitcodeToFile(AST::module.get(), fdos);
     return 0;

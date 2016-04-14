@@ -17,7 +17,8 @@ int main(int argc, char** argv)
     fs::path p = argc < 2 ? "./build" : argv[1];
     fs::path src = argc < 3 ? "." : argv[2];
     yyin = fopen((src / "helmkf").generic_string().c_str(), "r");
-    if(!yyin) {
+    if (!yyin)
+    {
         fprintf(stderr, "*** No helmkf file in the specified dir. Stop. ***\n");
         return 1;
     }
@@ -29,7 +30,8 @@ int main(int argc, char** argv)
     variableMap["FLAGS"] = vector<boost::any>(1, boost::any(string("")));
     yyparse();
     auto sources = variableMap["SOURCES"];
-    if(sources.empty()) {
+    if (sources.empty())
+    {
         fprintf(stderr, "*** Provided helmkf file contains no SOURCES variable. Stop. ***\n");
         return 1;
     }
@@ -43,10 +45,12 @@ int main(int argc, char** argv)
     // general Helen project structure
     string include = boost::any_cast<string>(variableMap["HELEN_INCLUDE"][0]);
     string lib = boost::any_cast<string>(variableMap["HELEN_LIB"][0]);
-    if(include.empty()) {
+    if (include.empty())
+    {
         include = fs::canonical(fs::path(helc).parent_path() / "../include").generic_string();
     }
-    if(lib.empty()) {
+    if (lib.empty())
+    {
         lib = fs::canonical(fs::path(helc).parent_path() / "../lib").generic_string();
     }
     fprintf(makefile, "\nHINCLUDE = %s\nHLIB = %s\n", include.c_str(), lib.c_str());
@@ -54,25 +58,29 @@ int main(int argc, char** argv)
     string flags = boost::any_cast<string>(variableMap["FLAGS"][0]);
     fprintf(makefile, "FLAGS = %s\n", flags.c_str());
     fprintf(makefile, "all: %s\n\n%s: ", project.c_str(), project.c_str());
-    for(boost::any& s : sources) {
+    for (boost::any& s : sources)
+    {
         fs::path p = boost::any_cast<string>(s);
         string abs = fs::canonical(p).stem().generic_string();
         fprintf(makefile, "%s.bc ", abs.c_str());
     }
     fprintf(makefile, "\n");
-    for(boost::any& s : sources) {
+    for (boost::any& s : sources)
+    {
         fs::path p = boost::any_cast<string>(s);
         string abs = fs::canonical(p).stem().generic_string();
         fprintf(makefile, "\t$(LLC) %s.bc -filetype=obj\n", abs.c_str());
     }
     fprintf(makefile, "\t$(LD) ");
-    for(boost::any& s : sources) {
+    for (boost::any& s : sources)
+    {
         fs::path p = boost::any_cast<string>(s);
         string abs = fs::canonical(p).stem().generic_string();
         fprintf(makefile, "%s.obj ", abs.c_str());
     }
     fprintf(makefile, "-o %s -L$(HLIB) -lhelstd\n\n", project.c_str());
-    for(boost::any& s : sources) {
+    for (boost::any& s : sources)
+    {
         fs::path p = boost::any_cast<string>(s);
         string abs = fs::canonical(p).generic_string();
         string stem = fs::canonical(p).stem().generic_string();

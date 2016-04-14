@@ -3,24 +3,22 @@
 
 #include <string>
 
-namespace Helen
-{
+namespace Helen {
 
-class BuiltinFunctions
-{
-public:
-    static void createMainFunction(bool isMainModule);
-    static void createAllBuiltins();
-    const static std::string operatorMarker;
-    const static std::string unaryOperatorMarker;
+    class BuiltinFunctions {
+    public:
+        static void createMainFunction(bool isMainModule);
+        static void createAllBuiltins();
+        const static std::string operatorMarker;
+        const static std::string unaryOperatorMarker;
 
-private:
-    static void createArith();
-    static void createLnC(); // Logical and Comparison
-    static void createIO();
-    static void createIndex();
-    static void createMemory();
-};
+    private:
+        static void createArith();
+        static void createLnC(); // Logical and Comparison
+        static void createIO();
+        static void createIndex();
+        static void createMemory();
+    };
 }
 
 #endif // BUILTINFUNCTIONS_H

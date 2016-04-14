@@ -9,41 +9,39 @@
 using namespace std;
 using namespace llvm;
 
-namespace Helen
-{
-class AST;
+namespace Helen {
+    class AST;
 
-enum class ErrorType {
-    UnknownError,
-    SyntaxError,
-    FileNotFound,
-    UndeclaredVariable,
-    UndeclaredFunction,
-    WrongArgumentType,
-    FunctionRedefined,
-    UnexpectedOperator,
-    AssignmentError,
-    IndexArgumentError,
-    ZeroIndexError,
-    UnknownStyle,
-    TypeRedefined,
-    UndeclaredType,
-    NonObjectType,
-    UncastableTypes,
-    InvalidShiftbyUse,
-    InterfaceInheritedFromType
-};
+    enum class ErrorType {
+        UnknownError,
+        SyntaxError,
+        FileNotFound,
+        UndeclaredVariable,
+        UndeclaredFunction,
+        WrongArgumentType,
+        FunctionRedefined,
+        UnexpectedOperator,
+        AssignmentError,
+        IndexArgumentError,
+        ZeroIndexError,
+        UnknownStyle,
+        TypeRedefined,
+        UndeclaredType,
+        NonObjectType,
+        UncastableTypes,
+        InvalidShiftbyUse,
+        InterfaceInheritedFromType
+    };
 
-class Error
-{
-public:
-    static AST* error(ErrorType et, vector<string> args = vector<string>());
-    static Value* errorValue(ErrorType et, vector<string> args = vector<string>());
-    static bool errorFlag;
+    class Error {
+    public:
+        static AST* error(ErrorType et, vector<string> args = vector<string>());
+        static Value* errorValue(ErrorType et, vector<string> args = vector<string>());
+        static bool errorFlag;
 
-private:
-    static map<ErrorType, string> errorMessages;
-};
+    private:
+        static map<ErrorType, string> errorMessages;
+    };
 }
 
 #endif // ERROR_H
