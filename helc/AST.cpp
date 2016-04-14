@@ -469,10 +469,20 @@ Function* FunctionPrototypeAST::codegen()
         args.insert(args.begin(), PointerType::get(types[className], 0));
         argNames.insert(argNames.begin(), "this");
     }
+    vector<string> genTypenames;
+    // if it's generic, we must adjust type params and mangle them into the name
+    if (!genericParams.empty())
+    {
+        for (string s : genericParams)
+        {
+            Type* tp = genericInstTypes[s];
+            //genTypenames.push_back(FunctionNameMangler::typeString(tp));
+        }
+    }
     if (!styles.count(style))
         return (Function*) Error::errorValue(ErrorType::UnknownStyle);
     FunctionType* ft = FunctionType::get(returnType ? : PointerType::get(types[className], 0), args, false);
-    name = FunctionNameMangler::mangleName(name, args, style, className);
+    name = FunctionNameMangler::mangleName(name, args, style, className, genTypenames);
     Function* f = functions[name];
     if (f)
         return f;

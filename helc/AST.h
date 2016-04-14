@@ -237,7 +237,7 @@ class FunctionPrototypeAST : public AST
     Type* returnType;
     string style;
     vector<string> genericParams;
-
+    map<string, Type*> genericInstTypes;
 public:
 
     FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style, vector<string> genericParams)
@@ -275,6 +275,17 @@ public:
     {
         return args;
     }
+    
+    const map<string, Type*>& getGenericInstTypes() const
+    {
+        return genericInstTypes;
+    }
+    
+    void setGenericInstTypes(const map<string, Type*>& val)
+    {
+        genericInstTypes = val;
+    }
+    
     Function* codegen();
 };
 
@@ -290,6 +301,12 @@ public:
     , body(body)
     {
     }
+    
+    FunctionPrototypeAST* getPrototype() 
+    {
+        return proto;
+    }
+    
     Function* codegen();
 };
 
