@@ -79,13 +79,16 @@ crashlytics.properties
 crashlytics-build.properties
 
 ### Flex/Bison files
-helen-compiler/grammar/*.cpp
-helen-compiler/grammar/*.hpp
+helc/grammar/*.cpp
+helc/grammar/*.hpp
 helmake/grammar/*.cpp
 helmake/grammar/*.hpp
 
-helen-compiler/grammar/*.output
+helc/grammar/*.output
 helmake/grammar/*.output
 
 # CMAKE generated config files
-helen-compiler/cmake/*.h
+helc/cmake/*.h
+
+# NetBeans project files
+nbproject/
