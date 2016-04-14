@@ -18,6 +18,13 @@ public:
     GenericFunction(FunctionAST* theAST) : theAST(theAST)
     {
     }
+    
+    FunctionAST* getAST() const
+    {
+        return theAST;
+    }
+    
     Function* instantiate(map<string, Type*> typeParams);
+
 };
 }

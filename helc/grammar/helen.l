@@ -72,6 +72,8 @@ include                  BEGIN(INCLUDE);
 "->"                     return RARROW;
 \(                       return LPAREN;
 \)                       return RPAREN;
+\[                       return LBRK;
+\]                       return RBRK;
 \;                       return SEMI;
 \:                       return COLON;
 \,                       return COMMA;

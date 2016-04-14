@@ -324,6 +324,20 @@ public:
     Function* codegen();
 };
 
+class GenericFunctionInstanceAST : public AST
+{
+    string genObjectName;
+    vector<Type*> typeParams;
+public:
+
+    GenericFunctionInstanceAST(string genObjectName, vector<Type*> typeParams)
+    : genObjectName(genObjectName)
+    , typeParams(typeParams)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class ShiftbyAST : public AST
 {
     shared_ptr<AST> pointer;

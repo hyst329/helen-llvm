@@ -20,6 +20,7 @@ map<string, AllocaInst*> AST::variables;
 map<string, Function*> AST::functions;
 map<string, Type*> AST::types;
 map<string, vector<string> > AST::fields;
+map<string, GenericFunction*> AST::genericFunctions;
 stack<string> AST::callstack;
 bool AST::isMainModule = false;
 
@@ -501,14 +502,14 @@ Function* FunctionPrototypeAST::codegen()
 Function* FunctionAST::codegen()
 {
     // If it's generic and no need for instantiation, skip this step
-    if(!proto->getGenericParams().empty() && !shouldInstantiate)
+    if (!proto->getGenericParams().empty() && !shouldInstantiate)
     {
-        if(!genericFunctions[proto->getName()])
-            genericFunctions[proto->getName()] = new GenericFunction { this };
+        if (!genericFunctions[proto->getName()])
+            genericFunctions[proto->getName()] = new GenericFunction(this);
         return 0;
     }
     shouldInstantiate = 0;
-    
+
     Function* f = module->getFunction(proto->getName());
 
     if (!f)
@@ -542,6 +543,24 @@ Function* FunctionAST::codegen()
     fpm->run(*f);
     builder.SetInsertPoint(parent);
     return f;
+}
+
+Value* GenericFunctionInstanceAST::codegen()
+{
+    GenericFunction* f = genericFunctions[genObjectName];
+    if (!f)
+    {
+        return Error::errorValue(ErrorType::InvalidInstantiation,{genObjectName});
+    }
+    map<string, Type*> instanceTypes;
+    vector<string> p = f->getAST()->getPrototype()->getGenericParams();
+    int idx = 0;
+    for (Type* t : typeParams)
+    {
+        // TODO: if (!types[s])
+        instanceTypes[p[idx++]] = t;
+    }
+    return f->instantiate(instanceTypes);
 }
 
 Value* ShiftbyAST::codegen()

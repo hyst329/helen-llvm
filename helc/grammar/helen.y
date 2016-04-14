@@ -57,6 +57,7 @@ static bool lastTerm = 0;
 %token ID OPERATOR
 %token NEWLINE
 %token LPAREN RPAREN
+%token LBRK RBRK
 %token LARROW RARROW
 %token SEMI COLON COMMA POINT
 %type<ast> program
@@ -73,6 +74,9 @@ static bool lastTerm = 0;
 %type<arglist> arglist
 %type<exprlist> exprlist
 %type<exprlist> properties
+%type<idlist> genparams
+%type<idlist> idlist
+%type<typelist> typelist
 %type<vstr> style
 %type<vstr> OPERATOR
 %type<vstr> ID
@@ -104,6 +108,8 @@ static bool lastTerm = 0;
     llvm::Type* type;
     NamedArgs* arglist;
     std::vector<shared_ptr<Helen::AST> >* exprlist;
+    std::vector<std::string>* idlist;
+    std::vector<llvm::Type*>* typelist;   
 }
 %%
 program: instseq {
@@ -231,11 +237,13 @@ declaration: type ID OPERATOR expression {
 | type ID {
     $$ = new DeclarationAST($1, $2);
 }
-funprot: ID LPAREN arglist RPAREN style {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, Type::getVoidTy(getGlobalContext()), $5, vector<string>());
+funprot: genparams ID LPAREN arglist RPAREN style {
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, Type::getVoidTy(getGlobalContext()), $6, *$1);
+    delete $1;
 }
-| ID LPAREN arglist RPAREN RARROW type style {
-    $$ = new FunctionPrototypeAST($1, $3->types, $3->names, $6, $7, vector<string>());
+| genparams ID LPAREN arglist RPAREN RARROW type style {
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, $7, $8, *$1);
+    delete $1;
 }
 | OPERATORKW OPERATOR LPAREN arglist RPAREN RARROW type {
     if(!prec.count(operatorMarker + $2)) {
@@ -262,6 +270,20 @@ style: STYLE LPAREN ID RPAREN {
 | /* empty */ {
     $$ = "Helen";
 }
+genparams: GENERIC LBRK idlist RBRK {
+    $$ = $3;
+}
+| /* empty */ {
+    $$ = new std::vector<string>;
+}
+idlist: idlist COMMA ID {
+    $1->push_back($3);
+    $$ = $1;
+}
+| ID {
+    $$ = new std::vector<string>;
+    $$->push_back($1);
+}
 arglist: arglist COMMA type ID {
     $1->types.push_back($3);
     $1->names.push_back($4);
@@ -274,6 +296,14 @@ arglist: arglist COMMA type ID {
 }
 | /* empty */ {
     $$ = new NamedArgs;
+}
+typelist: typelist COMMA type {
+    $1->push_back($3);
+    $$ = $1;
+}
+| type {
+    $$ = new std::vector<Type*>;
+    $$->push_back($1);
 }
 type: INT {
     $$ = llvm::Type::getInt64Ty(getGlobalContext());
@@ -354,6 +384,9 @@ term: literal {
 }
 | ID LPAREN exprlist RPAREN {
     $$ = new FunctionCallAST($1, *$3);
+}
+| ID LBRK typelist RBRK {
+    $$ = new GenericFunctionInstanceAST($1, *$3);
 }
 | ID {
     $$ = new VariableAST($1);

@@ -25,6 +25,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::UncastableTypes, "Value cannot be casted to type"},
     { ErrorType::InvalidShiftbyUse, "Invalid use of SHIFTBY instruction"},
     { ErrorType::InterfaceInheritedFromType, "Interface cannot inherit from regular type"},
+    { ErrorType::InvalidInstantiation, "Invalid instantiation: %1% is not generic"},
 };
 
 AST* Error::error(ErrorType et, vector<string> args)

@@ -111,6 +111,7 @@ string FunctionNameMangler::typeString(Type* t)
             if (et->isStructTy())
             {
                 res += "type." + string(((StructType*) et)->getName());
+                return res;
             }
             else
             {

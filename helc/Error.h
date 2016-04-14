@@ -32,7 +32,8 @@ enum class ErrorType
     NonObjectType,
     UncastableTypes,
     InvalidShiftbyUse,
-    InterfaceInheritedFromType
+    InterfaceInheritedFromType,
+    InvalidInstantiation
 };
 
 class Error
