@@ -7,10 +7,12 @@
 using namespace llvm;
 using namespace std;
 
-namespace Helen {
+namespace Helen
+{
 
-    class GenericFunction {
-        FunctionAST* theAST;
-        Function* instantiate(map<string, Type*> typeParams);
-    };
+class GenericFunction
+{
+    FunctionAST* theAST;
+    Function* instantiate(map<string, Type*> typeParams);
+};
 }

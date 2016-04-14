@@ -5,7 +5,9 @@
 namespace Helen
 {
 
-string FunctionNameMangler::mangleName(string name, vector<Type*> args, string style, string className)
+string FunctionNameMangler::mangleName(string name, vector<Type*> args, 
+                                       string style, string className,
+                                       vector<string> genericParams)
 {
     if (style == "C")
         return name;
