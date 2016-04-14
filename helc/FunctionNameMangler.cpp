@@ -5,7 +5,7 @@
 namespace Helen
 {
 
-string FunctionNameMangler::mangleName(string name, vector<Type*> args, 
+string FunctionNameMangler::mangleName(string name, vector<Type*> args,
                                        string style, string className,
                                        vector<string> genericInstParams)
 {
