@@ -304,7 +304,7 @@ public:
     
     FunctionPrototypeAST* getPrototype() 
     {
-        return proto;
+        return proto.get();
     }
     
     Function* codegen();
