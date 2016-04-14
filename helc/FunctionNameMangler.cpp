@@ -7,7 +7,7 @@ namespace Helen
 
 string FunctionNameMangler::mangleName(string name, vector<Type*> args, 
                                        string style, string className,
-                                       vector<string> genericParams)
+                                       vector<string> genericInstParams)
 {
     if (style == "C")
         return name;
@@ -15,6 +15,11 @@ string FunctionNameMangler::mangleName(string name, vector<Type*> args,
     {
         string cls = !className.empty() ? className + "-" : "";
         string mangledName = "_" + cls + name;
+        if (!genericInstParams.empty())
+        {
+            for (string gip : genericInstParams)
+                mangledName += ":" + gip;
+        }
         if (args.empty())
             mangledName += "_v";
         for (Type* t : args)
