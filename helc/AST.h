@@ -17,12 +17,12 @@
 #include <stack>
 #include <vector>
 #include <memory>
-#include "Generics.h"
 
 using namespace llvm;
 using namespace std;
 namespace Helen
 {
+class GenericFunction;
 
 class AST
 {
@@ -37,7 +37,7 @@ public:
     static map<string, Function*> functions;
     static map<string, Type*> types;
     static map<string, vector<string> > fields;
-    static map<string, GenericFunction> genericFunctions;
+    static map<string, GenericFunction*> genericFunctions;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
     static bool isMainModule;
 };
@@ -277,17 +277,22 @@ public:
     {
         return args;
     }
-    
+
     const map<string, Type*>& getGenericInstTypes() const
     {
         return genericInstTypes;
     }
-    
+
     void setGenericInstTypes(const map<string, Type*>& val)
     {
         genericInstTypes = val;
     }
-    
+
+    vector<string> getGenericParams() const
+    {
+        return genericParams;
+    }
+
     Function* codegen();
 };
 
@@ -305,17 +310,17 @@ public:
     , shouldInstantiate(0)
     {
     }
-    
-    FunctionPrototypeAST* getPrototype() 
+
+    FunctionPrototypeAST* getPrototype()
     {
         return proto.get();
     }
-    
+
     void prepareForInstantiation()
     {
         shouldInstantiate = 1;
     }
-    
+
     Function* codegen();
 };
 

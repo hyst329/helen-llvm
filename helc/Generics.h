@@ -13,6 +13,11 @@ namespace Helen
 class GenericFunction
 {
     FunctionAST* theAST;
+public:
+
+    GenericFunction(FunctionAST* theAST) : theAST(theAST)
+    {
+    }
     Function* instantiate(map<string, Type*> typeParams);
 };
 }

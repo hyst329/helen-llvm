@@ -3,6 +3,7 @@
 //
 
 #include "AST.h"
+#include "Generics.h"
 #include "Error.h"
 #include "FunctionNameMangler.h"
 #include "BuiltinFunctions.h"
@@ -476,7 +477,7 @@ Function* FunctionPrototypeAST::codegen()
         for (string s : genericParams)
         {
             Type* tp = genericInstTypes[s];
-            //genTypenames.push_back(FunctionNameMangler::typeString(tp));
+            genTypenames.push_back(FunctionNameMangler::typeString(tp));
         }
     }
     if (!styles.count(style))
@@ -500,10 +501,10 @@ Function* FunctionPrototypeAST::codegen()
 Function* FunctionAST::codegen()
 {
     // If it's generic and no need for instantiation, skip this step
-    if(!proto->genericParams.empty() && !shouldInstantiate)
+    if(!proto->getGenericParams().empty() && !shouldInstantiate)
     {
-        if(!genericFunction)
-        genericFunctions[proto.name] = this;
+        if(!genericFunctions[proto->getName()])
+            genericFunctions[proto->getName()] = new GenericFunction { this };
         return 0;
     }
     shouldInstantiate = 0;

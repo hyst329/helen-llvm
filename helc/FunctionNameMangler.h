@@ -18,6 +18,7 @@ public:
                              vector<string> genericInstParams = vector<string>());
     static string humanReadableName(string mangledName);
     static string functionName(string mangledName);
+    static string typeString(Type* t);
 };
 
 }

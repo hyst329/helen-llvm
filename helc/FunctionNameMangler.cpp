@@ -25,31 +25,7 @@ string FunctionNameMangler::mangleName(string name, vector<Type*> args,
         for (Type* t : args)
         {
             mangledName += "_";
-            if (t->isArrayTy())
-            {
-                mangledName += "a";
-                t = t->getArrayElementType();
-            }
-            if (t->isPointerTy())
-            {
-                PointerType* pt = (PointerType*) t;
-                Type* et = pt->getElementType();
-                if (et->isStructTy())
-                {
-                    mangledName += "type." + string(((StructType*) et)->getName());
-                }
-                else
-                {
-                    mangledName += "p";
-                    t = et;
-                }
-            }
-            if (t->isIntegerTy())
-                mangledName += "i" + std::to_string(t->getPrimitiveSizeInBits());
-            if (t == Type::getDoubleTy(getGlobalContext()))
-                mangledName += "r";
-            if (t == Type::getInt8PtrTy(getGlobalContext()))
-                mangledName += "s";
+            mangledName += typeString(t);
         }
         return mangledName;
     }
@@ -117,4 +93,39 @@ string FunctionNameMangler::functionName(string mangledName)
     }
     return "";
 }
+
+string FunctionNameMangler::typeString(Type* t)
+{
+    string res;
+    while (t->isArrayTy() || t->isPointerTy())
+    {
+        if (t->isArrayTy())
+        {
+            res += "a";
+            t = t->getArrayElementType();
+        }
+        if (t->isPointerTy())
+        {
+            PointerType* pt = (PointerType*) t;
+            Type* et = pt->getElementType();
+            if (et->isStructTy())
+            {
+                res += "type." + string(((StructType*) et)->getName());
+            }
+            else
+            {
+                res += "p";
+                t = et;
+            }
+        }
+    }
+    if (t->isIntegerTy())
+        res += "i" + std::to_string(t->getPrimitiveSizeInBits());
+    if (t == Type::getDoubleTy(getGlobalContext()))
+        res += "r";
+    if (t == Type::getInt8PtrTy(getGlobalContext()))
+        res += "s";
+    return res;
+}
+
 }
