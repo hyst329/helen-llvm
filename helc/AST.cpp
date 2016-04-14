@@ -499,6 +499,15 @@ Function* FunctionPrototypeAST::codegen()
 
 Function* FunctionAST::codegen()
 {
+    // If it's generic and no need for instantiation, skip this step
+    if(!proto->genericParams.empty() && !shouldInstantiate)
+    {
+        if(!genericFunction)
+        genericFunctions[proto.name] = this;
+        return 0;
+    }
+    shouldInstantiate = 0;
+    
     Function* f = module->getFunction(proto->getName());
 
     if (!f)

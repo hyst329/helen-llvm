@@ -12,6 +12,7 @@ Function* GenericFunction::instantiate(map<string, Type*> typeParams)
     map<string, Type*> oldtypes = AST::types;
     AST::types.insert(typeParams.begin(), typeParams.end());
     theAST->getPrototype()->setGenericInstTypes(typeParams);
+    theAST->prepareForInstantiation();
     Function* f = theAST->codegen(); // TODO: Mangle the name properly
     // Restore from backup
     AST::types = oldtypes;

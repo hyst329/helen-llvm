@@ -17,6 +17,7 @@
 #include <stack>
 #include <vector>
 #include <memory>
+#include "Generics.h"
 
 using namespace llvm;
 using namespace std;
@@ -36,6 +37,7 @@ public:
     static map<string, Function*> functions;
     static map<string, Type*> types;
     static map<string, vector<string> > fields;
+    static map<string, GenericFunction> genericFunctions;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
     static bool isMainModule;
 };
@@ -293,18 +295,25 @@ class FunctionAST : public AST
 {
     shared_ptr<FunctionPrototypeAST> proto;
     shared_ptr<AST> body;
+    bool shouldInstantiate;
 
 public:
 
     FunctionAST(shared_ptr<FunctionPrototypeAST> proto, shared_ptr<AST> body)
     : proto(proto)
     , body(body)
+    , shouldInstantiate(0)
     {
     }
     
     FunctionPrototypeAST* getPrototype() 
     {
         return proto.get();
+    }
+    
+    void prepareForInstantiation()
+    {
+        shouldInstantiate = 1;
     }
     
     Function* codegen();
