@@ -21,6 +21,7 @@ enum class ErrorType
     UndeclaredVariable,
     UndeclaredFunction,
     WrongArgumentType,
+    WrongArgumentNumber,
     FunctionRedefined,
     UnexpectedOperator,
     AssignmentError,

@@ -478,7 +478,8 @@ Function* FunctionPrototypeAST::codegen()
         for (string s : genericParams)
         {
             Type* tp = genericInstTypes[s];
-            genTypenames.push_back(FunctionNameMangler::typeString(tp));
+            string st = FunctionNameMangler::typeString(tp);
+            genTypenames.push_back(st);
         }
     }
     if (!styles.count(style))
@@ -560,6 +561,8 @@ Value* GenericFunctionInstanceAST::codegen()
         // TODO: if (!types[s])
         instanceTypes[p[idx++]] = t;
     }
+    if (p.size() != idx)
+        return Error::errorValue(ErrorType::WrongArgumentNumber,{to_string(p.size()), to_string(idx)});
     return f->instantiate(instanceTypes);
 }
 

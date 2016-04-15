@@ -13,6 +13,7 @@ map<ErrorType, string> Error::errorMessages = {
     { ErrorType::UndeclaredVariable, "Undeclared variable: %1%"},
     { ErrorType::UndeclaredFunction, "Undeclared function: %1% (mangled name: %2%)"},
     { ErrorType::WrongArgumentType, "Wrong argument type: %1%"},
+    { ErrorType::WrongArgumentNumber, "Wrong argument type: %1% while %2% required"},
     { ErrorType::FunctionRedefined, "Function %1% is redefined"},
     { ErrorType::UnexpectedOperator, "Unexpected operator: %1%"},
     { ErrorType::AssignmentError, "Assignment error: %1% is not an lvalue"},
