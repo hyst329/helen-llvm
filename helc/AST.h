@@ -24,6 +24,12 @@ namespace Helen
 {
 class GenericFunction;
 
+struct TypeInfo
+{
+    string name;
+    Type* type;
+};
+
 class AST
 {
 public:
