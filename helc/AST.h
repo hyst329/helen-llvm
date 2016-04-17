@@ -127,14 +127,14 @@ public:
 
 class DeclarationAST : public AST
 {
-    Type* type;
+    TypeInfo typeInfo;
     string name;
     shared_ptr<AST> initialiser;
 
 public:
 
-    DeclarationAST(Type* type, string name, shared_ptr<AST> initialiser = 0)
-    : type(type)
+    DeclarationAST(TypeInfo& type, string name, shared_ptr<AST> initialiser = 0)
+    : typeInfo(type)
     , name(name)
     , initialiser(initialiser)
     {
@@ -142,7 +142,7 @@ public:
 
     Type* getType()
     {
-        return type;
+        return typeInfo.type;
     }
 
     string getName()
@@ -240,15 +240,15 @@ public:
 class FunctionPrototypeAST : public AST
 {
     string name, origName;
-    vector<Type*> args;
+    vector<TypeInfo> args;
     vector<string> argNames;
-    Type* returnType;
+    TypeInfo returnType;
     string style;
     vector<string> genericParams;
-    map<string, Type*> genericInstTypes;
+    map<string, TypeInfo> genericInstTypes;
 public:
 
-    FunctionPrototypeAST(string name, vector<Type*> args, vector<string> argNames, Type* returnType, string style, vector<string> genericParams)
+    FunctionPrototypeAST(string name, vector<TypeInfo> args, vector<string> argNames, TypeInfo returnType, string style, vector<string> genericParams)
     : name(name)
     , origName(name)
     , args(args)
@@ -271,7 +271,7 @@ public:
 
     Type* getReturnType() const
     {
-        return returnType;
+        return returnType->type;
     }
 
     string& getStyle()
@@ -279,17 +279,17 @@ public:
         return style;
     }
 
-    const vector<Type*>& getArgs() const
+    const vector<TypeInfo>& getArgs() const
     {
         return args;
     }
 
-    const map<string, Type*>& getGenericInstTypes() const
+    const map<string, TypeInfo>& getGenericInstTypes() const
     {
         return genericInstTypes;
     }
 
-    void setGenericInstTypes(const map<string, Type*>& val)
+    void setGenericInstTypes(const map<string, TypeInfo>& val)
     {
         genericInstTypes = val;
     }
@@ -333,10 +333,10 @@ public:
 class GenericFunctionInstanceAST : public AST
 {
     string genObjectName;
-    vector<Type*> typeParams;
+    vector<TypeInfo> typeParams;
 public:
 
-    GenericFunctionInstanceAST(string genObjectName, vector<Type*> typeParams)
+    GenericFunctionInstanceAST(string genObjectName, vector<TypeInfo> typeParams)
     : genObjectName(genObjectName)
     , typeParams(typeParams)
     {
@@ -398,12 +398,12 @@ public:
 
 class NewAST : public AST
 {
-    Type* type;
+    TypeInfo type;
     vector<shared_ptr<AST> > arguments;
 
 public:
 
-    NewAST(Type* type, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
+    NewAST(TypeInfo& type, vector<shared_ptr<AST> > arguments = vector<shared_ptr<AST> >())
     : type(type)
     , arguments(arguments)
     {
@@ -427,11 +427,11 @@ public:
 class CastAST : public AST
 {
     shared_ptr<AST> value;
-    Type* destinationType;
+    TypeInfo destinationType;
 
 public:
 
-    CastAST(shared_ptr<AST> value, Type* destinationType)
+    CastAST(shared_ptr<AST> value, TypeInfo& destinationType)
     : value(value)
     , destinationType(destinationType)
     {

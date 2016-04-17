@@ -93,7 +93,7 @@ static bool lastTerm = 0;
 %define parse.error verbose
 %code requires {
     struct NamedArgs {
-        std::vector<Type*> types;
+        std::vector<Helen::TypeInfo> types;
         std::vector<std::string> names;
     };
 }
@@ -105,11 +105,11 @@ static bool lastTerm = 0;
     uint64_t vint;
     char vchar;
     Helen::AST *ast;
-    llvm::Type* type;
+    Helen::TypeInfo type;
     NamedArgs* arglist;
     std::vector<shared_ptr<Helen::AST> >* exprlist;
     std::vector<std::string>* idlist;
-    std::vector<llvm::Type*>* typelist;   
+    std::vector<Helen::TypeInfo>* typelist;   
 }
 %%
 program: instseq {
@@ -306,33 +306,34 @@ typelist: typelist COMMA type {
     $$->push_back($1);
 }
 type: INT {
-    $$ = llvm::Type::getInt64Ty(getGlobalContext());
+    $$ = { "i64", llvm::Type::getInt64Ty(getGlobalContext()) };
 }
 | REAL {
-    $$ = llvm::Type::getDoubleTy(getGlobalContext());
+    $$ = { "r", llvm::Type::getDoubleTy(getGlobalContext()) };
 }
 | CHAR {
-    $$ = llvm::Type::getInt8Ty(getGlobalContext());
+    $$ = { "i8", llvm::Type::getInt8Ty(getGlobalContext()) };
 }
 | LOGICAL {
-    $$ = llvm::Type::getInt1Ty(getGlobalContext());
+    $$ = { "i1", llvm::Type::getInt1Ty(getGlobalContext()) };
 }
 | ID {
     if(AST::types.find($1) == AST::types.end()) {
         // maybe it's a type currently being declared?
-        $$ = 0;
+        $$ = { $1, 0 };
         //Error::error(ErrorType::UndeclaredType, {$1});
     }
-    else $$ = llvm::PointerType::get(AST::types[$1], 0);
+    else
+    $$ = { $1, llvm::PointerType::get(AST::types[$1], 0) };
 }
 | INT LPAREN INTLIT RPAREN {
-    $$ = llvm::IntegerType::get(getGlobalContext(), $3);
+    $$ = { "i" + std::to_string($3), llvm::IntegerType::get(getGlobalContext(), $3) };
 }
 | ARRAY LPAREN INTLIT RPAREN type {
-    $$ = llvm::ArrayType::get($5, $3);
+    $$ = { "a" + $5->name, llvm::ArrayType::get($5->type, $3) };
 }
 | PTR type {
-    $$ = llvm::PointerType::get($2, 0);
+    $$ = { "a" + $2->name, llvm::PointerType::get($2->type, 0) };
 }
 exprlist: exprlist COMMA expression {
     $1->push_back(shared_ptr<AST>($3));
