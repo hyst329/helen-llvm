@@ -271,7 +271,7 @@ public:
 
     Type* getReturnType() const
     {
-        return returnType->type;
+        return returnType.type;
     }
 
     string& getStyle()
