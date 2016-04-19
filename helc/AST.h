@@ -246,9 +246,10 @@ class FunctionPrototypeAST : public AST
     string style;
     vector<string> genericParams;
     map<string, TypeInfo> genericInstTypes;
+    bool vararg;
 public:
 
-    FunctionPrototypeAST(string name, vector<TypeInfo> args, vector<string> argNames, TypeInfo returnType, string style, vector<string> genericParams)
+    FunctionPrototypeAST(string name, vector<TypeInfo> args, vector<string> argNames, TypeInfo returnType, string style, vector<string> genericParams, bool vararg)
     : name(name)
     , origName(name)
     , args(args)
@@ -256,6 +257,7 @@ public:
     , returnType(returnType)
     , style(style)
     , genericParams(genericParams)
+    , vararg(vararg)
     {
     }
 
@@ -297,6 +299,11 @@ public:
     vector<string> getGenericParams() const
     {
         return genericParams;
+    }
+
+    bool isVararg() const
+    {
+        return vararg;
     }
 
     Function* codegen();

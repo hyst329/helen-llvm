@@ -59,7 +59,7 @@ static bool lastTerm = 0;
 %token LPAREN RPAREN
 %token LBRK RBRK
 %token LARROW RARROW
-%token SEMI COLON COMMA POINT
+%token SEMI COLON COMMA POINT ELLIPSIS
 %type<ast> program
 %type<ast> instseq
 %type<ast> instruction
@@ -95,6 +95,7 @@ static bool lastTerm = 0;
     struct NamedArgs {
         std::vector<Helen::TypeInfo> types;
         std::vector<std::string> names;
+        bool vararg;
     };
 }
 
@@ -238,11 +239,11 @@ declaration: type ID OPERATOR expression {
     $$ = new DeclarationAST($1, $2);
 }
 funprot: genparams ID LPAREN arglist RPAREN style {
-    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, Type::getVoidTy(getGlobalContext()), $6, *$1);
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, Type::getVoidTy(getGlobalContext()), $6, *$1, $4->vararg);
     delete $1;
 }
 | genparams ID LPAREN arglist RPAREN RARROW type style {
-    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, $7, $8, *$1);
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, $7, $8, *$1, $4->vararg);
     delete $1;
 }
 | OPERATORKW OPERATOR LPAREN arglist RPAREN RARROW type {
@@ -250,15 +251,15 @@ funprot: genparams ID LPAREN arglist RPAREN style {
         // TODO: Warning
         prec[operatorMarker + $2] = 5; // default value
     }
-    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen", vector<string>());
+    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen", vector<string>(), 0);
 }
 | CONSTRUCTOR ID LPAREN arglist RPAREN {
     $$ = new FunctionPrototypeAST("__ctor", $4->types, $4->names,
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>());
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>(), 0);
 }
 | DESTRUCTOR ID LPAREN RPAREN {
     $$ = new FunctionPrototypeAST("__dtor", std::vector<Type*>(), std::vector<std::string>(),
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>());
+                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>(), 0);
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
@@ -289,13 +290,19 @@ arglist: arglist COMMA type ID {
     $1->names.push_back($4);
     $$ = $1;
 }
+| arglist COMMA ELLIPSIS {
+    $1->vararg = 1;
+    $$ = $1;
+}
 | type ID {
     $$ = new NamedArgs;
     $$->types.push_back($1);
     $$->names.push_back($2);
+    $$->vararg = 0;
 }
 | /* empty */ {
     $$ = new NamedArgs;
+    $$->vararg = 0;
 }
 typelist: typelist COMMA type {
     $1->push_back($3);

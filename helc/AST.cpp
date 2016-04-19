@@ -407,9 +407,9 @@ Value* FunctionCallAST::codegen()
             {
                 //TODO: Check for arguments' castability, then call the most suitable
                 ArrayRef<Type*> params = fu.getFunctionType()->params();
-                if (params.size() != vargs.size()) continue;
+                if (params.size() != vargs.size() || (fu.isVarArg() && params.size() > vargs.size())) continue;
                 bool available = 1;
-                for (unsigned i = 0; i < vargs.size(); i++)
+                for (unsigned i = 0; i < (fu.isVarArg() ? params.size() : vargs.size()); i++)
                     if (!CastInst::isCastable(vargs[i]->getType(), params[i]))
                     {
                         available = 0;
@@ -427,11 +427,11 @@ Value* FunctionCallAST::codegen()
         //TODO: 
     }
     ArrayRef<Type*> params = f->getFunctionType()->params();
-    for (unsigned i = 0; i < vargs.size(); i++)
+    for (unsigned i = 0; i < (f->isVarArg() ? params.size() : vargs.size()); i++)
         if (!shouldCast && vargs[i]->getType() != params[i])
             return Error::errorValue(ErrorType::WrongArgumentType,{std::to_string(i)});
     if (shouldCast)
-        for (unsigned i = 0; i < vargs.size(); i++)
+        for (unsigned i = 0; i < (f->isVarArg() ? params.size() : vargs.size()); i++)
         {
             auto opc = CastInst::getCastOpcode(vargs[i], true, params[i], true);
             vargs[i] = builder.CreateCast(opc, vargs[i], params[i]);
@@ -484,7 +484,7 @@ Function* FunctionPrototypeAST::codegen()
     }
     if (!styles.count(style))
         return (Function*) Error::errorValue(ErrorType::UnknownStyle);
-    FunctionType* ft = FunctionType::get(returnType ? : PointerType::get(types[className], 0), args, false);
+    FunctionType* ft = FunctionType::get(returnType ? : PointerType::get(types[className], 0), args, vararg);
     name = FunctionNameMangler::mangleName(name, args, style, className, genTypenames);
     Function* f = functions[name];
     if (f)
