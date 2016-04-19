@@ -70,6 +70,7 @@ include                  BEGIN(INCLUDE);
 [a-zA-Z][a-zA-Z0-9]*     yylval.vstr = strdup(yytext); return ID;
 "<-"                     return LARROW;
 "->"                     return RARROW;
+\.\.\.                   return ELLIPSIS;
 \(                       return LPAREN;
 \)                       return RPAREN;
 \[                       return LBRK;
