@@ -1,4 +1,4 @@
-project(helmake VERSION "0.1.5")
+project(helmake VERSION "0.2.0")
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)

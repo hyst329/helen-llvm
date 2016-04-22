@@ -120,9 +120,9 @@ Value* DeclarationAST::codegen()
     }
     else
     {
-        initValue = Constant::getNullValue(type);
+        initValue = Constant::getNullValue(typeInfo.type);
     }
-    AllocaInst* alloca = createEntryBlockAlloca(f, type, name);
+    AllocaInst* alloca = createEntryBlockAlloca(f, typeInfo.type, name);
     if (initValue)
         builder.CreateStore(initValue, alloca);
     variables[name] = alloca;
@@ -468,7 +468,11 @@ Function* FunctionPrototypeAST::codegen()
     if (!className.empty())
     {
         // add 'this' parameter
-        args.insert(args.begin(), PointerType::get(types[className], 0));
+        auto thistype = PointerType::get(types[className], 0);
+
+        args.insert(args.begin(),
+        {
+            className, thistype});
         argNames.insert(argNames.begin(), "this");
     }
     vector<string> genTypenames;
@@ -477,15 +481,19 @@ Function* FunctionPrototypeAST::codegen()
     {
         for (string s : genericParams)
         {
-            Type* tp = genericInstTypes[s];
+            Type* tp = genericInstTypes[s].type;
             string st = FunctionNameMangler::typeString(tp);
             genTypenames.push_back(st);
         }
     }
     if (!styles.count(style))
         return (Function*) Error::errorValue(ErrorType::UnknownStyle);
-    FunctionType* ft = FunctionType::get(returnType ? : PointerType::get(types[className], 0), args, vararg);
-    name = FunctionNameMangler::mangleName(name, args, style, className, genTypenames);
+    std::vector<Type*> argtypes;
+    for (auto p : args) argtypes.push_back(p.type);
+    FunctionType* ft = FunctionType::get(returnType.type ? :
+                                         PointerType::get(types[className], 0), 
+                                         argtypes, vararg);
+    name = FunctionNameMangler::mangleName(name, argtypes, style, className, genTypenames);
     Function* f = functions[name];
     if (f)
         return f;
@@ -556,10 +564,10 @@ Value* GenericFunctionInstanceAST::codegen()
     map<string, Type*> instanceTypes;
     vector<string> p = f->getAST()->getPrototype()->getGenericParams();
     int idx = 0;
-    for (Type* t : typeParams)
+    for (TypeInfo t : typeParams)
     {
         // TODO: if (!types[s])
-        instanceTypes[p[idx++]] = t;
+        instanceTypes[p[idx++]] = t.type;
     }
     if (p.size() != idx)
         return Error::errorValue(ErrorType::WrongArgumentNumber,{to_string(p.size()), to_string(idx)});
@@ -593,7 +601,9 @@ Value* CustomTypeAST::codegen()
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*) i.get();
             fpi->getStyle() = "__method_" + typeName;
             fpi->codegen();
-            string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpi->getArgs(), "Helen", typeName);
+            vector<Type*> fpitypes;
+            for(auto a : fpi->getArgs()) fpitypes.push_back(a.type);
+            string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpitypes, "Helen", typeName);
             if (find(fields[typeName].begin(), fields[typeName].end(), name) == fields[typeName].end())
             {
                 //printf("ind=%d f=%40s len=%d\n", ind, fpi->getName().c_str(), fields[typeName].size());
@@ -715,10 +725,12 @@ void CustomTypeAST::compileTime()
         if (dynamic_cast<FunctionPrototypeAST*> (i.get()))
         {
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*) i.get();
-            vector<Type*> args = fpi->getArgs();
-            args.insert(args.begin(), PointerType::get(st, 0));
+            vector<TypeInfo> args = fpi->getArgs();
+            vector<Type*> argtypes;
+            for(auto a : args) argtypes.push_back(a.type);
+            argtypes.insert(argtypes.begin(), PointerType::get(st, 0));
             // Finding mangled name inherited from parent class
-            string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), args, "Helen", typeName);
+            string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), argtypes, "Helen", typeName);
             // workaround, not sure for full correctness
             if (/*find(fieldNames.begin(), fieldNames.end(), fpi->getOriginalName()) != fieldNames.end() ||*/
                     find(fieldNames.begin(), fieldNames.end(), mname) != fieldNames.end())
@@ -728,7 +740,7 @@ void CustomTypeAST::compileTime()
                 continue;
             }
             fieldNames.push_back(fpi->getOriginalName());
-            FunctionType* ft = FunctionType::get(fpi->getReturnType() ? : PointerType::get(st, 0), args, false);
+            FunctionType* ft = FunctionType::get(fpi->getReturnType() ? : PointerType::get(st, 0), argtypes, false);
             Type* pf = PointerType::get(ft, 0);
             fieldTypes.push_back(pf);
         }
@@ -742,13 +754,14 @@ void CustomTypeAST::compileTime()
 
 Value* NewAST::codegen()
 {
-    if (!type->isPointerTy())
+    Type* ttype = type.type;
+    if (!ttype->isPointerTy())
         return Error::errorValue(ErrorType::WrongArgumentType,{"non-struct type"});
-    if (!cast<PointerType>(type)->getElementType()->isStructTy())
+    if (!cast<PointerType>(ttype)->getElementType()->isStructTy())
         return Error::errorValue(ErrorType::WrongArgumentType,{"non-struct type"});
-    Type* ptrType = type;
-    type = cast<PointerType>(type)->getElementType();
-    size_t size = dataLayout->getTypeStoreSize(type);
+    Type* ptrType = ttype;
+    ttype = cast<PointerType>(ttype)->getElementType();
+    size_t size = dataLayout->getTypeStoreSize(ttype);
     Value* memoryPtr = builder.CreateCall(
                                           module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
     Value * msvals[] = {memoryPtr, ConstantInt::get(Type::getInt32Ty(getGlobalContext()), 0),
@@ -787,7 +800,7 @@ Value* NewAST::codegen()
         argValues.push_back(av);
         argTypes.push_back(av->getType());
     }
-    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*) type)->getName());
+    string ctorname = FunctionNameMangler::mangleName("__ctor", argTypes, "Helen", ((StructType*) ttype)->getName());
     Function* ctor = module->getFunction(ctorname); // functions[ctorname];
     //printf("ctor=%d %s\n", ctor, ctorname.c_str());
     if (ctor)
@@ -837,19 +850,20 @@ Value* CastAST::codegen()
         return 0;
     //v->getType()->dump();
     //destinationType->dump();
-    if (CastInst::isCastable(v->getType(), destinationType))
+    Type* dtype = destinationType.type;
+    if (CastInst::isCastable(v->getType(), dtype))
     {
-        auto opc = CastInst::getCastOpcode(v, true, destinationType, true);
-        return builder.CreateCast(opc, v, destinationType, "casttmp");
+        auto opc = CastInst::getCastOpcode(v, true, dtype, true);
+        return builder.CreateCast(opc, v, dtype, "casttmp");
     }
 #if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7
-    else if (CastInst::isBitOrNoopPointerCastable(v->getType(), destinationType, *dataLayout.get()))
+    else if (CastInst::isBitOrNoopPointerCastable(v->getType(), dtype, *dataLayout.get()))
     {
 #else
-    else if (CastInst::isBitOrNoopPointerCastable(v->getType(), destinationType))
+    else if (CastInst::isBitOrNoopPointerCastable(v->getType(), dtype))
     {
 #endif
-        return builder.CreateBitOrPointerCast(v, destinationType, "casttmp");
+        return builder.CreateBitOrPointerCast(v, dtype, "casttmp");
     }
     else
         return Error::errorValue(ErrorType::UncastableTypes);

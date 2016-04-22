@@ -28,6 +28,7 @@ struct TypeInfo
 {
     string name;
     Type* type;
+    //TypeInfo(string name, Type* type) : name(name), type(type) { }
 };
 
 class AST

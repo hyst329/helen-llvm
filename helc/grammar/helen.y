@@ -106,7 +106,7 @@ static bool lastTerm = 0;
     uint64_t vint;
     char vchar;
     Helen::AST *ast;
-    Helen::TypeInfo type;
+    Helen::TypeInfo *type;
     NamedArgs* arglist;
     std::vector<shared_ptr<Helen::AST> >* exprlist;
     std::vector<std::string>* idlist;
@@ -168,7 +168,7 @@ instruction: statement NEWLINE {
 | TYPE ALIAS ID OPERATOR type {
     if(strcmp($4, "=")) Error::error(ErrorType::UnexpectedOperator, {$4});
     if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
-    AST::types[$3] = $5;
+    AST::types[$3] = $5->type;
     $$ = new NullAST();
 }
 | TYPE interface ID basetype NEWLINE properties ENDTYPE {
@@ -214,7 +214,7 @@ properties: properties property NEWLINE {
     $$->push_back(shared_ptr<AST>($1));
 }
 property: type ID {
-    $$ = new DeclarationAST($1, $2);
+    $$ = new DeclarationAST(*$1, $2);
 }
 | DECLARE funprot {
     $$ = $2;
@@ -233,17 +233,18 @@ statement: declaration {
 }
 declaration: type ID OPERATOR expression {
     if(strcmp($3, "=")) Error::error(ErrorType::UnexpectedOperator, {$3});
-    $$ = new DeclarationAST($1, $2, shared_ptr<AST>($4));
+    $$ = new DeclarationAST(*$1, $2, shared_ptr<AST>($4));
 }
 | type ID {
-    $$ = new DeclarationAST($1, $2);
+    $$ = new DeclarationAST(*$1, $2);
 }
 funprot: genparams ID LPAREN arglist RPAREN style {
-    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, Type::getVoidTy(getGlobalContext()), $6, *$1, $4->vararg);
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, 
+        { "v", Type::getVoidTy(getGlobalContext()) }, $6, *$1, $4->vararg);
     delete $1;
 }
 | genparams ID LPAREN arglist RPAREN RARROW type style {
-    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, $7, $8, *$1, $4->vararg);
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, *$7, $8, *$1, $4->vararg);
     delete $1;
 }
 | OPERATORKW OPERATOR LPAREN arglist RPAREN RARROW type {
@@ -251,15 +252,17 @@ funprot: genparams ID LPAREN arglist RPAREN style {
         // TODO: Warning
         prec[operatorMarker + $2] = 5; // default value
     }
-    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, $7, "Helen", vector<string>(), 0);
+    $$ = new FunctionPrototypeAST(operatorMarker + $2, $4->types, $4->names, *$7, "Helen", vector<string>(), 0);
 }
 | CONSTRUCTOR ID LPAREN arglist RPAREN {
     $$ = new FunctionPrototypeAST("__ctor", $4->types, $4->names,
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>(), 0);
+                                  { "v", llvm::Type::getVoidTy(getGlobalContext()) }, 
+                                  string("__method_") + $2, vector<string>(), 0);
 }
 | DESTRUCTOR ID LPAREN RPAREN {
-    $$ = new FunctionPrototypeAST("__dtor", std::vector<Type*>(), std::vector<std::string>(),
-                                  llvm::Type::getVoidTy(getGlobalContext()), string("__method_") + $2, vector<string>(), 0);
+    $$ = new FunctionPrototypeAST("__dtor", std::vector<TypeInfo>(), std::vector<std::string>(),
+                                  { "v", llvm::Type::getVoidTy(getGlobalContext()) },
+                                  string("__method_") + $2, vector<string>(), 0);
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
@@ -286,7 +289,7 @@ idlist: idlist COMMA ID {
     $$->push_back($1);
 }
 arglist: arglist COMMA type ID {
-    $1->types.push_back($3);
+    $1->types.push_back(*$3);
     $1->names.push_back($4);
     $$ = $1;
 }
@@ -296,7 +299,7 @@ arglist: arglist COMMA type ID {
 }
 | type ID {
     $$ = new NamedArgs;
-    $$->types.push_back($1);
+    $$->types.push_back(*$1);
     $$->names.push_back($2);
     $$->vararg = 0;
 }
@@ -305,42 +308,44 @@ arglist: arglist COMMA type ID {
     $$->vararg = 0;
 }
 typelist: typelist COMMA type {
-    $1->push_back($3);
+    $1->push_back(*$3);
+    delete $3;
     $$ = $1;
 }
 | type {
-    $$ = new std::vector<Type*>;
-    $$->push_back($1);
+    $$ = new std::vector<TypeInfo>;
+    $$->push_back(*$1);
+    delete $1;
 }
 type: INT {
-    $$ = { "i64", llvm::Type::getInt64Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i64", llvm::Type::getInt64Ty(getGlobalContext()) };
 }
 | REAL {
-    $$ = { "r", llvm::Type::getDoubleTy(getGlobalContext()) };
+    $$ = new TypeInfo { "r", llvm::Type::getDoubleTy(getGlobalContext()) };
 }
 | CHAR {
-    $$ = { "i8", llvm::Type::getInt8Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i8", llvm::Type::getInt8Ty(getGlobalContext()) };
 }
 | LOGICAL {
-    $$ = { "i1", llvm::Type::getInt1Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i1", llvm::Type::getInt1Ty(getGlobalContext()) };
 }
 | ID {
     if(AST::types.find($1) == AST::types.end()) {
         // maybe it's a type currently being declared?
-        $$ = { $1, 0 };
+        $$ = new TypeInfo { $1, 0 };
         //Error::error(ErrorType::UndeclaredType, {$1});
     }
     else
-    $$ = { $1, llvm::PointerType::get(AST::types[$1], 0) };
+    $$ = new TypeInfo { $1, llvm::PointerType::get(AST::types[$1], 0) };
 }
 | INT LPAREN INTLIT RPAREN {
-    $$ = { "i" + std::to_string($3), llvm::IntegerType::get(getGlobalContext(), $3) };
+    $$ = new TypeInfo { "i" + std::to_string($3), llvm::IntegerType::get(getGlobalContext(), $3) };
 }
 | ARRAY LPAREN INTLIT RPAREN type {
-    $$ = { "a" + $5->name, llvm::ArrayType::get($5->type, $3) };
+    $$ = new TypeInfo { "a" + $5->name, llvm::ArrayType::get($5->type, $3) };
 }
 | PTR type {
-    $$ = { "a" + $2->name, llvm::PointerType::get($2->type, 0) };
+    $$ = new TypeInfo { "a" + $2->name, llvm::PointerType::get($2->type, 0) };
 }
 exprlist: exprlist COMMA expression {
     $1->push_back(shared_ptr<AST>($3));
@@ -410,13 +415,13 @@ term: literal {
     $$ = new ShiftbyAST(shared_ptr<AST>($1), shared_ptr<AST>($3));
 }
 | NEW type {
-    $$ = new NewAST($2);
+    $$ = new NewAST(*$2);
 }
 | NEW type LPAREN exprlist RPAREN {
-    $$ = new NewAST($2, *$4);
+    $$ = new NewAST(*$2, *$4);
 }
 | CAST expression TO type {
-    $$ = new CastAST(shared_ptr<AST>($2), $4);
+    $$ = new CastAST(shared_ptr<AST>($2), *$4);
 }
 literal: INTLIT {
      $$ = new ConstantIntAST($1);
