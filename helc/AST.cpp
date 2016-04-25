@@ -24,6 +24,11 @@ map<string, GenericFunction*> AST::genericFunctions;
 stack<string> AST::callstack;
 bool AST::isMainModule = false;
 
+Type* TypeInfo::getType()
+{
+    return type ? : AST::types[name];
+}
+
 AllocaInst* AST::createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName)
 {
     IRBuilder<> tmp(&f->getEntryBlock(), f->getEntryBlock().begin());
@@ -120,9 +125,9 @@ Value* DeclarationAST::codegen()
     }
     else
     {
-        initValue = Constant::getNullValue(typeInfo.type);
+        initValue = Constant::getNullValue(typeInfo.getType());
     }
-    AllocaInst* alloca = createEntryBlockAlloca(f, typeInfo.type, name);
+    AllocaInst* alloca = createEntryBlockAlloca(f, typeInfo.getType(), name);
     if (initValue)
         builder.CreateStore(initValue, alloca);
     variables[name] = alloca;
@@ -472,7 +477,8 @@ Function* FunctionPrototypeAST::codegen()
 
         args.insert(args.begin(),
         {
-            className, thistype});
+                    className, thistype
+        });
         argNames.insert(argNames.begin(), "this");
     }
     vector<string> genTypenames;
@@ -481,7 +487,7 @@ Function* FunctionPrototypeAST::codegen()
     {
         for (string s : genericParams)
         {
-            Type* tp = genericInstTypes[s].type;
+            Type* tp = genericInstTypes[s].getType();
             string st = FunctionNameMangler::typeString(tp);
             genTypenames.push_back(st);
         }
@@ -489,9 +495,11 @@ Function* FunctionPrototypeAST::codegen()
     if (!styles.count(style))
         return (Function*) Error::errorValue(ErrorType::UnknownStyle);
     std::vector<Type*> argtypes;
-    for (auto p : args) argtypes.push_back(p.type);
-    FunctionType* ft = FunctionType::get(returnType.type ? :
-                                         PointerType::get(types[className], 0), 
+    for (auto p : args) argtypes.push_back(p.getType());
+    // a "kludge" (workaround) for generic functions 
+    Type* rtype = genericParams.empty() ? returnType.type : returnType.getType();
+    FunctionType* ft = FunctionType::get(rtype ? :
+                                         PointerType::get(types[className], 0),
                                          argtypes, vararg);
     name = FunctionNameMangler::mangleName(name, argtypes, style, className, genTypenames);
     Function* f = functions[name];
@@ -567,7 +575,7 @@ Value* GenericFunctionInstanceAST::codegen()
     for (TypeInfo t : typeParams)
     {
         // TODO: if (!types[s])
-        instanceTypes[p[idx++]] = t.type;
+        instanceTypes[p[idx++]] = t.getType();
     }
     if (p.size() != idx)
         return Error::errorValue(ErrorType::WrongArgumentNumber,{to_string(p.size()), to_string(idx)});
@@ -602,7 +610,7 @@ Value* CustomTypeAST::codegen()
             fpi->getStyle() = "__method_" + typeName;
             fpi->codegen();
             vector<Type*> fpitypes;
-            for(auto a : fpi->getArgs()) fpitypes.push_back(a.type);
+            for (auto a : fpi->getArgs()) fpitypes.push_back(a.getType());
             string name = FunctionNameMangler::mangleName(fpi->getOriginalName(), fpitypes, "Helen", typeName);
             if (find(fields[typeName].begin(), fields[typeName].end(), name) == fields[typeName].end())
             {
@@ -727,7 +735,7 @@ void CustomTypeAST::compileTime()
             FunctionPrototypeAST* fpi = (FunctionPrototypeAST*) i.get();
             vector<TypeInfo> args = fpi->getArgs();
             vector<Type*> argtypes;
-            for(auto a : args) argtypes.push_back(a.type);
+            for (auto a : args) argtypes.push_back(a.getType());
             argtypes.insert(argtypes.begin(), PointerType::get(st, 0));
             // Finding mangled name inherited from parent class
             string mname = FunctionNameMangler::mangleName(fpi->getOriginalName(), argtypes, "Helen", typeName);
@@ -754,7 +762,7 @@ void CustomTypeAST::compileTime()
 
 Value* NewAST::codegen()
 {
-    Type* ttype = type.type;
+    Type* ttype = type.getType();
     if (!ttype->isPointerTy())
         return Error::errorValue(ErrorType::WrongArgumentType,{"non-struct type"});
     if (!cast<PointerType>(ttype)->getElementType()->isStructTy())
@@ -850,7 +858,7 @@ Value* CastAST::codegen()
         return 0;
     //v->getType()->dump();
     //destinationType->dump();
-    Type* dtype = destinationType.type;
+    Type* dtype = destinationType.getType();
     if (CastInst::isCastable(v->getType(), dtype))
     {
         auto opc = CastInst::getCastOpcode(v, true, dtype, true);

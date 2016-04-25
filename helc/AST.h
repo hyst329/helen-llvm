@@ -28,7 +28,8 @@ struct TypeInfo
 {
     string name;
     Type* type;
-    //TypeInfo(string name, Type* type) : name(name), type(type) { }
+
+    Type* getType();
 };
 
 class AST
@@ -272,9 +273,9 @@ public:
         return origName;
     }
 
-    Type* getReturnType() const
+    Type* getReturnType()
     {
-        return returnType.type;
+        return genericParams.empty() ? returnType.type : returnType.getType();
     }
 
     string& getStyle()
