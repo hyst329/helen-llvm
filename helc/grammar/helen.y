@@ -171,6 +171,12 @@ instruction: statement NEWLINE {
     AST::types[$3] = $5->type;
     $$ = new NullAST();
 }
+| DECLARE TYPE ID style {
+    if(!strcmp($4, "C"))
+        AST::typesCStyle.insert($3);
+    AST::types[$3] = llvm::StructType::create(getGlobalContext(), $3);
+    $$ = new NullAST();
+}
 | TYPE interface ID basetype NEWLINE properties ENDTYPE {
     if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
     $$ = new CustomTypeAST($3, *$6, $4, $2);
@@ -336,7 +342,8 @@ type: INT {
         //Error::error(ErrorType::UndeclaredType, {$1});
     }
     else
-    $$ = new TypeInfo { $1, llvm::PointerType::get(AST::types[$1], 0) };
+    $$ = new TypeInfo { $1, AST::typesCStyle.count($1) ? 
+                        AST::types[$1] : llvm::PointerType::get(AST::types[$1], 0) };
 }
 | INT LPAREN INTLIT RPAREN {
     $$ = new TypeInfo { "i" + std::to_string($3), llvm::IntegerType::get(getGlobalContext(), $3) };

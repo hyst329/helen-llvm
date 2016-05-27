@@ -19,6 +19,7 @@ IRBuilder<> AST::builder(getGlobalContext());
 map<string, AllocaInst*> AST::variables;
 map<string, Function*> AST::functions;
 map<string, Type*> AST::types;
+set<string> AST::typesCStyle;
 map<string, vector<string> > AST::fields;
 map<string, GenericFunction*> AST::genericFunctions;
 stack<string> AST::callstack;
@@ -678,7 +679,17 @@ void CustomTypeAST::compileTime()
 {
     vector<string> fieldNames;
     vector<Type*> fieldTypes;
-    StructType* st = StructType::create(getGlobalContext(), typeName);
+    StructType* st;
+    if (Type * tp = AST::types[typeName])
+        if (((StructType*) tp)->isOpaque())
+            st = (StructType*) tp;
+        else
+        {
+            Error::error(ErrorType::UndeclaredType,{typeName});
+            return;
+        }
+
+    st = StructType::create(getGlobalContext(), typeName);
     bstc = 0;
     if (!baseTypeName.empty())
     {

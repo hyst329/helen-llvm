@@ -56,9 +56,14 @@ void BuiltinFunctions::createArith()
             f->addAttribute(AttributeSet::FunctionIndex, Attribute::AlwaysInline);
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
-            auto it = f->arg_begin();
+            auto it = f->arg_begin();            
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*(it++);
+            right = &*it;
+#else
             left = it++;
             right = it;
+#endif
             switch (c)
             {
             case '+':
@@ -93,7 +98,11 @@ void BuiltinFunctions::createArith()
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
             auto it = f->arg_begin();
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*it;
+#else
             left = it;
+#endif
             switch (c)
             {
             case '+':
@@ -133,8 +142,13 @@ void BuiltinFunctions::createLnC()
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
             auto it = f->arg_begin();
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*(it++);
+            right = &*it;
+#else
             left = it++;
             right = it;
+#endif
             if (s == "<")
                 res = t->isIntegerTy() ? AST::builder.CreateICmpSLT(left, right, "tmp") :
                 AST::builder.CreateFCmpOLT(left, right, "tmp");
@@ -167,8 +181,13 @@ void BuiltinFunctions::createLnC()
             bb = BasicBlock::Create(getGlobalContext(), "entry", f);
             AST::builder.SetInsertPoint(bb);
             auto it = f->arg_begin();
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*(it++);
+            right = &*it;
+#else
             left = it++;
             right = it;
+#endif
             if (s == "~&")
                 res = AST::builder.CreateAnd(left, right, "tmp");
             if (s == "~|")
@@ -188,7 +207,11 @@ void BuiltinFunctions::createLnC()
         bb = BasicBlock::Create(getGlobalContext(), "entry", f);
         AST::builder.SetInsertPoint(bb);
         auto it = f->arg_begin();
-        left = it;
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*it;
+#else
+            left = it;
+#endif
         res = AST::builder.CreateNot(left, "tmp");
         AST::builder.CreateRet(res);
     }
@@ -201,8 +224,13 @@ void BuiltinFunctions::createLnC()
         bb = BasicBlock::Create(getGlobalContext(), "entry", f);
         AST::builder.SetInsertPoint(bb);
         auto it = f->arg_begin();
-        left = it++;
-        right = it;
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*(it++);
+            right = &*it;
+#else
+            left = it++;
+            right = it;
+#endif
         if (s == "&")
             res = AST::builder.CreateAnd(left, right, "tmp");
         if (s == "|")
@@ -219,7 +247,13 @@ void BuiltinFunctions::createLnC()
     bb = BasicBlock::Create(getGlobalContext(), "entry", f);
     AST::builder.SetInsertPoint(bb);
     auto it = f->arg_begin();
-    left = it;
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+            left = &*(it++);
+            right = &*it;
+#else
+            left = it++;
+            right = it;
+#endif
     res = AST::builder.CreateNot(left, "tmp");
     AST::builder.CreateRet(res);
 }
@@ -280,9 +314,17 @@ void BuiltinFunctions::createIO()
         Constant* fmt_ref = ConstantExpr::getGetElementPtr(var, ind);
 #endif
         auto it = printf->arg_begin();
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8
+        Value* val = &*it++;
+#else
         Value* val = it++;
+#endif
         args.push_back(fmt_ref);
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 8        
+        args.push_back(&*(f->arg_begin()));
+#else
         args.push_back(f->arg_begin());
+#endif       
         CallInst* call = AST::builder.CreateCall(printf, args);
         call->setTailCall(true);
         AST::builder.CreateRet(Constant::getNullValue(llvm::IntegerType::getInt64Ty(getGlobalContext())));

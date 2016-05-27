@@ -79,7 +79,9 @@ int main(int argc, char** argv)
     AST::module = llvm::make_unique<Module>("__helenmodule__", getGlobalContext());
     AST::fpm = llvm::make_unique<legacy::FunctionPassManager>(AST::module.get());
     AST::dataLayout = llvm::make_unique<DataLayout>(AST::module.get());
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR < 8
     AST::fpm->add(createBasicAliasAnalysisPass());
+#endif 
     AST::fpm->add(createPromoteMemoryToRegisterPass());
     AST::fpm->add(createInstructionCombiningPass());
     AST::fpm->add(createReassociatePass());

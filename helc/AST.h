@@ -14,6 +14,7 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Scalar.h>
 #include <map>
+#include <set>
 #include <stack>
 #include <vector>
 #include <memory>
@@ -44,6 +45,7 @@ public:
     static stack<string> callstack;
     static map<string, Function*> functions;
     static map<string, Type*> types;
+    static set<string> typesCStyle;
     static map<string, vector<string> > fields;
     static map<string, GenericFunction*> genericFunctions;
     static AllocaInst* createEntryBlockAlloca(Function* f, Type* t, const std::string& VarName);
