@@ -1,0 +1,14 @@
+include file.f4i
+
+declare fopen(ptr char filename, ptr char mode) -> ptr FILE style(C)
+declare fclose(ptr FILE stream) -> int style(C)
+
+fun constructor File(String name)
+    String mode = "r"
+    this.handle = fopen(name.cstr, mode.cstr)
+    delete mode
+endfun
+
+fun destructor File()
+    fclose(this.handle)
+endfun

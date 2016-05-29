@@ -1,0 +1,8 @@
+declare type FILE style(C)
+include ../core/string.f4i
+
+type File
+    ptr FILE handle
+    declare constructor File(String name)
+    declare destructor File()
+endtype

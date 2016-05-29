@@ -17,7 +17,7 @@ foreach(HelstdDir ${HelstdDirs})
                      COMMAND ${CMAKE_COMMAND} -E copy_directory 
                      ${HelstdDir} ${CMAKE_BINARY_DIR}/include/${DIR})
 endforeach()
-set(HelstdSrcFiles core/string.f4)
+set(HelstdSrcFiles core/string.f4 io/file.f4)
 set(HelstdObjFiles "")
 make_directory(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 make_directory(${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj)
@@ -32,17 +32,15 @@ foreach(HelstdSrcFile ${HelstdSrcFiles})
   add_custom_command(TARGET helstd_copy PRE_BUILD
                      COMMAND llc ${CMAKE_BINARY_DIR}/include/${HelstdSrcFile}.bc -filetype=obj
                      -o ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o)
-  set(HelstdObjFiles "${HelstdObjFiles} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o")  
+  set(HelstdObjFiles ${HelstdObjFiles} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/${SRC_FN}.o)  
 endforeach()
-string(STRIP ${HelstdObjFiles} HelstdObjFiles)
+foreach(HelstdObjFile ${HelstdObjFiles})
+string(STRIP ${HelstdObjFile} HelstdObjFile)
+endforeach()
 message("HSOF ${HelstdObjFiles}")
-#set(HelstdObjFiles ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/obj/*.o)
-message("HSOF ${HelstdObjFiles}")
-#add_custom_command(TARGET helen_lib_copy POST_BUILD
-#                   COMMAND ar rcs ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libhelstd.a ${HelstdObjFiles})
-add_library(helstd STATIC ${HelstdObjFiles})
+add_library(helstd STATIC "${HelstdObjFiles}")
 add_dependencies(helstd helstd_copy)
-set_source_files_properties(${HelstdObjFiles} PROPERTIES EXTERNAL_OBJECT true GENERATED true)
+set_source_files_properties("${HelstdObjFiles}" PROPERTIES EXTERNAL_OBJECT true GENERATED true)
 set_target_properties(helstd PROPERTIES LINKER_LANGUAGE C
                       ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
                       
