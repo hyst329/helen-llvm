@@ -156,6 +156,20 @@ public:
     virtual Value* codegen();
 };
 
+class ArrayInitialiserAST : public AST
+{
+    TypeInfo elementTypeInfo;
+    vector<shared_ptr<AST> > arguments;
+public:
+
+    ArrayInitialiserAST(TypeInfo elementTypeInfo, vector<shared_ptr<AST> > arguments)
+    : elementTypeInfo(elementTypeInfo)
+    , arguments(arguments)
+    {
+    }
+    virtual Value* codegen();
+};
+
 class ConditionAST : public AST
 {
     shared_ptr<AST> condition;

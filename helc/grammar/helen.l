@@ -75,6 +75,8 @@ include                  BEGIN(INCLUDE);
 \)                       return RPAREN;
 \[                       return LBRK;
 \]                       return RBRK;
+\{                       return LBRACE;
+\}                       return RBRACE;
 \;                       return SEMI;
 \:                       return COLON;
 \,                       return COMMA;

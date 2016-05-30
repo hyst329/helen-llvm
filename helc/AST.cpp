@@ -147,6 +147,41 @@ Value* VariableAST::codegen()
     }
 }
 
+Value* ArrayInitialiserAST::codegen()
+{
+    // TODO: Replace with generic array class
+    Constant* zero = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), 0);
+    ArrayType* atp = ArrayType::get(elementTypeInfo.type, arguments.size());
+    Type* etp = atp->getElementType();
+    size_t size = dataLayout->getTypeStoreSize(atp);
+    Value* memoryPtr = builder.CreateCall(module->getFunction("malloc"), ConstantInt::get(Type::getInt32Ty(getGlobalContext()), size), "memtmp");
+    Value* arr = builder.CreateBitCast(memoryPtr, atp, "arrtmp");
+    for (int i = 0; i < arguments.size(); i++)
+    {
+        Constant* idx = ConstantInt::get(Type::getInt64Ty(getGlobalContext()), i);
+        Value * ind[] = {zero, idx};
+        Value* v = builder.CreateInBoundsGEP(arr, ind, "indtmpptr");
+        Value* elem = arguments[i]->codegen();
+        if (CastInst::isCastable(elem->getType(), etp))
+        {
+            auto opc = CastInst::getCastOpcode(elem, true, etp, true);
+            Value* casted = builder.CreateCast(opc, elem, etp, "casttmp");
+            builder.CreateStore(casted, v);
+            
+        }
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 7
+        else if (CastInst::isBitOrNoopPointerCastable(v->getType(), etp, *dataLayout.get()))
+#else
+        else if (CastInst::isBitOrNoopPointerCastable(v->getType(), etp))
+#endif
+        {
+            Value* casted = builder.CreateBitOrPointerCast(elem, etp, "casttmp");
+            builder.CreateStore(casted, v);
+        }
+        // TODO: else error (uncastable)
+    }
+}
+
 Value* ConditionAST::codegen()
 {
     Value* cond = condition->codegen();

@@ -58,6 +58,7 @@ static bool lastTerm = 0;
 %token NEWLINE
 %token LPAREN RPAREN
 %token LBRK RBRK
+%token LBRACE RBRACE
 %token LARROW RARROW
 %token SEMI COLON COMMA POINT ELLIPSIS
 %type<ast> program
@@ -407,6 +408,9 @@ term: literal {
 }
 | ID LBRK typelist RBRK {
     $$ = new GenericFunctionInstanceAST($1, *$3);
+}
+| LBRACE exprlist RBRACE type {
+    $$ = new ArrayInitialiserAST(*$4, *$2);
 }
 | ID {
     $$ = new VariableAST($1);
