@@ -10,6 +10,7 @@ message(STATUS "Found Bison ${BISON_VERSION}")
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Boost 1.55 REQUIRED COMPONENTS filesystem system)
+find_package(Threads REQUIRED)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -23,8 +24,8 @@ ADD_FLEX_BISON_DEPENDENCY(HelenScanner HelenParser)
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -lpthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 
 set(SOURCE_FILES main.cpp
                  AST.cpp AST.h
@@ -37,6 +38,6 @@ add_executable(helc ${SOURCE_FILES} ${GENERATED_SOURCE_FILES})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader scalaropts bitwriter ipo)
 
-target_link_libraries(helc ${Boost_LIBRARIES} ${llvm_libs})
+target_link_libraries(helc ${Boost_LIBRARIES} ${llvm_libs} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS helc DESTINATION bin)
