@@ -17,7 +17,7 @@ extern "C" int yywrap() {
 void yyerror(Helen::AST* ast, const char* msg) {
     /* To be fixed*/
     printf("%s in line %d", msg, yylineno);
-    Error::error(ErrorType::SyntaxError, {msg + string("\n")});
+    Helen::Error::error(ErrorType::SyntaxError, {msg + string("\n")});
 }
 stack<YY_BUFFER_STATE> includeStack;
 set<string> includedFiles;
@@ -93,25 +93,25 @@ include                  BEGIN(INCLUDE);
                          currentFilename = path;
                          filenameStack.push(path);
                          includeStack.push(YY_CURRENT_BUFFER);
-                         if(!checkPath(path, abspath)) 
-                             Error::error(ErrorType::FileNotFound, { path });
+                         if(!checkPath(path, abspath))
+                             Helen::Error::error(ErrorType::FileNotFound, { path });
                          filecurrent = abspath;
                          while(!filecurrent.empty())
                          {
                              if (filecurrent.back() != '/' && filecurrent.back() != '\\')
                                 filecurrent.pop_back();
-                             else break;                             
+                             else break;
                          }
                          if(filecurrent == "")
                              filecurrent = ".";
                          else filecurrent.pop_back();
                          yyin = fopen(abspath.c_str(), "r");
                          if(!yyin)
-                             Error::error(ErrorType::FileNotFound, { path });
+                             Helen::Error::error(ErrorType::FileNotFound, { path });
                          includePaths.insert(includePaths.begin(), filecurrent);
                          yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
                          begin:
-                         BEGIN(INITIAL);        
+                         BEGIN(INITIAL);
 }
 [\+\-\*\/\<\>\=@\&\|\~\!]+       yylval.vstr = strdup(yytext); return OPERATOR;
 [\+\-]?[0-9]+[\.\,][0-9]+       yylval.vreal = atof(yytext); return REALLIT;

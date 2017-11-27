@@ -111,7 +111,7 @@ static bool lastTerm = 0;
     NamedArgs* arglist;
     std::vector<shared_ptr<Helen::AST> >* exprlist;
     std::vector<std::string>* idlist;
-    std::vector<Helen::TypeInfo>* typelist;   
+    std::vector<Helen::TypeInfo>* typelist;
 }
 %%
 program: instseq {
@@ -167,19 +167,19 @@ instruction: statement NEWLINE {
     $$ = new FunctionCallAST("__resize", {shared_ptr<AST>($4)});
 }
 | TYPE ALIAS ID OPERATOR type {
-    if(strcmp($4, "=")) Error::error(ErrorType::UnexpectedOperator, {$4});
-    if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
+    if(strcmp($4, "=")) Helen::Error::error(ErrorType::UnexpectedOperator, {$4});
+    if(AST::types.find($3) != AST::types.end()) Helen::Error::error(ErrorType::TypeRedefined, {$3});
     AST::types[$3] = $5->type;
     $$ = new NullAST();
 }
 | DECLARE TYPE ID style {
     if(!strcmp($4, "C"))
         AST::typesCStyle.insert($3);
-    AST::types[$3] = llvm::StructType::create(getGlobalContext(), $3);
+    AST::types[$3] = llvm::StructType::create(Helen::AST::context, $3);
     $$ = new NullAST();
 }
 | TYPE interface ID basetype NEWLINE properties ENDTYPE {
-    if(AST::types.find($3) != AST::types.end()) Error::error(ErrorType::TypeRedefined, {$3});
+    if(AST::types.find($3) != AST::types.end()) Helen::Error::error(ErrorType::TypeRedefined, {$3});
     $$ = new CustomTypeAST($3, *$6, $4, $2);
     ((CustomTypeAST*)$$)->compileTime();
 }
@@ -205,7 +205,7 @@ interface: INTERFACE {
 }
 | /* empty */ {
     $$ = 0;
-} 
+}
 qid: qid COLON ID {
     $$ = strdup((std::string($1) + "-" + $3).c_str());
 }
@@ -239,15 +239,15 @@ statement: declaration {
     $$ = $1;
 }
 declaration: type ID OPERATOR expression {
-    if(strcmp($3, "=")) Error::error(ErrorType::UnexpectedOperator, {$3});
+    if(strcmp($3, "=")) Helen::Error::error(ErrorType::UnexpectedOperator, {$3});
     $$ = new DeclarationAST(*$1, $2, shared_ptr<AST>($4));
 }
 | type ID {
     $$ = new DeclarationAST(*$1, $2);
 }
 funprot: genparams ID LPAREN arglist RPAREN style {
-    $$ = new FunctionPrototypeAST($2, $4->types, $4->names, 
-        { "v", Type::getVoidTy(getGlobalContext()) }, $6, *$1, $4->vararg);
+    $$ = new FunctionPrototypeAST($2, $4->types, $4->names,
+        { "v", Type::getVoidTy(Helen::AST::context) }, $6, *$1, $4->vararg);
     delete $1;
 }
 | genparams ID LPAREN arglist RPAREN RARROW type style {
@@ -263,19 +263,19 @@ funprot: genparams ID LPAREN arglist RPAREN style {
 }
 | CONSTRUCTOR ID LPAREN arglist RPAREN {
     $$ = new FunctionPrototypeAST("__ctor", $4->types, $4->names,
-                                  { "v", llvm::Type::getVoidTy(getGlobalContext()) }, 
+                                  { "v", llvm::Type::getVoidTy(Helen::AST::context) },
                                   string("__method_") + $2, vector<string>(), 0);
 }
 | DESTRUCTOR ID LPAREN RPAREN {
     $$ = new FunctionPrototypeAST("__dtor", std::vector<TypeInfo>(), std::vector<std::string>(),
-                                  { "v", llvm::Type::getVoidTy(getGlobalContext()) },
+                                  { "v", llvm::Type::getVoidTy(Helen::AST::context) },
                                   string("__method_") + $2, vector<string>(), 0);
 }
 style: STYLE LPAREN ID RPAREN {
     $$ = $3;
 }
 | METHOD LPAREN ID RPAREN {
-    if(AST::types.find($3) == AST::types.end()) Error::error(ErrorType::UndeclaredType, {$3});
+    if(AST::types.find($3) == AST::types.end()) Helen::Error::error(ErrorType::UndeclaredType, {$3});
     $$ = strdup((string("__method_") + $3).c_str());
 }
 | /* empty */ {
@@ -325,29 +325,29 @@ typelist: typelist COMMA type {
     delete $1;
 }
 type: INT {
-    $$ = new TypeInfo { "i64", llvm::Type::getInt64Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i64", llvm::Type::getInt64Ty(Helen::AST::context) };
 }
 | REAL {
-    $$ = new TypeInfo { "r", llvm::Type::getDoubleTy(getGlobalContext()) };
+    $$ = new TypeInfo { "r", llvm::Type::getDoubleTy(Helen::AST::context) };
 }
 | CHAR {
-    $$ = new TypeInfo { "i8", llvm::Type::getInt8Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i8", llvm::Type::getInt8Ty(Helen::AST::context) };
 }
 | LOGICAL {
-    $$ = new TypeInfo { "i1", llvm::Type::getInt1Ty(getGlobalContext()) };
+    $$ = new TypeInfo { "i1", llvm::Type::getInt1Ty(Helen::AST::context) };
 }
 | ID {
     if(AST::types.find($1) == AST::types.end()) {
         // maybe it's a type currently being declared?
         $$ = new TypeInfo { $1, 0 };
-        //Error::error(ErrorType::UndeclaredType, {$1});
+        //Helen::Error::error(ErrorType::UndeclaredType, {$1});
     }
     else
-    $$ = new TypeInfo { $1, AST::typesCStyle.count($1) ? 
+    $$ = new TypeInfo { $1, AST::typesCStyle.count($1) ?
                         AST::types[$1] : llvm::PointerType::get(AST::types[$1], 0) };
 }
 | INT LPAREN INTLIT RPAREN {
-    $$ = new TypeInfo { "i" + std::to_string($3), llvm::IntegerType::get(getGlobalContext(), $3) };
+    $$ = new TypeInfo { "i" + std::to_string($3), llvm::IntegerType::get(Helen::AST::context, $3) };
 }
 | ARRAY LPAREN INTLIT RPAREN type {
     $$ = new TypeInfo { "a" + $5->name, llvm::ArrayType::get($5->type, $3) };
@@ -367,7 +367,7 @@ exprlist: exprlist COMMA expression {
     $$ = new vector<shared_ptr<AST> >;
 }
 expression: expression OPERATOR expression {
-    
+
     double last = DBL_MAX;
     if(dynamic_cast<FunctionCallAST*>($3) && !lastTerm)
         last = prec.find(((FunctionCallAST*)($3))->getFunctionName()) == prec.end() ?
@@ -381,7 +381,7 @@ expression: expression OPERATOR expression {
     }
     else {
         shared_ptr<AST> tmp = ((FunctionCallAST*)($3))->getArguments()[0];
-        ((FunctionCallAST*)($3))->getArguments()[0] = 
+        ((FunctionCallAST*)($3))->getArguments()[0] =
         shared_ptr<AST>(new FunctionCallAST(operatorMarker + $2, {shared_ptr<AST>($1), tmp}));
         $$ = $3;
     }

@@ -10,7 +10,8 @@ set(SOURCE_FILES main.cpp)
 find_package(Boost 1.55 REQUIRED COMPONENTS filesystem system)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -lpthread")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread")
 
 BISON_TARGET(HelmakeParser grammar/helmake.y
              ${PROJECT_SOURCE_DIR}/grammar/helmake.parser.cpp COMPILE_FLAGS "--verbose")
