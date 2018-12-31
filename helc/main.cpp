@@ -83,8 +83,8 @@ int main(int argc, char **argv) {
   AST::module = llvm::make_unique<Module>("__helenmodule__", AST::context);
   AST::fpm = llvm::make_unique<legacy::FunctionPassManager>(AST::module.get());
   AST::dataLayout = llvm::make_unique<DataLayout>(AST::module.get());
-  AST::fpm->add(createPromoteMemoryToRegisterPass());
-  AST::fpm->add(createInstructionCombiningPass());
+  //AST::fpm->add(createPromoteMemoryToRegisterPass());
+  //AST::fpm->add(createInstructionCombiningPass());
   AST::fpm->add(createReassociatePass());
   AST::fpm->add(createGVNPass());
   AST::fpm->add(createCFGSimplificationPass());
@@ -124,6 +124,6 @@ int main(int argc, char **argv) {
   if (outputFilename == "-")
     outputFilename = inputFilename + ".bc";
   raw_fd_ostream fdos(outputFilename, ec, sys::fs::OpenFlags::F_None);
-  WriteBitcodeToFile(AST::module.get(), fdos);
+  WriteBitcodeToFile(*AST::module.get(), fdos);
   return 0;
 }

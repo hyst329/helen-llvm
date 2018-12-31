@@ -24,15 +24,37 @@ using namespace std;
 namespace Helen {
 class GenericFunction;
 
+/**
+ * Struct storing a relationship between Helen's types and LLVM underlying ones.
+ * This structure helps to get LLVM type by identifier defined in Helen sources.
+ */
 struct TypeInfo {
+  /**
+   * Name of a type defined in Helen.
+   * An identifier (such as `String`) or type keyword (such as `int`).
+   */
   string name;
+  /**
+   * Pointer to LLVM underlying type.
+   * .
+   */
   Type *type;
-
+  /**
+   * Get the type, either primitive or Helen's composite one.
+   * @return Pointer to a type (by name or if otherwise defined)
+   */
   Type *getType();
 };
 
+/**
+ * Basic abstract class for Helen's Abstract Syntax Tree (AST) node.
+ * This class serves as a base class for all AST nodes.
+ */
 class AST {
 public:
+  /**
+   * This method does the main job - namely, generating LLVM IR code.
+   */
   virtual Value *codegen() = 0;
   static LLVMContext context;
   static unique_ptr<Module> module;
@@ -52,8 +74,9 @@ public:
 };
 
 class ConstantIntAST : public AST {
-  int64_t value;
-  int bitwidth;
+  // TODO: Signedness
+  uint64_t value;
+  uint32_t bitwidth;
 
 public:
   ConstantIntAST(int64_t value, int bitwidth = 64)
@@ -72,7 +95,7 @@ public:
 };
 
 class ConstantCharAST : public AST {
-  char value;
+  uint8_t value;
 
 public:
   ConstantCharAST(char value) : value(value) {}
@@ -273,7 +296,7 @@ class CustomTypeAST : public AST {
   bool isInterface;
   vector<string> baseInterfaces;
   vector<shared_ptr<AST>> instructions;
-  int bstc;                         // helper field
+  uint64_t bstc;                         // helper field
   vector<string> overriddenMethods; // helper field
 public:
   CustomTypeAST(string typeName, vector<shared_ptr<AST>> instructions,

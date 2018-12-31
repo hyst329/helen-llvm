@@ -42,11 +42,11 @@ AST *Error::error(ErrorType et, vector<string> args) {
     fmt = fmt % s;
   fprintf(stderr, "Error [%04d]: %s\n", et, fmt.str().c_str());
   errorFlag = 1;
-  return 0;
+  return nullptr;
 }
 
 Value *Error::errorValue(ErrorType et, vector<string> args) {
   error(et, args);
-  return 0;
+  return nullptr;
 }
 } // namespace Helen

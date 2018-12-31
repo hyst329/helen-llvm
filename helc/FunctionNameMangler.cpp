@@ -41,7 +41,7 @@ string FunctionNameMangler::humanReadableName(string mangledName) {
   vector<string> strs;
   boost::split(strs, mangledName, boost::is_any_of("_"));
   name = strs[0] + "(";
-  for (int i = 1; i < strs.size(); i++) {
+  for (uint64_t i = 1; i < strs.size(); i++) {
     if (strs[i][0] == 'v') {
       name += "array ";
       strs[i] = strs[i].substr(1);
@@ -90,10 +90,10 @@ string FunctionNameMangler::typeString(Type *t) {
       t = t->getArrayElementType();
     }
     if (t->isPointerTy()) {
-      PointerType *pt = (PointerType *)t;
+      PointerType *pt = static_cast<PointerType *>(t);
       Type *et = pt->getElementType();
       if (et->isStructTy()) {
-        res += "type." + string(((StructType *)et)->getName());
+        res += "type." + string((static_cast<StructType *>(et))->getName());
         return res;
       } else {
         res += "p";

@@ -9,7 +9,7 @@ message(STATUS "Found Bison ${BISON_VERSION}")
 set(SOURCE_FILES main.cpp)
 find_package(Boost 1.55 REQUIRED COMPONENTS filesystem system)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -static-libgcc -static-libstdc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -static-libgcc -static-libstdc++")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread")
 

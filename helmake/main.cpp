@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   string helc = boost::any_cast<string>(variableMap["HELEN_COMPILER"][0]);
   helc = fs::system_complete(helc).generic_string();
   fprintf(makefile, "HELC = %s\n", helc.c_str());
-  fprintf(makefile, "LLC = llc\n", helc.c_str());
+  fprintf(makefile, "LLC = llc\n");
   fprintf(makefile, "LD = gcc\n");
   // general Helen project structure
   string include = boost::any_cast<string>(variableMap["HELEN_INCLUDE"][0]);

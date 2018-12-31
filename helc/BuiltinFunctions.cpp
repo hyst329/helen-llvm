@@ -38,7 +38,7 @@ void BuiltinFunctions::createArith() {
   Function *f;
   BasicBlock *bb;
   string name;
-  Value *left, *right, *res;
+  Value *left, *right, *res = nullptr;
   Type *i8 = Type::getInt8Ty(AST::context);
   Type *i16 = Type::getInt16Ty(AST::context);
   Type *i32 = Type::getInt32Ty(AST::context);
@@ -118,7 +118,7 @@ void BuiltinFunctions::createLnC() {
   Function *f;
   BasicBlock *bb;
   string name;
-  Value *left, *right, *res;
+  Value *left, *right, *res = nullptr;
   Type *i8 = Type::getInt8Ty(AST::context);
   Type *i16 = Type::getInt16Ty(AST::context);
   Type *i32 = Type::getInt32Ty(AST::context);
@@ -271,7 +271,7 @@ void BuiltinFunctions::createIO() {
   Type *i8 = Type::getInt8Ty(AST::context);
   Type *i1 = Type::getInt1Ty(AST::context);
   Type *s = PointerType::get(i8, 0);
-  Type *v = Type::getVoidTy(AST::context);
+  //Type *v = Type::getVoidTy(AST::context);
   for (Type *t : {i16, i32, i64, r64, i8, i1, s}) {
     string fmtstr;
     if (t == i16)
@@ -293,7 +293,7 @@ void BuiltinFunctions::createIO() {
     Function *f = Function::Create(ft, Function::LinkOnceODRLinkage, name,
                                    AST::module.get());
     f->addAttribute(functionIndex, Attribute::AlwaysInline);
-    BasicBlock *parent = AST::builder.GetInsertBlock();
+    //BasicBlock *parent = AST::builder.GetInsertBlock();
     BasicBlock *bb = BasicBlock::Create(AST::context, "entry", f);
     AST::builder.SetInsertPoint(bb);
     vector<Value *> args;
@@ -308,8 +308,8 @@ void BuiltinFunctions::createIO() {
         Constant::getNullValue(llvm::IntegerType::getInt32Ty(AST::context));
     Constant *ind[] = {zero, zero};
     Constant *fmt_ref = ConstantExpr::getGetElementPtr(stype, var, ind);
-    auto it = printf->arg_begin();
-    Value *val = &*it++;
+    //auto it = printf->arg_begin();
+    //Value *val = &*it++;
     args.push_back(fmt_ref);
     args.push_back(&*(f->arg_begin()));
     CallInst *call = AST::builder.CreateCall(printf, args);

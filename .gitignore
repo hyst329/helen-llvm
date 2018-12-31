@@ -92,3 +92,9 @@ helc/cmake/*.h
 
 # NetBeans project files
 nbproject/
+
+# Build Directory
+build/
+
+# Visual Studio Code-specific stuff
+.vscode/
