@@ -92,7 +92,8 @@ Value *ConstantStringAST::codegen() {
   std::vector<Value *> argValues = {str, v, len};
   std::vector<Type *> argTypes = {str->getType(), v->getType(), len->getType()};
   string ctorname = FunctionNameMangler::mangleName(
-      "__ctor", argTypes, "Helen", (static_cast<StructType *>(type))->getName());
+      "__ctor", argTypes, "Helen",
+      (static_cast<StructType *>(type))->getName());
   Function *ctor = module->getFunction(ctorname); // functions[ctorname];
   // printf("ctor=%d %s\n", ctor, ctorname.c_str());
   if (ctor) {
@@ -214,7 +215,7 @@ Value *LoopAST::codegen() {
   if (initial)
     initial->codegen();
   Function *f = builder.GetInsertBlock()->getParent();
-  //BasicBlock *preheaderBB = builder.GetInsertBlock();
+  // BasicBlock *preheaderBB = builder.GetInsertBlock();
   BasicBlock *loopBB = BasicBlock::Create(AST::context, "loop", f);
   builder.CreateBr(loopBB);
   builder.SetInsertPoint(loopBB);
@@ -229,7 +230,7 @@ Value *LoopAST::codegen() {
   if (condtype->isDoubleTy())
     cond = builder.CreateFCmpONE(cond, Constant::getNullValue(condtype),
                                  "condtmp");
-  //BasicBlock *loopEndBB = builder.GetInsertBlock();
+  // BasicBlock *loopEndBB = builder.GetInsertBlock();
   BasicBlock *afterBB = BasicBlock::Create(AST::context, "afterloop", f);
   builder.CreateCondBr(cond, loopBB, afterBB);
   builder.SetInsertPoint(afterBB);
@@ -256,11 +257,13 @@ Value *FunctionCallAST::codegen() {
           idx = builder.CreateSub(idx, one);
           Value *ind[] = {zero, idx};
           if (!dynamic_cast<VariableAST *>(leftf->arguments[0].get())) {
-            return Error::errorValue(ErrorType::AssignmentError,
-                                     {std::to_string(reinterpret_cast<size_t>(left.get()))});
+            return Error::errorValue(
+                ErrorType::AssignmentError,
+                {std::to_string(reinterpret_cast<size_t>(left.get()))});
           }
           AllocaInst *aarr = variables.at(
-              (static_cast<VariableAST *>(leftf->arguments[0].get()))->getName());
+              (static_cast<VariableAST *>(leftf->arguments[0].get()))
+                  ->getName());
           ;
           builder.CreateStore(arr, aarr);
           Value *v = builder.CreateInBoundsGEP(aarr, ind, "indtmpptr");
@@ -272,7 +275,8 @@ Value *FunctionCallAST::codegen() {
           if (!dynamic_cast<VariableAST *>(leftf->arguments[1].get()))
             return Error::errorValue(ErrorType::WrongArgumentType,
                                      {"must be ID"});
-          string name = (static_cast<VariableAST *>(leftf->arguments[1].get()))->getName();
+          string name = (static_cast<VariableAST *>(leftf->arguments[1].get()))
+                            ->getName();
           vector<string> fie =
               fields[static_cast<StructType *>(elTy)->getName()];
           auto field = std::find(fie.begin(), fie.end(), name);
@@ -281,11 +285,13 @@ Value *FunctionCallAST::codegen() {
           }
           int64_t pos = field - fie.begin();
           Value *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
-          Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context), static_cast<uint64_t>(pos));
+          Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context),
+                                        static_cast<uint64_t>(pos));
           Value *idx[] = {zero, ind};
           if (!dynamic_cast<VariableAST *>(leftf->arguments[0].get())) {
-            return Error::errorValue(ErrorType::AssignmentError,
-                                     {std::to_string(reinterpret_cast<size_t>(left.get()))});
+            return Error::errorValue(
+                ErrorType::AssignmentError,
+                {std::to_string(reinterpret_cast<size_t>(left.get()))});
           }
           Value *tmpptr = builder.CreateInBoundsGEP(arr, idx, "indtmpptr");
           Value *v = builder.CreateStore(right->codegen(), tmpptr);
@@ -297,8 +303,9 @@ Value *FunctionCallAST::codegen() {
     }
     VariableAST *lefte = dynamic_cast<VariableAST *>(left.get());
     if (!lefte)
-      return Error::errorValue(ErrorType::AssignmentError,
-                               {std::to_string(reinterpret_cast<size_t>(left.get()))});
+      return Error::errorValue(
+          ErrorType::AssignmentError,
+          {std::to_string(reinterpret_cast<size_t>(left.get()))});
     Value *v = right->codegen();
     if (!v)
       return nullptr;
@@ -357,7 +364,8 @@ Value *FunctionCallAST::codegen() {
         }
         int64_t pos = field - fie.begin();
         Value *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
-        Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context), static_cast<uint64_t>(pos));
+        Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context),
+                                      static_cast<uint64_t>(pos));
         Value *right[] = {zero, ind};
         Value *tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
         Value *f = builder.CreateLoad(tmpptr, "indtmp");
@@ -373,7 +381,8 @@ Value *FunctionCallAST::codegen() {
       }
       int64_t pos = field - fie.begin();
       Value *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
-      Value *ind = ConstantInt::get(Type::getInt32Ty(AST::context), static_cast<uint64_t>(pos));
+      Value *ind = ConstantInt::get(Type::getInt32Ty(AST::context),
+                                    static_cast<uint64_t>(pos));
       Value *right[] = {zero, ind};
       Value *tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
       return builder.CreateLoad(tmpptr, "indtmp");
@@ -529,8 +538,8 @@ Function *FunctionAST::codegen() {
     return nullptr;
 
   if (!f->empty())
-    return static_cast<Function *>(Error::errorValue(ErrorType::FunctionRedefined,
-                                         {proto->getName()}));
+    return static_cast<Function *>(
+        Error::errorValue(ErrorType::FunctionRedefined, {proto->getName()}));
   BasicBlock *parent = builder.GetInsertBlock();
   BasicBlock *bb = BasicBlock::Create(AST::context, "entry", f);
   builder.SetInsertPoint(bb);
@@ -612,10 +621,13 @@ Value *CustomTypeAST::codegen() {
       ind++;
   }
   vector<string> fieldNames = fields[typeName];
-  vector<Type *> fieldTypes = (static_cast<StructType *>(types[typeName]))->elements();
+  vector<Type *> fieldTypes =
+      (static_cast<StructType *>(types[typeName]))->elements();
   for (uint64_t i = 0; i < bstc; i++) {
     if (fieldTypes[i]->isPointerTy()) {
-      if ((static_cast<PointerType *>(fieldTypes[i]))->getElementType()->isFunctionTy() &&
+      if ((static_cast<PointerType *>(fieldTypes[i]))
+              ->getElementType()
+              ->isFunctionTy() &&
           find(overriddenMethods.begin(), overriddenMethods.end(),
                fieldNames[i]) == overriddenMethods.end()) {
         // printf("Method '%s' generated as base-class\n",
@@ -641,7 +653,8 @@ Value *CustomTypeAST::codegen() {
         // TODO: error if not bf
         int idx = 0;
         for (auto &arg : f->args()) {
-          arg.setName((static_cast<Argument *>(bf->arg_begin()))[idx++].getName());
+          arg.setName(
+              (static_cast<Argument *>(bf->arg_begin()))[idx++].getName());
           AllocaInst *alloca =
               createEntryBlockAlloca(f, arg.getType(), arg.getName());
           builder.CreateStore(&arg, alloca);
@@ -674,8 +687,7 @@ void CustomTypeAST::compileTime() {
   if (Type *tp = AST::types[typeName]) {
     if ((static_cast<StructType *>(tp))->isOpaque()) {
       st = static_cast<StructType *>(tp);
-    }
-    else {
+    } else {
       Error::error(ErrorType::UndeclaredType, {typeName});
       return;
     }
@@ -699,9 +711,11 @@ void CustomTypeAST::compileTime() {
     for (uint64_t i = 0; i < bstc; i++) {
       Type *tp = bst->getElementType(static_cast<uint32_t>(i));
       if (tp->isPointerTy()) {
-        if ((static_cast<PointerType *>(tp))->getElementType()->isFunctionTy()) {
-          FunctionType *ft =
-              static_cast<FunctionType *>((static_cast<PointerType *>(tp))->getElementType());
+        if ((static_cast<PointerType *>(tp))
+                ->getElementType()
+                ->isFunctionTy()) {
+          FunctionType *ft = static_cast<FunctionType *>(
+              (static_cast<PointerType *>(tp))->getElementType());
           auto ret = ft->getReturnType();
           std::vector<Type *> params = ft->params();
           params[0] = PointerType::get(st, 0);
@@ -748,7 +762,8 @@ void CustomTypeAST::compileTime() {
       }
       fieldNames.push_back(fpi->getOriginalName());
       FunctionType *ft = FunctionType::get(
-          fpi->getReturnType() ? fpi->getReturnType() : PointerType::get(st, 0), argtypes, false);
+          fpi->getReturnType() ? fpi->getReturnType() : PointerType::get(st, 0),
+          argtypes, false);
       Type *pf = PointerType::get(ft, 0);
       fieldTypes.push_back(pf);
     }
@@ -777,12 +792,15 @@ Value *NewAST::codegen() {
                      ConstantInt::get(Type::getInt32Ty(AST::context), size)};
   builder.CreateCall(module->getFunction("memset"), msvals);
   Value *v = builder.CreateBitCast(memoryPtr, ptrType, "newtmp");
-  if ((static_cast<PointerType *>(v->getType()))->getElementType()->isStructTy()) {
-    StructType *s =
-        static_cast<StructType *>((static_cast<PointerType *>(v->getType()))->getElementType());
+  if ((static_cast<PointerType *>(v->getType()))
+          ->getElementType()
+          ->isStructTy()) {
+    StructType *s = static_cast<StructType *>(
+        (static_cast<PointerType *>(v->getType()))->getElementType());
     for (uint64_t i = 0; i < s->getNumElements(); i++) {
       if (s->getElementType(static_cast<uint32_t>(i))->isPointerTy()) {
-        if (static_cast<PointerType *>(s->getElementType(static_cast<uint32_t>(i)))
+        if (static_cast<PointerType *>(
+                s->getElementType(static_cast<uint32_t>(i)))
                 ->getElementType()
                 ->isFunctionTy()) {
           // Load the method
@@ -807,7 +825,8 @@ Value *NewAST::codegen() {
     argTypes.push_back(av->getType());
   }
   string ctorname = FunctionNameMangler::mangleName(
-      "__ctor", argTypes, "Helen", (static_cast<StructType *>(ttype))->getName());
+      "__ctor", argTypes, "Helen",
+      (static_cast<StructType *>(ttype))->getName());
   Function *ctor = module->getFunction(ctorname); // functions[ctorname];
   // printf("ctor=%d %s\n", ctor, ctorname.c_str());
   if (ctor) {
@@ -828,7 +847,8 @@ Value *DeleteAST::codegen() {
       return Error::errorValue(ErrorType::NonObjectType);
     Type *type = cast<PointerType>(addr->getType())->getElementType();
     string dtorname = FunctionNameMangler::mangleName(
-        "__dtor", vector<Type *>(), "Helen", (static_cast<StructType *>(type))->getName());
+        "__dtor", vector<Type *>(), "Helen",
+        (static_cast<StructType *>(type))->getName());
     Function *dtor = module->getFunction(dtorname); // functions[dtorname];
     // printf("dtor=%d %s\n", dtor, dtorname.c_str());
     if (dtor) {

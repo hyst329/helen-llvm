@@ -296,7 +296,7 @@ class CustomTypeAST : public AST {
   bool isInterface;
   vector<string> baseInterfaces;
   vector<shared_ptr<AST>> instructions;
-  uint64_t bstc;                         // helper field
+  uint64_t bstc;                    // helper field
   vector<string> overriddenMethods; // helper field
 public:
   CustomTypeAST(string typeName, vector<shared_ptr<AST>> instructions,
