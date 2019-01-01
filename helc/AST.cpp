@@ -83,8 +83,8 @@ Value *ConstantStringAST::codegen() {
         Value *ind[] = {zero, idx};
         Value *tmp = builder.CreateInBoundsGEP(str, ind, "tmp");
         if (f) {
-          Value *ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
-          builder.CreateStore(ft, tmp);
+          // Value *ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
+          builder.CreateStore(f, tmp);
         }
       }
     }
@@ -134,7 +134,7 @@ Value *VariableAST::codegen() {
 
 Value *ArrayInitialiserAST::codegen() {
   // TODO: Replace with generic array class
-  Constant *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
+  Constant *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
   ArrayType *atp = ArrayType::get(elementTypeInfo.type, arguments.size());
   Type *etp = atp->getElementType();
   size_t size = dataLayout->getTypeStoreSize(atp);
@@ -143,7 +143,7 @@ Value *ArrayInitialiserAST::codegen() {
       ConstantInt::get(Type::getInt32Ty(AST::context), size), "memtmp");
   Value *arr = builder.CreateBitCast(memoryPtr, atp, "arrtmp");
   for (uint32_t i = 0; i < arguments.size(); i++) {
-    Constant *idx = ConstantInt::get(Type::getInt64Ty(AST::context), i);
+    Constant *idx = ConstantInt::get(Type::getInt32Ty(AST::context), i);
     Value *ind[] = {zero, idx};
     Value *v = builder.CreateInBoundsGEP(arr, ind, "indtmpptr");
     Value *elem = arguments[i]->codegen();
@@ -202,7 +202,7 @@ Value *ConditionAST::codegen() {
 
   f->getBasicBlockList().push_back(mergeBB);
   builder.SetInsertPoint(mergeBB);
-  /*PHINode* PN = builder.CreatePHI(Type::getInt64Ty(AST::context), 2,
+  /*PHINode* PN = builder.CreatePHI(Type::getInt32Ty(AST::context), 2,
   "iftmp");
 
   PN->addIncoming(thenValue, thenBB);
@@ -234,7 +234,7 @@ Value *LoopAST::codegen() {
   BasicBlock *afterBB = BasicBlock::Create(AST::context, "afterloop", f);
   builder.CreateCondBr(cond, loopBB, afterBB);
   builder.SetInsertPoint(afterBB);
-  return Constant::getNullValue(Type::getInt64Ty(AST::context));
+  return Constant::getNullValue(Type::getInt32Ty(AST::context));
 }
 
 Value *FunctionCallAST::codegen() {
@@ -252,8 +252,8 @@ Value *FunctionCallAST::codegen() {
           if (!idx->getType()->isIntegerTy(64))
             return Error::errorValue(ErrorType::WrongArgumentType,
                                      {"must be int"});
-          Constant *one = ConstantInt::get(Type::getInt64Ty(AST::context), 1);
-          Constant *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
+          Constant *one = ConstantInt::get(Type::getInt32Ty(AST::context), 1);
+          Constant *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
           idx = builder.CreateSub(idx, one);
           Value *ind[] = {zero, idx};
           if (!dynamic_cast<VariableAST *>(leftf->arguments[0].get())) {
@@ -284,8 +284,8 @@ Value *FunctionCallAST::codegen() {
             return Error::errorValue(ErrorType::UndeclaredVariable, {name});
           }
           int64_t pos = field - fie.begin();
-          Value *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
-          Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context),
+          Value *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
+          Value *ind = ConstantInt::get(Type::getInt32Ty(AST::context),
                                         static_cast<uint64_t>(pos));
           Value *idx[] = {zero, ind};
           if (!dynamic_cast<VariableAST *>(leftf->arguments[0].get())) {
@@ -325,8 +325,8 @@ Value *FunctionCallAST::codegen() {
       Value *right = arguments[1]->codegen();
       if (!right->getType()->isIntegerTy(64))
         return Error::errorValue(ErrorType::WrongArgumentType, {"must be int"});
-      Constant *one = ConstantInt::get(Type::getInt64Ty(AST::context), 1);
-      Constant *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
+      Constant *one = ConstantInt::get(Type::getInt32Ty(AST::context), 1);
+      Constant *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
       right = builder.CreateSub(right, one);
       Value *ind[] = {zero, right};
       AllocaInst *aleft = dyn_cast<AllocaInst>(left);
@@ -363,8 +363,8 @@ Value *FunctionCallAST::codegen() {
           return Error::errorValue(ErrorType::UndeclaredFunction, {name, name});
         }
         int64_t pos = field - fie.begin();
-        Value *zero = ConstantInt::get(Type::getInt64Ty(AST::context), 0);
-        Value *ind = ConstantInt::get(Type::getInt64Ty(AST::context),
+        Value *zero = ConstantInt::get(Type::getInt32Ty(AST::context), 0);
+        Value *ind = ConstantInt::get(Type::getInt32Ty(AST::context),
                                       static_cast<uint64_t>(pos));
         Value *right[] = {zero, ind};
         Value *tmpptr = builder.CreateInBoundsGEP(left, right, "indtmpptr");
@@ -810,8 +810,8 @@ Value *NewAST::codegen() {
           Value *ind[] = {zero, idx};
           Value *tmp = builder.CreateInBoundsGEP(v, ind, "tmp");
           if (f) {
-            Value *ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
-            builder.CreateStore(ft, tmp);
+            // Value *ft = builder.CreateInBoundsGEP(f, zero, "mtmp");
+            builder.CreateStore(f, tmp);
           }
         }
       }

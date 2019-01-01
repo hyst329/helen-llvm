@@ -8,8 +8,8 @@ find_package(FLEX REQUIRED)
 message(STATUS "Found Flex ${FLEX_VERSION}")
 message(STATUS "Found Bison ${BISON_VERSION}")
 
-find_package(LLVM REQUIRED CONFIG)
-find_package(Boost 1.55 REQUIRED COMPONENTS filesystem system)
+find_package(LLVM 7.0 REQUIRED CONFIG)
+find_package(Boost 1.68 REQUIRED COMPONENTS filesystem system)
 find_package(Threads REQUIRED)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")

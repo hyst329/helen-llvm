@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.11)
 project(helen VERSION 0.2.0)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(helc)
-#add_subdirectory(helstd)
+add_subdirectory(helstd)
 add_subdirectory(helmake)
 
 SET(CPACK_PACKAGE_VERSION_MAJOR "0")
@@ -17,7 +17,7 @@ SET(CPACK_NSIS_MODIFY_PATH ON)
 if(UNIX AND NOT APPLE)
   SET(CPACK_GENERATOR "DEB")
   SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Gerry King")
-  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "llvm (>= 5.0~) libboost-dev (>= 1.63~)")
+  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "llvm (>= 7.0~) libboost-dev (>= 1.68~)")
 endif(UNIX AND NOT APPLE)
 
 if(WIN32)

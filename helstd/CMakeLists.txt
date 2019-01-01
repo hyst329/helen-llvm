@@ -38,7 +38,7 @@ foreach(HelstdObjFile ${HelstdObjFiles})
 string(STRIP ${HelstdObjFile} HelstdObjFile)
 endforeach()
 message("HSOF ${HelstdObjFiles}")
-add_library(helstd STATIC "${HelstdObjFiles}")
+add_library(helstd STATIC IMPORTED "${HelstdObjFiles}")
 add_dependencies(helstd helstd_copy)
 set_source_files_properties("${HelstdObjFiles}" PROPERTIES EXTERNAL_OBJECT true GENERATED true)
 set_target_properties(helstd PROPERTIES LINKER_LANGUAGE C
@@ -46,4 +46,4 @@ set_target_properties(helstd PROPERTIES LINKER_LANGUAGE C
 
 install(FILES ${HelstdFiles} DESTINATION include)
 install(DIRECTORY ${HelstdDirs} DESTINATION include FILES_MATCHING PATTERN "*.f4i")
-install(TARGETS helstd DESTINATION lib)
+install(FILES $<TARGET_FILE_NAME:helstd>, DESTINATION lib)
