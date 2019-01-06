@@ -1,4 +1,4 @@
 [submodule "libfirm"]
-	path = libfirm
+	path = external/libfirm
 	url = https://github.com/libfirm/libfirm
 	branch = master
